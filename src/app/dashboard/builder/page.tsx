@@ -13,6 +13,7 @@ function BuilderWizard() {
   
   const stepParam = searchParams.get('step')
   const step = stepParam ? parseInt(stepParam, 10) : 1
+  const demoId = searchParams.get('demoId') || "custom"
 
   const setStep = (newStep: number) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -114,7 +115,8 @@ function BuilderWizard() {
         acceptBtn, 
         rejectBtn,
         loveMessage,
-        photoUrl
+        photoUrl,
+        demoId
       });
       const res = await publishEvent(eventId);
       if (res.success && res.slug) {
@@ -158,7 +160,8 @@ function BuilderWizard() {
           acceptBtn,
           rejectBtn,
           loveMessage,
-          photoUrl: res.url
+          photoUrl: res.url,
+          demoId
         });
       }
     } catch (err: any) {

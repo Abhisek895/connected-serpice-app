@@ -36,14 +36,13 @@ export default function DashboardSidebar() {
         <Link href="/">
           <h1 className="text-2xl font-bold text-rose-500 font-pacifico tracking-wider">OurStory</h1>
         </Link>
-        
+
         {/* Notification Bell Icon */}
-        <Link 
+        <Link
           href="/dashboard/analytics"
           onClick={() => setHasUnread(false)}
-          className={`p-2 rounded-full relative transition ${
-            hasUnread ? "bg-rose-50 text-rose-500 hover:bg-rose-100" : "bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-          }`}
+          className={`p-2 rounded-full relative transition ${hasUnread ? "bg-rose-50 text-rose-500 hover:bg-rose-100" : "bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            }`}
           title={hasUnread ? "New recipient activity available" : "Notifications"}
         >
           <Bell className="w-4 h-4" />
@@ -71,29 +70,28 @@ export default function DashboardSidebar() {
           </p>
         </div>
       </div>
-      
+
       {/* Navigation Links */}
       <nav className="flex-1 p-4 space-y-2">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = item.href === "/dashboard" 
-            ? pathname === "/dashboard" 
+          const isActive = item.href === "/dashboard"
+            ? pathname === "/dashboard"
             : pathname.startsWith(item.href);
 
           return (
-            <Link 
+            <Link
               key={item.href}
-              href={item.href} 
+              href={item.href}
               onClick={() => {
                 if (item.href === "/dashboard/analytics") {
                   setHasUnread(false);
                 }
               }}
-              className={`flex items-center justify-between px-4 py-3 rounded-xl font-medium transition ${
-                isActive 
-                  ? "bg-rose-50 text-rose-600 shadow-sm shadow-rose-100" 
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-              }`}
+              className={`flex items-center justify-between px-4 py-3 rounded-xl font-medium transition ${isActive
+                ? "bg-rose-50 text-rose-600 shadow-sm shadow-rose-100"
+                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                }`}
             >
               <div className="flex items-center gap-3">
                 <Icon className="w-5 h-5" />
@@ -108,10 +106,10 @@ export default function DashboardSidebar() {
           );
         })}
       </nav>
-      
+
       {/* Sign Out Button */}
       <div className="p-4 border-t border-slate-100">
-        <button 
+        <button
           onClick={handleSignOut}
           className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition font-medium text-sm"
         >

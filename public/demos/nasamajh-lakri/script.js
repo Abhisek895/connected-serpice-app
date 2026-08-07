@@ -141,14 +141,14 @@ ${new Date().toLocaleString()}
             message: summaryMessage
         }
     )
-    .then((response) => {
-        console.log("SUCCESS!", response);
-    })
-    .catch((error) => {
-        console.error("FULL ERROR:", error);
-        console.error("STATUS:", error.status);
-        console.error("TEXT:", error.text);
-    });
+        .then((response) => {
+            console.log("SUCCESS!", response);
+        })
+        .catch((error) => {
+            console.error("FULL ERROR:", error);
+            console.error("STATUS:", error.status);
+            console.error("TEXT:", error.text);
+        });
 }
 
 function confetti() {

@@ -64,9 +64,9 @@ export async function uploadMedia(eventId: string, formData: FormData) {
 
   const file = formData.get("file") as File;
   const type = formData.get("type") as string; // "image" or "audio"
-  
+
   if (!file) return { success: false, error: "No file provided" };
-  
+
   // Convert to base64 for local dev storage
   const buffer = Buffer.from(await file.arrayBuffer());
   const url = `data:${file.type};base64,${buffer.toString("base64")}`;
@@ -152,13 +152,6 @@ export async function createInstantEventFromTemplate(themeName: string, title?: 
   }
 
   let defaultUrl = `/p/${uniqueSlug}`;
-  if (demoId === "nasamajh-lakri") {
-    defaultUrl = `/demos/nasamajh-lakri/index.html`;
-  } else if (demoId === "date-planner") {
-    defaultUrl = `/demos/date-planner/index.html`;
-  } else if (demoId === "jalpaiguri-planner") {
-    defaultUrl = `/demos/jalpaiguri-planner/index.html`;
-  }
 
   const customData = {
     title: title || `${themeName} for ${recipientName || "My Love"}`,

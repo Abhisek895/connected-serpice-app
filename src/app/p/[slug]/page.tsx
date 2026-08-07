@@ -31,6 +31,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       rejectBtn={(customData as any).rejectBtn || ""}
       loveMessage={(customData as any).loveMessage || ""}
       photoUrl={(customData as any).photoUrl || ""}
+      demoId={(customData as any).demoId || ""}
       media={event.media.map(m => ({ id: m.id, url: m.url, type: m.type }))}
     />
   );

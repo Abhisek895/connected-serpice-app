@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Sparkles, ExternalLink, Compass, Zap, Loader2, CheckCircle2, Copy, Edit3, Eye, Gift, Heart, X, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createInstantEventFromTemplate } from "./builder/actions";
@@ -171,7 +172,7 @@ export default function DashboardDemos() {
       {/* Modal Notification when Instant Link is Created */}
       <AnimatePresence>
         {publishedUrl && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
@@ -226,7 +227,7 @@ export default function DashboardDemos() {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent" />
-                  
+
                   <span className={`absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-bold tracking-wide shadow-sm ${demo.badgeColor}`}>
                     {demo.badge}
                   </span>
@@ -246,7 +247,7 @@ export default function DashboardDemos() {
 
               {/* Action Buttons Grid */}
               <div className="p-4 pt-2.5 space-y-1.5 border-t border-slate-100">
-                
+
                 {/* BUTTON 1: Live Demo */}
                 <a
                   href={demo.previewUrl}
@@ -274,17 +275,16 @@ export default function DashboardDemos() {
                 )}
 
                 {/* BUTTON 3: Edit & Customize */}
-                <button
-                  onClick={() => openConfigureModal(demo)}
-                  className={`w-full py-2 px-3 rounded-xl text-white text-xs font-bold transition shadow-sm flex items-center justify-between ${
-                    !demo.hasInstantUse ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200' : 'bg-slate-900 hover:bg-slate-800'
-                  }`}
+                <Link
+                  href={`/dashboard/builder?demoId=${demo.id}`}
+                  className={`w-full py-2 px-3 rounded-xl text-white text-xs font-bold transition shadow-sm flex items-center justify-between ${!demo.hasInstantUse ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200' : 'bg-slate-900 hover:bg-slate-800'
+                    }`}
                 >
                   <span className="flex items-center gap-1.5">
                     <Edit3 className="w-3.5 h-3.5" /> {!demo.hasInstantUse ? '2. Edit & Customize' : '3. Edit & Customize'}
                   </span>
                   <span className="text-[10px] opacity-80 font-normal">Add Your Text/Photos</span>
-                </button>
+                </Link>
 
               </div>
             </motion.div>

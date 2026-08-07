@@ -10,12 +10,10 @@ export default function EventCardMenu({
   eventId,
   slug,
   isPublished,
-  onOpenDetails
 }: {
   eventId: string;
   slug: string;
   isPublished: boolean;
-  onOpenDetails?: () => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -75,20 +73,6 @@ export default function EventCardMenu({
       {isOpen && (
         <div className="absolute right-0 top-8 w-52 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
           
-          {/* View Answers & Details */}
-          {onOpenDetails && (
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                onOpenDetails();
-              }}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-rose-600 hover:bg-rose-50 transition text-left"
-            >
-              <BarChart2 className="w-4 h-4 text-rose-500" />
-              View Answers & Log
-            </button>
-          )}
-
           {/* View Live Page */}
           <a
             href={`/p/${slug}`}
