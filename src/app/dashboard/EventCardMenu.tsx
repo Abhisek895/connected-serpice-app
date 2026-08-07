@@ -1,4 +1,4 @@
-is is "use client";
+"use client";
 
 import { useState, useRef, useEffect } from "react";
 import { MoreVertical, Trash2, ExternalLink, Power, Loader2, BarChart2, AlertTriangle, X } from "lucide-react";
