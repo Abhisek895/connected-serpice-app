@@ -33,8 +33,8 @@ export default function Home() {
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4">
-          <Link href="/builder" className="px-8 py-4 rounded-full font-bold bg-slate-900 text-white shadow-xl hover:bg-slate-800 transition flex items-center gap-2 text-lg">
-            Create Your Page <ArrowRight className="w-5 h-5" />
+          <Link href="/dashboard/builder" className="px-8 py-4 rounded-full font-bold bg-slate-900 text-white shadow-xl hover:bg-slate-800 transition flex items-center gap-2 text-lg">
+            Create Your First Page <ArrowRight className="w-5 h-5" />
           </Link>
         </div>
         

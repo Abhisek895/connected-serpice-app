@@ -1,0 +1,68 @@
+body {
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #fbc2eb, #a6c1ee, #fbc2eb);
+    font-family: 'Segoe UI', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+}
+.container {
+    text-align: center;
+    background: rgba(255, 240, 245, 0.92);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 0 30px rgba(255, 182, 193, 0.4);
+    width: 90%;
+    max-width: 400px;
+    backdrop-filter: blur(8px);
+}
+h1 {
+    font-size: 2em;
+    margin-bottom: 10px;
+    color: #e75480;
+}
+p {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+    color: #d36c6c;
+}
+button {
+    padding: 12px 20px;
+    margin: 10px;
+    border: none;
+    background: linear-gradient(135deg, #ff758c, #ff7eb3);
+    color: white;
+    font-size: 1em;
+    border-radius: 12px;
+    cursor: pointer;
+    transition:  0.4s, transform 0.2s, box-shadow 0.3s;
+    box-shadow: 0 4px 14px rgba(255, 105, 135, 0.4);
+}
+button:hover {
+    background: linear-gradient(135deg, #ff6a88, #ff99ac);
+    transform: scale(1.07);
+    box-shadow: 0 6px 20px rgba(255, 105, 135, 0.5);
+}
+.hidden {
+    display: none;
+}
+@keyframes fall {
+    to { transform: translateY(110vh) rotate(360deg); }
+}
+
+.celebrate {
+    background: linear-gradient(270deg, #ffc1cc, #ffdde1, #ffd1dc, #ffe0e9, #ffc1cc);
+    background-size: 500% 500%;
+    animation: romanticSlide 12s ease infinite;
+    box-shadow: 0 0 30px rgba(255, 192, 203, 0.6);
+}
+
+@keyframes romanticSlide {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+

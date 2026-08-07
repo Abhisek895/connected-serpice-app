@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Surprise For You</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Pacifico&display=swap"
+        rel="stylesheet">
+
+    <style>
+        /* --- GLOBAL STYLES --- */
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            transition: background 1s ease;
+            /* Romantic Gradient Background */
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+            /* Prevent selecting text or zooming on double tap */
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* --- SECTION 1: LANDING PAGE --- */
+        #landing-page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Pacifico', cursive;
+            z-index: 10;
+            transition: opacity 1s ease;
+        }
+
+        h1 {
+            color: #d6336c;
+            font-size: 3.5rem;
+            margin-bottom: 50px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 2s ease-in;
+            text-align: center;
+            padding: 0 15px;
+            line-height: 1.2;
+        }
+
+        .heart-wrapper {
+            position: relative;
+            z-index: 10;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .heart-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: block;
+            /* Removes the blue highlight on mobile tap */
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+        }
+
+        .heart {
+            background-color: #ff4d6d;
+            width: 80px;
+            height: 80px;
+            position: relative;
+            transform: rotate(-45deg);
+            animation: heartbeat 1.2s infinite;
+            box-shadow: 0 0 40px rgba(255, 77, 109, 0.6);
+            transition: all 0.3s ease;
+        }
+
+        .heart::before,
+        .heart::after {
+            content: "";
+            background-color: #ff4d6d;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            position: absolute;
+        }
+
+        .heart::before {
+            top: -40px;
+            left: 0;
+        }
+
+        .heart::after {
+            top: 0;
+            left: 40px;
+        }
+
+        .heart-btn:hover .heart,
+        .heart-btn:active .heart {
+            background-color: #ff2a55;
+            box-shadow: 0 0 60px rgba(255, 42, 85, 0.9);
+            transform: rotate(-45deg) scale(1.1);
+        }
+
+        .click-text {
+            margin-top: 60px;
+            color: #d6336c;
+            font-family: 'Dancing Script', cursive;
+            font-size: 2rem;
+            font-weight: bold;
+            opacity: 0;
+            animation: slideUp 1s ease-out 1s forwards;
+            pointer-events: none;
+        }
+
+        .tiny-text {
+            position: absolute;
+            bottom: 80px;
+            color: #d6336c;
+            font-family: 'Dancing Script', cursive;
+            font-size: 1.2rem;
+            opacity: 0;
+            animation: slideUp 1s ease-out 1.2s forwards;
+            pointer-events: none;
+        }
+
+        .scroll-hint {
+            position: absolute;
+            bottom: 50px;
+            color: #d6336c;
+            font-family: 'Dancing Script', cursive;
+            font-size: 1.5rem;
+            font-weight: bold;
+            opacity: 0;
+            animation: slideUp 1s ease-out 1.5s forwards;
+            pointer-events: none;
+        }
+
+        .bg-heart {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.6);
+            width: 20px;
+            height: 20px;
+            transform: rotate(-45deg);
+            z-index: 1;
+        }
+
+        .bg-heart::before,
+        .bg-heart::after {
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: inherit;
+            border-radius: 50%;
+        }
+
+        .bg-heart::before {
+            top: -50%;
+            left: 0;
+        }
+
+        .bg-heart::after {
+            top: 0;
+            left: 50%;
+        }
+
+
+        /* --- SECTION 2: PORTRAIT PAGE --- */
+        #portrait-page {
+            display: none;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial Black', sans-serif;
+            transition: opacity 2s ease;
+        }
+
+        .portrait-container {
+            position: relative;
+            display: inline-flex;
+            max-width: 98vw;
+            max-height: 80vh;
+            /* Dark Vignette */
+            box-shadow: inset 0 0 80px rgba(0, 0, 0, 1);
+            overflow: hidden;
+        }
+
+        /* THE TEXT PIXELS */
+        .text-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            /* High Res Trick: 3x Size */
+            width: 300%;
+            height: 300%;
+            /* Scaled Down */
+            transform: scale(0.3333);
+            transform-origin: top left;
+
+            z-index: 1;
+            background-color: black;
+            color: white;
+
+            /* Typography */
+            font-size: 8px;
+            line-height: 8px;
+            letter-spacing: 0px;
+            font-weight: 900;
+            word-break: break-all;
+            overflow: hidden;
+            text-align: justify;
+        }
+
+        .source-image {
+            display: block;
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 80vh;
+            position: relative;
+            z-index: 2;
+            filter: grayscale(100%) contrast(160%) brightness(1.2);
+            mix-blend-mode: multiply;
+        }
+
+        /* Animations */
+        @keyframes heartbeat {
+            0% {
+                transform: rotate(-45deg) scale(1);
+            }
+
+            14% {
+                transform: rotate(-45deg) scale(1.15);
+            }
+
+            28% {
+                transform: rotate(-45deg) scale(1);
+            }
+
+            42% {
+                transform: rotate(-45deg) scale(1.15);
+            }
+
+            70% {
+                transform: rotate(-45deg) scale(1);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            .heart {
+                width: 60px;
+                height: 60px;
+            }
+
+            .heart::before {
+                top: -30px;
+                width: 60px;
+                height: 60px;
+            }
+
+            .heart::after {
+                left: 30px;
+                width: 60px;
+                height: 60px;
+            }
+
+            .portrait-container {
+                max-width: 100vw;
+                max-height: 70vh;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <audio id="loveSong" src="loveSong.mp3" loop preload="auto"></audio>
+
+
+    <div id="landing-page">
+        <div id="bg-hearts-container"></div>
+        <h1>I have a surprise for you...</h1>
+        <div class="heart-wrapper">
+            <button class="heart-btn" onclick="revealSurprise()">
+                <div class="heart"></div>
+            </button>
+        </div>
+        <div class="click-text">Tap the Heart</div>
+        <span class="tiny-text">I made this tiny</span>
+        <div class="scroll-hint">scroll down ↓</div>
+    </div>
+
+
+    <div id="portrait-page">
+        <div class="portrait-container">
+            <div class="text-layer" id="text-wall"></div>
+            <img src="sneha.jpeg" class="source-image" id="main-img" alt="Portrait">
+        </div>
+    </div>
+
+
+    <script>
+        /* 1. BACKGROUND HEARTS ANIMATION */
+        const container = document.getElementById('bg-hearts-container');
+        let heartInterval;
+
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.classList.add('bg-heart');
+            heart.style.left = Math.random() * 100 + 'vw';
+            const duration = Math.random() * 6 + 4;
+            heart.style.transition = `top ${duration}s linear, opacity ${duration}s ease-in`;
+            const scale = Math.random() * 1 + 0.5;
+            heart.style.transform = `rotate(-45deg) scale(${scale})`;
+            heart.style.top = '110vh';
+            heart.style.opacity = Math.random() * 0.5 + 0.3;
+            container.appendChild(heart);
+            requestAnimationFrame(() => { heart.style.top = '-10vh'; heart.style.opacity = '0'; });
+            setTimeout(() => { heart.remove(); }, duration * 1000);
+        }
+        heartInterval = setInterval(createHeart, 400);
+
+
+        /* 2. REVEAL & PLAY MUSIC FUNCTION */
+        function revealSurprise() {
+            const landing = document.getElementById('landing-page');
+            const portrait = document.getElementById('portrait-page');
+            const song = document.getElementById('loveSong');
+
+            // --- A. PLAY MUSIC ---
+            // We do this first so it feels responsive
+            song.volume = 1.0;
+            song.play().catch(error => {
+                console.log("Auto-play was blocked. Please tap again.");
+            });
+
+            // --- B. START TRANSITION ---
+            landing.style.opacity = '0';
+            document.body.style.background = '#000'; // Fade to black
+
+            setTimeout(() => {
+                landing.style.display = 'none';
+                clearInterval(heartInterval); // Stop flying hearts
+
+                portrait.style.display = 'flex';
+                // Slight delay to allow flexbox to render before fading in
+                setTimeout(() => {
+                    portrait.style.opacity = '1';
+                    generateArt();
+                }, 50);
+            }, 1000);
+        }
+
+
+        /* 3. PORTRAIT GENERATION */
+        const textWall = document.getElementById('text-wall');
+        const img = document.getElementById('main-img');
+
+        // --- CUSTOMIZE TEXT HERE ---
+        const phrase = "LOVE YOU";
+
+        function generateArt() {
+            if (!img.complete || img.naturalWidth === 0) return;
+
+            const w = img.clientWidth;
+            const h = img.clientHeight;
+
+            // 3x Scale Calculation
+            const multiplier = 3;
+            const charsPerLine = Math.ceil((w * multiplier) / 5);
+            const totalLines = Math.ceil((h * multiplier) / 8);
+            const totalChars = (charsPerLine * totalLines) * 1.5;
+
+            const repeatCount = Math.ceil(totalChars / phrase.length);
+            textWall.innerText = phrase.repeat(repeatCount);
+        }
+
+        window.addEventListener('resize', generateArt);
+        img.onload = function () {
+            if (document.getElementById('portrait-page').style.display === 'flex') generateArt();
+        };
+    </script>
+</body>
+
+</html>

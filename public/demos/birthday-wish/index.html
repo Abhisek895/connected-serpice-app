@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Happy Birthday — Suyo Poka</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <canvas id="confetti"></canvas>
+
+  <!-- Entry Buttons -->
+  <div id="entry">
+    <h2>How Was Your Birthday ? ❤️</h2>
+    <div>
+      <button class="btn btn-primary" id="loveBtn">Very Good❤️</button>
+      <button class="btn btn-ghost" id="hateBtn">BAd 💔</button>
+    </div>
+  </div>
+
+  <!-- Hate message -->
+  <div id="hateMsg">Why 💔 !!!!!!!!!!!!!!!!! </div>
+
+  <!-- Birthday Card -->
+  <div class="card" id="card">
+    <div class="photo-slider">
+      <img src="s0.jpeg" class="active">
+      <img src="s1.jpeg">
+      <img src="s2.jpeg">
+      <img src="s3.jpeg">
+      <img src="s4.jpeg">
+      <img src="s5.jpeg">
+    </div>
+
+    <h1>Happy Birthday, <span class="name">Kankita  🦋</span> 💖</h1>
+    <div class="subtitle">A little surprise from someone who truly cares…</div>
+    
+    <button class="btn btn-primary" id="msgBtn">Read My Message 💌</button>
+    <div class="message" id="message"></div>
+  </div>
+
+  <audio id="song" src="hbd.mp3"></audio>
+
+  <script src="script.js"></script>
+</body>
+</html>
