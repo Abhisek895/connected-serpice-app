@@ -602,8 +602,7 @@ export default function DatePlannerTemplate({ slug, demoId, title }: ProposalCli
       finalSummary.classList.add('show');
       finalSummary.scrollIntoView({ behavior: 'smooth' });
 
-      // Trigger ACCEPTED so the Analytics Dashboard logs it correctly just like Nasamajh Lakri!
-      recordResponseAction(slug, "ACCEPTED", JSON.stringify({ place: selectedPlace, food: selectedFood, date: formattedDate, time: timeVal }));
+      // Trigger ACCEPTED via window.__datePlannerTracker inside window.initializeDatePlanner handler
 
       if (window.sendFinalResponseEmail) {
         window.sendFinalResponseEmail(selectedPlace, selectedFood, formattedDate, timeVal, dodgeCount);
