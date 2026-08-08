@@ -32,6 +32,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       loveMessage={(customData as any).loveMessage || ""}
       photoUrl={(customData as any).photoUrl || ""}
       demoId={(customData as any).demoId || ""}
+      recipientName={(customData as any).recipientName || ""}
       media={event.media.map(m => ({ id: m.id, url: m.url, type: m.type }))}
     />
   );

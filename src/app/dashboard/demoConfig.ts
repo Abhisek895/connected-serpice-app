@@ -16,14 +16,14 @@ export type DemoItem = {
 
 export const demos: DemoItem[] = [
   {
-    id: "ankita-surprise",
+    id: "surprise",
     title: "Romantic Love Surprise 💖",
     badge: "Requires Customization",
     badgeColor: "bg-rose-500 text-white",
     description: "Interactive romantic surprise with floating heart animations, love song (loveSong.mp3), photo showcase, & love letter reveal.",
     previewUrl: "/p/demo-romantic",
     builderTheme: "Romantic",
-    image: "/demos/ankita-surprise/images.jpeg",
+    image: "/demos/surprise/images.jpeg",
     icon: Sparkles,
     borderColor: "border-rose-200",
     hasInstantUse: false

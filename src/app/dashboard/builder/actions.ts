@@ -153,45 +153,61 @@ export async function createInstantEventFromTemplate(themeName: string, title?: 
 
   let defaultUrl = `/p/${uniqueSlug}`;
 
-  let classSpecificData: any = {};
-
-  if (demoId === "birthday-wish") {
-    classSpecificData = {
-      title: "Happy Birthday! 🎂",
-      question: "Wishing you the happiest birthday! 🎂",
-      loveMessage: "May all your dreams come true. You deserve all the happiness in the world! 🎉",
-    };
-  } else if (demoId === "date-planner" || demoId === "jalpaiguri-planner") {
-    classSpecificData = {
-      title: "Date Planner 🌸",
-      question: "Let's plan our perfect date! 🌸",
-    };
-  } else if (demoId === "nasamajh-lakri") {
-    classSpecificData = {
-      title: "Hi, Nasamajh Lakri 😊",
-      question: "Will you be mine? 💖",
-      acceptBtn: "Yes 😍",
-      rejectBtn: "No 🙈",
-    };
-  } else {
-    // Default Romantic Proposals
-    classSpecificData = {
+  // Import class defaults from templateConfig to ensure object === class when not customized
+  // We inline the defaults here to keep this as a server-only file
+  const CLASS_DEFAULTS: Record<string, any> = {
+    "surprise": {
       title: "A Surprise For You... 😊",
       question: "Will you be mine? 💖",
       acceptBtn: "Yes! 😍",
       rejectBtn: "No 🙈",
-    };
-  }
+      loveMessage: "A little surprise from someone who truly cares…",
+      hasDefaultMusic: true,
+    },
+    "birthday-wish": {
+      title: "Happy Birthday! 🎂",
+      question: "Wishing you the happiest birthday! 🎂",
+      loveMessage: "May all your dreams come true. You deserve all the happiness in the world! 🎉",
+      hasDefaultMusic: true,
+    },
+    "nasamajh-lakri": {
+      title: "Hi, Nasamajh Lakri 😊",
+      question: "Will you be mine? 💖",
+      acceptBtn: "Yes 😍",
+      rejectBtn: "No 🙈",
+    },
+    "date-planner": {
+      title: "Date Planner 🌸",
+      question: "Let's plan our perfect date! 🌸",
+      hasDefaultMusic: true,
+      hasSummaryCard: true,
+    },
+    "jalpaiguri-planner": {
+      title: "Date Planner 🌿",
+      question: "Let's plan our perfect date! 🌿",
+      hasDefaultMusic: true,
+      hasSummaryCard: true,
+    },
+  };
+
+  const classDefaults = CLASS_DEFAULTS[demoId || ""] || {
+    title: "A Surprise For You... 😊",
+    question: "Will you be mine? 💖",
+    acceptBtn: "Yes! 😍",
+    rejectBtn: "No 🙈",
+  };
 
   const customData = {
-    ...classSpecificData,
-    title: title || classSpecificData.title || `${themeName} for ${recipientName || "My Love"}`,
+    // 1. Start with class defaults (object == class)
+    ...classDefaults,
+    // 2. Apply user title/recipient overrides
+    title: title || classDefaults.title || `${themeName} for ${recipientName || "My Love"}`,
     recipientName: recipientName || "My Love",
-    demoId: demoId || "custom",
+    // 3. Class identity — ALWAYS stored so /p/[slug] knows which template to render
+    demoId: demoId || "surprise",
     customUrl: defaultUrl,
-    hasDefaultMusic: true,
-    hasSummaryCard: true,
     isInstant: true,
+    // 4. Apply any extra user overrides on top
     ...(extraData || {})
   };
 
@@ -241,4 +257,67 @@ export async function toggleEventStatusAction(eventId: string) {
   });
 
   return { success: true, status: newStatus };
+}
+
+/**
+ * Fetch an event's customData for pre-filling edit forms.
+ * Returns parsed customData or null if not found/unauthorized.
+ */
+export async function getEventCustomData(eventId: string) {
+  const { userId } = await getCurrentUser();
+
+  const event = await prisma.event.findFirst({
+    where: { id: eventId, userId },
+    include: { media: true },
+  });
+
+  if (!event) return { success: false, error: "Not found" };
+
+  let customData: any = {};
+  try {
+    customData = event.customData ? JSON.parse(event.customData) : {};
+  } catch {
+    customData = {};
+  }
+
+  return {
+    success: true,
+    customData,
+    media: event.media.map((m) => ({ id: m.id, url: m.url, type: m.type })),
+  };
+}
+
+/**
+ * Update an existing published event with new customData (for re-editing saved events).
+ * Preserves class identity (demoId) and merges user overrides.
+ */
+export async function updatePublishedEvent(
+  eventId: string,
+  overrides: Record<string, any>
+) {
+  const { userId } = await getCurrentUser();
+
+  const event = await prisma.event.findFirst({
+    where: { id: eventId, userId },
+  });
+
+  if (!event) return { success: false, error: "Unauthorized or not found" };
+
+  // Parse existing data
+  let existing: any = {};
+  try {
+    existing = event.customData ? JSON.parse(event.customData) : {};
+  } catch {
+    existing = {};
+  }
+
+  // Merge: keep class identity + existing + new overrides
+  const merged = { ...existing, ...overrides };
+
+  await prisma.event.update({
+    where: { id: eventId },
+    data: { customData: JSON.stringify(merged) },
+  });
+
+  return { success: true };
 }

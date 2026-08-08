@@ -28,7 +28,7 @@ export default function AnalyticsClient({ event, customData }: AnalyticsClientPr
   const accepts = responses.filter(r => r.action === "ACCEPTED").length;
   const rejects = responses.filter(r => r.action === "REJECTED").length;
 
-  const demoId = customData.demoId || "ankita-surprise";
+  const demoId = customData.demoId || "surprise";
   const demo = demos.find(d => d.id === demoId) || demos[0];
   const Icon = demo.icon;
   const title = customData.title || `Proposal for ${event.theme.name}`;

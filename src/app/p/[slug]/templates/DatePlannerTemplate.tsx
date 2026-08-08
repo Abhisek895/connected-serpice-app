@@ -13,6 +13,7 @@ export type ProposalClientProps = {
   loveMessage?: string;
   photoUrl?: string;
   demoId?: string;
+  recipientName?: string;
   media: { id: string; url: string; type: string; }[];
 };
 

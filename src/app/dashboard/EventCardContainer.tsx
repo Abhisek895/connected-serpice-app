@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { Sparkles, Eye, Heart, MoreVertical, Plus, Globe } from "lucide-react";
+import { Sparkles, Eye, Globe, Edit3 } from "lucide-react";
 import EventCardActions from "./EventCardActions";
 import EventCardMenu from "./EventCardMenu";
-import { useRouter } from "next/navigation";
+import CustomizeModal from "./CustomizeModal";
+import { AnimatePresence } from "framer-motion";
 
 type EventItem = {
   id: string;
@@ -24,13 +24,17 @@ type EventItem = {
 };
 
 export default function EventCardContainer({ events }: { events: EventItem[] }) {
-  const router = useRouter();
+  const [editModal, setEditModal] = useState<{
+    eventId: string;
+    demoId: string;
+    slug: string;
+  } | null>(null);
 
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {events.map((event) => {
-          let customData = { title: "", question: "", isInstant: false };
+          let customData: any = { title: "", question: "", isInstant: false };
           try {
             customData = event.customData ? JSON.parse(event.customData) : {};
           } catch (e) {
@@ -38,10 +42,9 @@ export default function EventCardContainer({ events }: { events: EventItem[] }) 
           }
 
           const displayTitle = customData.title || `Proposal for ${event.theme.name}`;
-          const views = event.responses.filter(r => r.action === "VIEWED").length;
-          const accepts = event.responses.filter(r => r.action === "ACCEPTED").length;
+          const views = event.responses.filter((r) => r.action === "VIEWED").length;
           const isPublished = event.status === "PUBLISHED";
-          const isInstant = Boolean(customData.isInstant);
+          const demoId: string = customData.demoId || "";
 
           return (
             <div
@@ -62,7 +65,10 @@ export default function EventCardContainer({ events }: { events: EventItem[] }) 
                   />
                 </div>
 
-                <h3 className="text-xl font-bold text-slate-900 mb-1 truncate group-hover:text-rose-600 transition" title={displayTitle}>
+                <h3
+                  className="text-xl font-bold text-slate-900 mb-1 truncate group-hover:text-rose-600 transition"
+                  title={displayTitle}
+                >
                   {displayTitle}
                 </h3>
 
@@ -72,17 +78,23 @@ export default function EventCardContainer({ events }: { events: EventItem[] }) 
                 </div>
 
                 <div className="flex items-center gap-2 text-sm font-medium mb-6">
-                  <div className={`w-2.5 h-2.5 rounded-full ${isPublished ? 'bg-green-500 animate-pulse' : 'bg-amber-500'}`} />
-                  <span className={isPublished ? 'text-green-600' : 'text-amber-600'}>
-                    {isPublished ? 'Active (Expires in 30 days)' : 'Disabled'}
+                  <div
+                    className={`w-2.5 h-2.5 rounded-full ${
+                      isPublished ? "bg-green-500 animate-pulse" : "bg-amber-500"
+                    }`}
+                  />
+                  <span className={isPublished ? "text-green-600" : "text-amber-600"}>
+                    {isPublished ? "Active (Expires in 30 days)" : "Disabled"}
                   </span>
                 </div>
 
-                {/* Real Analytics Metrics */}
-                <div className="mb-6">
+                {/* Analytics */}
+                <div className="mb-4">
                   <div className="bg-slate-50 p-3 rounded-2xl flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="bg-white p-2 rounded-xl text-blue-500 shadow-sm"><Eye className="w-4 h-4" /></div>
+                      <div className="bg-white p-2 rounded-xl text-blue-500 shadow-sm">
+                        <Eye className="w-4 h-4" />
+                      </div>
                       <div>
                         <p className="text-xs text-slate-500 font-medium">Total Views</p>
                         <p className="text-lg font-bold text-slate-900">{views}</p>
@@ -90,6 +102,19 @@ export default function EventCardContainer({ events }: { events: EventItem[] }) 
                     </div>
                   </div>
                 </div>
+
+                {/* Edit button — opens CustomizeModal pre-filled with this event's data */}
+                {demoId && (
+                  <button
+                    onClick={() =>
+                      setEditModal({ eventId: event.id, demoId, slug: event.slug })
+                    }
+                    className="w-full mb-3 py-2 px-3 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold transition flex items-center justify-center gap-2"
+                  >
+                    <Edit3 className="w-3.5 h-3.5 text-rose-500" />
+                    Edit & Recustomize
+                  </button>
+                )}
               </div>
 
               {/* Event Card Actions */}
@@ -97,7 +122,7 @@ export default function EventCardContainer({ events }: { events: EventItem[] }) 
                 <EventCardActions
                   slug={event.slug}
                   eventId={event.id}
-                  isInstant={isInstant}
+                  isInstant={Boolean(customData.isInstant)}
                   customUrl={(customData as any).customUrl}
                 />
               </div>
@@ -105,6 +130,18 @@ export default function EventCardContainer({ events }: { events: EventItem[] }) 
           );
         })}
       </div>
+
+      {/* Edit Modal */}
+      <AnimatePresence>
+        {editModal && (
+          <CustomizeModal
+            demoId={editModal.demoId}
+            editEventId={editModal.eventId}
+            editSlug={editModal.slug}
+            onClose={() => setEditModal(null)}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }

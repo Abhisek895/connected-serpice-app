@@ -21,6 +21,7 @@ type ProposalClientProps = {
   loveMessage?: string;
   photoUrl?: string;
   demoId?: string;
+  recipientName?: string;
   media: MediaItem[];
 };
 
@@ -40,7 +41,7 @@ export default function ProposalClient(props: ProposalClientProps) {
     return <BirthdayTemplate {...props} />;
   }
 
-  if (demoId === "ankita-surprise") {
+  if (demoId === "surprise") {
     return <RomanticLoveTemplate {...props} />;
   }
 

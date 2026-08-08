@@ -1,27 +1,101 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { Gift, Cake, Sparkles, Heart } from "lucide-react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { recordResponseAction } from "../actions"
 import type { ProposalClientProps } from "./RomanticLoveTemplate"
 
+// ─── Canvas Confetti ──────────────────────────────────────────────────────────
+type Piece = { x: number; y: number; vy: number; size: number; color: string };
+
+function useConfetti(active: boolean) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const pieces = useRef<Piece[]>([]);
+  const raf = useRef<number>(0);
+
+  const draw = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d")!;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    pieces.current.forEach((p) => {
+      p.y += p.vy;
+      if (p.y > canvas.height) p.y = -10;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x, p.y, p.size, p.size * 0.6);
+    });
+    raf.current = requestAnimationFrame(draw);
+  }, []);
+
+  useEffect(() => {
+    if (!active) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    pieces.current = Array.from({ length: 150 }).map(() => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      vy: 1 + Math.random() * 2,
+      size: 5 + Math.random() * 6,
+      color: ["#ff9cc6", "#ffd6e8", "#ff6b9a", "#ffffff"][Math.floor(Math.random() * 4)],
+    }));
+    raf.current = requestAnimationFrame(draw);
+    return () => {
+      cancelAnimationFrame(raf.current);
+      window.removeEventListener("resize", resize);
+    };
+  }, [active, draw]);
+
+  return canvasRef;
+}
+
+// ─── Typewriter ───────────────────────────────────────────────────────────────
+function useTypewriter(text: string, active: boolean, speed = 28) {
+  const [displayed, setDisplayed] = useState("");
+  useEffect(() => {
+    if (!active || !text) return;
+    setDisplayed("");
+    let i = 0;
+    const iv = setInterval(() => {
+      setDisplayed((prev) => prev + text.charAt(i));
+      i++;
+      if (i >= text.length) clearInterval(iv);
+    }, speed);
+    return () => clearInterval(iv);
+  }, [active, text, speed]);
+  return displayed;
+}
+
+// ─── Slideshow ────────────────────────────────────────────────────────────────
+function useSlideshow(photos: string[], active: boolean, interval = 3000) {
+  const [current, setCurrent] = useState(0);
+  useEffect(() => {
+    if (!active || photos.length <= 1) return;
+    const iv = setInterval(() => setCurrent((c) => (c + 1) % photos.length), interval);
+    return () => clearInterval(iv);
+  }, [active, photos.length, interval]);
+  return current;
+}
+
+// ─── BirthdayTemplate ─────────────────────────────────────────────────────────
 export default function BirthdayTemplate({
   slug,
-  themeName,
   title,
   question,
-  acceptBtn,
-  rejectBtn,
   loveMessage,
-  photoUrl,
-  media
+  recipientName,
+  media,
 }: ProposalClientProps) {
-  const [stage, setStage] = useState(0) // 0: Cover, 1: Message
-
+  // 0 = entry, 1 = card, 2 = hate
+  const [stage, setStage] = useState<0 | 1 | 2>(0);
+  const [showMessage, setShowMessage] = useState(false);
   const hasViewedRef = useRef(false);
 
-  // Track initial view automatically
   useEffect(() => {
     if (!hasViewedRef.current) {
       recordResponseAction(slug, "VIEWED");
@@ -29,115 +103,328 @@ export default function BirthdayTemplate({
     }
   }, [slug]);
 
-  const handleOpen = () => {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    audioRef.current = new Audio("/demos/birthday-wish/hbd.mp3");
+    return () => { audioRef.current?.pause(); };
+  }, []);
+
+  // Media
+  const uploadedImages = media.filter((m) => m.type === "IMAGE").map((m) => m.url);
+  const uploadedAudio = media.find((m) => m.type === "AUDIO");
+  const defaultPhotos = [
+    "/demos/birthday-wish/s0.jpeg",
+    "/demos/birthday-wish/s1.jpeg",
+    "/demos/birthday-wish/s2.jpeg",
+    "/demos/birthday-wish/s3.jpeg",
+    "/demos/birthday-wish/s4.jpeg",
+    "/demos/birthday-wish/s5.jpeg",
+  ];
+  const photos = uploadedImages.length > 0 ? uploadedImages : defaultPhotos;
+  const audioSrc = uploadedAudio ? uploadedAudio.url : "/demos/birthday-wish/hbd.mp3";
+
+  const activeSlide = useSlideshow(photos, stage === 1);
+  const confettiRef = useConfetti(stage === 1);
+
+  const displayMessage =
+    loveMessage ||
+    "Happy Birthday! 🎂✨ I hope today makes you smile as much as you make everyone around you smile. You deserve all the happiness, good food, and unforgettable moments today. Stay the amazing person you are. And...I hope I get to steal a little of your time to celebrate with you someday. 😉❤️";
+
+  const typedMessage = useTypewriter(displayMessage, showMessage);
+
+  const displayRecipient = recipientName || "My Love";
+  const displayTitle = title || "Happy Birthday";
+  const displayQuestion = question || "Wishing you the happiest birthday! 🎂";
+
+  const handleLove = () => {
     setStage(1);
     recordResponseAction(slug, "ACCEPTED");
+    const audio = new Audio(audioSrc);
+    audio.play().catch(() => {});
   };
 
-  // Separate media into images and audio
-  const imageMedia = media.filter(m => m.type === "IMAGE");
-  const audioMedia = media.find(m => m.type === "AUDIO") || { url: "/demos/birthday-wish/hbd.mp3" };
-  const displayPhoto = photoUrl || (imageMedia.length > 0 ? imageMedia[0].url : "/demos/birthday-wish/s0.jpeg");
+  const handleHate = () => {
+    setStage(2);
+    recordResponseAction(slug, "REJECTED");
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-100 via-orange-50 to-rose-100 flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
+    <>
+      {/* Global styles injected inline */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@300;500;700&display=swap');
 
-      {/* Background Audio Player */}
-      {audioMedia && stage > 0 && (
-        <audio autoPlay loop src={audioMedia.url} className="hidden" />
-      )}
+        .bday-body {
+          min-height: 100vh;
+          padding: 20px 0;
+          font-family: 'Poppins', sans-serif;
+          background: radial-gradient(circle at 30% 30%, rgba(255,105,180,0.2), transparent 40%),
+                      radial-gradient(circle at 70% 70%, rgba(255,192,203,0.15), transparent 40%),
+                      linear-gradient(120deg, #1a0f1f, #10091a);
+          animation: bdayBgShift 12s ease-in-out infinite alternate;
+          color: #fff6fa;
+          overflow-x: hidden;
+          overflow-y: auto;
+          position: relative;
+        }
+        @keyframes bdayBgShift {
+          0% { filter: hue-rotate(0deg); }
+          100% { filter: hue-rotate(25deg); }
+        }
 
-      {/* Decorative background elements */}
-      <div className="absolute top-10 left-10 text-amber-300 opacity-50"><Cake className="w-12 h-12" /></div>
-      <div className="absolute bottom-20 right-10 text-rose-300 opacity-50"><Gift className="w-16 h-16" /></div>
+        .bday-entry {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.6);
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          z-index: 20;
+          text-align: center;
+          backdrop-filter: blur(10px);
+          animation: bdayFadeIn 1s ease forwards;
+        }
+        @keyframes bdayFadeIn {
+          from { opacity: 0; transform: scale(0.96); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        .bday-entry h2 {
+          color: #fff6fa;
+          font-size: 26px;
+          margin-bottom: 20px;
+          font-family: 'Playfair Display', serif;
+        }
+        .bday-btn {
+          display: inline-flex;
+          justify-content: center;
+          align-items: center;
+          padding: 12px 18px;
+          border-radius: 12px;
+          font-weight: 600;
+          border: none;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          margin: 8px;
+          font-size: 16px;
+        }
+        .bday-btn-primary {
+          background: linear-gradient(90deg, #ff6b9a, #ffa8d6);
+          color: #2c0f1c;
+          box-shadow: 0 0 15px rgba(255,107,154,0.4);
+        }
+        .bday-btn-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 0 30px rgba(255,107,154,0.6);
+        }
+        .bday-btn-ghost {
+          background: rgba(255,255,255,0.1);
+          border: 1px solid rgba(255,255,255,0.15);
+          color: #fff;
+        }
+        .bday-btn-ghost:hover {
+          background: rgba(255,255,255,0.15);
+          transform: translateY(-2px);
+        }
 
-      <AnimatePresence mode="wait">
-        {stage === 0 && (
-          <motion.div
-            key="cover"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20, scale: 0.9 }}
-            className="bg-white/80 backdrop-blur-md p-8 md:p-12 rounded-3xl shadow-xl max-w-md w-full text-center border border-amber-200"
-          >
-            <div className="flex justify-center mb-6">
-              <div className="relative">
-                <div className="absolute inset-0 bg-amber-400 blur-xl opacity-30 rounded-full animate-pulse" />
-                <Gift className="w-20 h-20 text-amber-500 relative z-10" />
-              </div>
-            </div>
+        .bday-card {
+          width: 100%;
+          max-width: 720px;
+          background: rgba(255,255,255,0.06);
+          backdrop-filter: blur(14px) saturate(140%);
+          border-radius: 22px;
+          box-shadow: 0 0 40px rgba(255,107,154,0.2), 0 0 80px rgba(255,107,154,0.1);
+          padding: 24px;
+          position: relative;
+          z-index: 2;
+          border: 1px solid rgba(255,255,255,0.1);
+          overflow: hidden;
+          text-align: center;
+          animation: bdayFadeIn 1.5s ease forwards;
+          margin: 24px auto;
+        }
+        .bday-slideshow {
+          width: 100%;
+          height: 280px;
+          border-radius: 18px;
+          overflow: hidden;
+          position: relative;
+          box-shadow: 0 0 24px rgba(0,0,0,0.4);
+          margin-bottom: 20px;
+        }
+        .bday-slide {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: 50% 35%;
+          opacity: 0;
+          transition: opacity 1.5s ease-in-out, transform 5s ease-in-out;
+          transform: scale(1.1);
+        }
+        .bday-slide.active {
+          opacity: 1;
+          transform: scale(1);
+        }
+        .bday-card h1 {
+          font-family: 'Playfair Display', serif;
+          font-size: 30px;
+          color: #fff;
+          margin-bottom: 6px;
+        }
+        .bday-card .name { color: #ff6b9a; }
+        .bday-subtitle {
+          font-size: 15px;
+          color: rgba(255,255,255,0.85);
+          margin-bottom: 10px;
+        }
+        .bday-message {
+          font-size: 16px;
+          line-height: 1.6;
+          color: rgba(255,255,255,0.95);
+          min-height: 100px;
+          margin-top: 8px;
+          text-align: left;
+          white-space: pre-wrap;
+        }
+        .bday-hate {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.85);
+          color: #fff;
+          font-size: 26px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 30;
+          text-align: center;
+          padding: 20px;
+          font-family: 'Playfair Display', serif;
+          animation: bdayFadeIn 0.8s ease forwards;
+        }
 
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4 tracking-tight">
-              {title || "Happy Birthday!"}
-            </h1>
+        @media (max-width: 640px) {
+          .bday-card { padding: 18px; max-width: 100%; }
+          .bday-slideshow { height: 200px; }
+          .bday-entry h2 { font-size: 22px; }
+          .bday-card h1 { font-size: 24px; text-align: left; }
+          .bday-subtitle { text-align: left; }
+          .bday-message { font-size: 15px; text-align: left; }
+        }
+        @media (max-width: 480px) {
+          .bday-slideshow { height: 180px; }
+          .bday-card h1 { font-size: 22px; }
+        }
+      `}</style>
 
-            <p className="text-slate-600 mb-8 font-medium">
-              You have a special surprise waiting for you...
-            </p>
+      <div className="bday-body">
+        {/* Canvas confetti */}
+        <canvas
+          ref={confettiRef}
+          style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 1 }}
+        />
 
-            <button
-              onClick={handleOpen}
-              className="w-full py-4 px-6 bg-amber-500 hover:bg-amber-600 text-white font-bold text-lg rounded-2xl shadow-lg shadow-amber-200 transition-all flex items-center justify-center gap-2"
+        {/* Entry screen */}
+        <AnimatePresence>
+          {stage === 0 && (
+            <motion.div
+              className="bday-entry"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
             >
-              <Sparkles className="w-5 h-5" /> Open Your Present
-            </button>
-          </motion.div>
-        )}
+              <h2>{displayTitle} ❤️</h2>
+              <p style={{ color: "rgba(255,255,255,0.7)", marginBottom: 20, fontSize: 15 }}>
+                {displayQuestion}
+              </p>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
+                <button className="bday-btn bday-btn-primary" onClick={handleLove}>
+                  Very Good ❤️
+                </button>
+                <button className="bday-btn bday-btn-ghost" onClick={handleHate}>
+                  Bad 💔
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {stage === 1 && (
-          <motion.div
-            key="message"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white/90 backdrop-blur-md p-8 md:p-12 rounded-3xl shadow-2xl max-w-lg w-full text-center border border-amber-200 relative overflow-hidden"
-          >
-            {/* Confetti effect background */}
-            <div className="absolute inset-0 pointer-events-none opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-multiply" />
+        {/* Birthday card */}
+        <AnimatePresence>
+          {stage === 1 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1 }}
+              style={{ display: "flex", justifyContent: "center", padding: "0 16px" }}
+            >
+              <div className="bday-card">
+                {/* Slideshow */}
+                <div className="bday-slideshow">
+                  {photos.map((src, i) => (
+                    <img
+                      key={src}
+                      src={src}
+                      className={`bday-slide ${i === activeSlide ? "active" : ""}`}
+                      alt={`Birthday photo ${i + 1}`}
+                    />
+                  ))}
+                </div>
 
-            <div className="relative z-10">
-              {displayPhoto && (
-                <motion.div
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                  className="w-40 h-40 md:w-56 md:h-56 mx-auto mb-8 rounded-2xl overflow-hidden shadow-lg border-4 border-white rotate-3 hover:rotate-0 transition-transform duration-300"
-                >
-                  <img src={displayPhoto} alt="Birthday Star" className="w-full h-full object-cover object-[center_top]" />
-                </motion.div>
-              )}
+                <h1>
+                  Happy Birthday, <span className="name">{displayRecipient} 🦋</span> 💖
+                </h1>
+                <div className="bday-subtitle">A little surprise from someone who truly cares…</div>
 
-              <motion.h2
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                className="text-3xl md:text-4xl font-bold text-amber-600 mb-4 font-pacifico"
-              >
-                {question || "Wishing you the happiest birthday!"}
-              </motion.h2>
+                {!showMessage ? (
+                  <button
+                    className="bday-btn bday-btn-primary"
+                    style={{ marginTop: 12 }}
+                    onClick={() => setShowMessage(true)}
+                  >
+                    Read My Message 💌
+                  </button>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bday-message"
+                    style={{ marginTop: 16 }}
+                  >
+                    {typedMessage}
+                    <span style={{ opacity: 0.5 }}>|</span>
+                  </motion.div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.6 }}
-                className="bg-orange-50 p-6 rounded-2xl border border-orange-100 mb-6"
-              >
-                <p className="text-slate-700 leading-relaxed text-lg font-medium">
-                  {loveMessage || "May all your dreams come true. You deserve all the happiness in the world!"}
-                </p>
-              </motion.div>
-
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.8 }}
-                className="flex justify-center"
-              >
-                <Heart className="w-8 h-8 text-rose-500 animate-bounce" fill="currentColor" />
-              </motion.div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
+        {/* Hate screen */}
+        <AnimatePresence>
+          {stage === 2 && (
+            <motion.div
+              className="bday-hate"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <div>
+                <div style={{ fontSize: 48, marginBottom: 16 }}>💔</div>
+                Why 💔 !!!!!!!!!!!!!!!!!!
+                <div style={{ marginTop: 24 }}>
+                  <button
+                    className="bday-btn bday-btn-primary"
+                    onClick={() => setStage(0)}
+                  >
+                    Try again 🥺
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </>
+  );
 }
