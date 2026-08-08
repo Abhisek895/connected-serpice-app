@@ -213,7 +213,7 @@ export default function DashboardDemos() {
       </AnimatePresence>
 
       {/* Grid of Demo Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 relative z-10">
         {demos.map((demo) => {
           const Icon = demo.icon;
 
@@ -304,12 +304,12 @@ export default function DashboardDemos() {
       {/* CONFIGURE & SAVE EVENT FORM MODAL */}
       <AnimatePresence>
         {activeFormDemo && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-white rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl border border-rose-100 relative overflow-hidden"
+              className="bg-white rounded-3xl p-5 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-rose-100 relative"
             >
               <button
                 onClick={() => setActiveFormDemo(null)}

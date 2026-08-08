@@ -1,5 +1,3 @@
-import Link from "next/link";
-import { LayoutDashboard, PlusCircle, Settings, LogOut, BarChart3 } from "lucide-react";
 import DashboardSidebar from "./DashboardSidebar";
 
 export default function DashboardLayout({
@@ -8,13 +6,13 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen bg-slate-50 font-sans">
-      {/* Sidebar */}
+    <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 font-sans antialiased">
+      {/* Sidebar & Mobile Top Navigation */}
       <DashboardSidebar />
       
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-8 max-w-7xl mx-auto">
+      {/* Main Content Viewport */}
+      <main className="flex-1 min-w-0 overflow-y-auto pt-20 md:pt-6">
+        <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto w-full">
           {children}
         </div>
       </main>

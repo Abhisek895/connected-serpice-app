@@ -13,41 +13,41 @@ export default function SettingsClient({ user }: { user: UserProps }) {
   const [activeTab, setActiveTab] = useState("profile");
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
       
-      {/* Navigation Sidebar for Settings (Internal) */}
-      <div className="col-span-1 space-y-2">
+      {/* Navigation Tabs for Settings (Responsive: Horizontal scroll on mobile, vertical list on desktop) */}
+      <div className="flex overflow-x-auto md:flex-col gap-2 pb-2 md:pb-0 scrollbar-none shrink-0">
         <button 
           onClick={() => setActiveTab("profile")}
-          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition ${
+          className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl font-semibold text-sm whitespace-nowrap transition ${
             activeTab === "profile" 
               ? "bg-slate-900 text-white shadow-md" 
-              : "text-slate-600 hover:bg-white border border-transparent hover:border-slate-200"
+              : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
           }`}
         >
-          <User className="w-5 h-5" />
+          <User className="w-4 h-4" />
           Profile
         </button>
         <button 
           onClick={() => setActiveTab("billing")}
-          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition ${
+          className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl font-semibold text-sm whitespace-nowrap transition ${
             activeTab === "billing" 
               ? "bg-slate-900 text-white shadow-md" 
-              : "text-slate-600 hover:bg-white border border-transparent hover:border-slate-200"
+              : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
           }`}
         >
-          <CreditCard className="w-5 h-5" />
+          <CreditCard className="w-4 h-4" />
           Billing & Plan
         </button>
         <button 
           onClick={() => setActiveTab("security")}
-          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition ${
+          className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl font-semibold text-sm whitespace-nowrap transition ${
             activeTab === "security" 
               ? "bg-slate-900 text-white shadow-md" 
-              : "text-slate-600 hover:bg-white border border-transparent hover:border-slate-200"
+              : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
           }`}
         >
-          <Shield className="w-5 h-5" />
+          <Shield className="w-4 h-4" />
           Security
         </button>
       </div>

@@ -275,7 +275,7 @@ export default function AnalyticsClient({ event, customData }: AnalyticsClientPr
                                         </div>
 
                                         {/* Card */}
-                                        <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2rem)] ml-12 md:ml-0 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition">
+                                        <div className="w-[calc(100%-3rem)] sm:w-[calc(100%-4rem)] md:w-[calc(50%-2rem)] ml-10 sm:ml-12 md:ml-0 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition">
                                           <div className="flex items-start justify-between gap-3">
                                             <div className="flex items-start gap-3">
                                               <div className={`p-2.5 rounded-xl shadow-sm shrink-0 mt-0.5 ${isAccepted ? "bg-green-500 text-white" : "bg-rose-500 text-white"}`}>
