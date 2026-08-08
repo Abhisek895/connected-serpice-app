@@ -43,7 +43,7 @@ export default function DashboardDemos() {
       description: "Interactive romantic surprise with floating heart animations, love song (loveSong.mp3), photo showcase, & love letter reveal.",
       previewUrl: "/demos/ankita-surprise/index.html",
       builderTheme: "Romantic",
-      image: "/demos/ankita-surprise/sneha.jpeg",
+      image: "/demos/ankita-surprise/cute_woman.png",
       icon: Heart,
       borderColor: "border-purple-200",
       hasInstantUse: false
@@ -132,6 +132,12 @@ export default function DashboardDemos() {
         setPublishedTitle(eventTitle || activeFormDemo.title);
         setActiveFormDemo(null);
         router.refresh();
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+          setPublishedUrl(null);
+          setPublishedTitle(null);
+        }, 5000);
       }
     } catch (err) {
       console.error("Form submit failed:", err);

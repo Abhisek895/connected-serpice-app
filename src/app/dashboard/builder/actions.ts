@@ -153,17 +153,45 @@ export async function createInstantEventFromTemplate(themeName: string, title?: 
 
   let defaultUrl = `/p/${uniqueSlug}`;
 
+  let classSpecificData: any = {};
+
+  if (demoId === "birthday-wish") {
+    classSpecificData = {
+      title: "Happy Birthday! 🎂",
+      question: "Wishing you the happiest birthday! 🎂",
+      loveMessage: "May all your dreams come true. You deserve all the happiness in the world! 🎉",
+    };
+  } else if (demoId === "date-planner" || demoId === "jalpaiguri-planner") {
+    classSpecificData = {
+      title: "Date Planner 🌸",
+      question: "Let's plan our perfect date! 🌸",
+    };
+  } else if (demoId === "nasamajh-lakri") {
+    classSpecificData = {
+      title: "Hi, Nasamajh Lakri 😊",
+      question: "Will you be mine? 💖",
+      acceptBtn: "Yes 😍",
+      rejectBtn: "No 🙈",
+    };
+  } else {
+    // Default Romantic Proposals
+    classSpecificData = {
+      title: "A Surprise For You... 😊",
+      question: "Will you be mine? 💖",
+      acceptBtn: "Yes! 😍",
+      rejectBtn: "No 🙈",
+    };
+  }
+
   const customData = {
-    title: title || `${themeName} for ${recipientName || "My Love"}`,
+    title: title || classSpecificData.title || `${themeName} for ${recipientName || "My Love"}`,
     recipientName: recipientName || "My Love",
     demoId: demoId || "custom",
     customUrl: defaultUrl,
-    question: "Will you be mine? 💖",
-    acceptBtn: "Yes! 😍",
-    rejectBtn: "No 🙈",
     hasDefaultMusic: true,
     hasSummaryCard: true,
     isInstant: true,
+    ...classSpecificData
   };
 
   const event = await prisma.event.create({

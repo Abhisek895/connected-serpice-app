@@ -145,7 +145,7 @@ export default function NasamajhLakriTemplate({
 
       <div className="bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-2xl text-center w-[90%] max-w-md border border-white/50">
 
-        {stage === 0 && (
+        {stage < 2 && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -156,6 +156,14 @@ export default function NasamajhLakriTemplate({
             <p className="text-xl text-[#d36c6c] mb-6">
               I have something to ask you...
             </p>
+          </motion.div>
+        )}
+
+        {stage === 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
             <button
               onClick={handleStart}
               className="px-6 py-3 bg-gradient-to-br from-[#ff758c] to-[#ff7eb3] text-white font-bold rounded-xl shadow-lg hover:scale-105 hover:shadow-xl transition-all"

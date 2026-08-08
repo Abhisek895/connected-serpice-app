@@ -45,7 +45,7 @@ export default function AnalyticsClient({ event, customData }: AnalyticsClientPr
 
   const sessions: SessionData[] = [];
   let currentSession: SessionData | null = null;
-  
+
   const sortedResponses = [...responses].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
   sortedResponses.forEach((res) => {
@@ -153,175 +153,174 @@ export default function AnalyticsClient({ event, customData }: AnalyticsClientPr
                 sessions.filter(s => s.actions.length > 0).map((session) => {
                   const isExpanded = expandedSessionId === session.id;
                   const hasActions = session.actions.length > 0;
-                
-                return (
-                  <div key={session.id} className={`transition-colors ${isExpanded ? 'bg-slate-50/50' : 'hover:bg-slate-50/50'}`}>
-                    {/* Table Row */}
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 items-center">
-                      
-                      {/* Column 1: Time & Device */}
-                      <div className="col-span-1 md:col-span-4 flex items-center gap-3 pl-2 md:pl-4">
-                        <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 shadow-sm border border-blue-100">
-                          {session.viewedAction?.device?.toLowerCase().includes("mobile") ? (
-                            <Smartphone className="w-4 h-4" />
+
+                  return (
+                    <div key={session.id} className={`transition-colors ${isExpanded ? 'bg-slate-50/50' : 'hover:bg-slate-50/50'}`}>
+                      {/* Table Row */}
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 items-center">
+
+                        {/* Column 1: Time & Device */}
+                        <div className="col-span-1 md:col-span-4 flex items-center gap-3 pl-2 md:pl-4">
+                          <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 shadow-sm border border-blue-100">
+                            {session.viewedAction?.device?.toLowerCase().includes("mobile") ? (
+                              <Smartphone className="w-4 h-4" />
+                            ) : (
+                              <Globe className="w-4 h-4" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-bold text-sm text-slate-900">
+                              {session.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              {session.startTime.toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Column 2: Summary */}
+                        <div className="col-span-1 md:col-span-4 flex justify-start md:justify-center">
+                          {hasActions ? (
+                            <div className="flex items-center gap-2">
+                              {session.acceptsCount > 0 && (
+                                <span className="px-2.5 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm border border-green-200">
+                                  {session.acceptsCount} <Heart className="w-3 h-3 fill-green-600" />
+                                </span>
+                              )}
+                              {session.rejectsCount > 0 && (
+                                <span className="px-2.5 py-1 bg-rose-100 text-rose-700 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm border border-rose-200">
+                                  {session.rejectsCount} <HeartOff className="w-3 h-3" />
+                                </span>
+                              )}
+                            </div>
                           ) : (
-                            <Globe className="w-4 h-4" />
+                            <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-xs font-medium border border-slate-200">
+                              Viewed only
+                            </span>
                           )}
                         </div>
-                        <div>
-                          <p className="font-bold text-sm text-slate-900">
-                            {session.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </p>
-                          <p className="text-xs text-slate-500 mt-0.5">
-                            {session.startTime.toLocaleDateString()}
-                          </p>
+
+                        {/* Column 3: Action Button */}
+                        <div className="col-span-1 md:col-span-4 flex justify-end pr-2 md:pr-4 mt-2 md:mt-0">
+                          {hasActions && (
+                            <button
+                              onClick={() => toggleSession(session.id)}
+                              className={`px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-sm ${isExpanded
+                                  ? "bg-slate-800 text-white hover:bg-slate-700"
+                                  : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+                                }`}
+                            >
+                              {isExpanded ? (
+                                <>Close Details <ChevronUp className="w-3.5 h-3.5" /></>
+                              ) : (
+                                <>View Actions <MousePointer2 className="w-3.5 h-3.5" /></>
+                              )}
+                            </button>
+                          )}
                         </div>
                       </div>
 
-                      {/* Column 2: Summary */}
-                      <div className="col-span-1 md:col-span-4 flex justify-start md:justify-center">
-                        {hasActions ? (
-                          <div className="flex items-center gap-2">
-                            {session.acceptsCount > 0 && (
-                              <span className="px-2.5 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm border border-green-200">
-                                {session.acceptsCount} <Heart className="w-3 h-3 fill-green-600" />
-                              </span>
-                            )}
-                            {session.rejectsCount > 0 && (
-                              <span className="px-2.5 py-1 bg-rose-100 text-rose-700 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm border border-rose-200">
-                                {session.rejectsCount} <HeartOff className="w-3 h-3" />
-                              </span>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-xs font-medium border border-slate-200">
-                            Viewed only
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Column 3: Action Button */}
-                      <div className="col-span-1 md:col-span-4 flex justify-end pr-2 md:pr-4 mt-2 md:mt-0">
-                        {hasActions && (
-                          <button
-                            onClick={() => toggleSession(session.id)}
-                            className={`px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-sm ${
-                              isExpanded 
-                                ? "bg-slate-800 text-white hover:bg-slate-700" 
-                                : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
-                            }`}
+                      {/* Expanded Details Area */}
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden"
                           >
-                            {isExpanded ? (
-                              <>Close Details <ChevronUp className="w-3.5 h-3.5" /></>
-                            ) : (
-                              <>View Actions <MousePointer2 className="w-3.5 h-3.5" /></>
-                            )}
-                          </button>
-                        )}
-                      </div>
-                    </div>
+                            <div className="p-6 md:p-8 border-t border-slate-100 bg-slate-100/50 inset-shadow-sm">
+                              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 pl-2">
+                                Chronological Action Log
+                              </h4>
 
-                    {/* Expanded Details Area */}
-                    <AnimatePresence>
-                      {isExpanded && (
-                        <motion.div 
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="overflow-hidden"
-                        >
-                          <div className="p-6 md:p-8 border-t border-slate-100 bg-slate-100/50 inset-shadow-sm">
-                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 pl-2">
-                              Chronological Action Log
-                            </h4>
-                            
-                            {hasActions ? (
-                              <div className="space-y-3 relative before:absolute before:inset-0 before:ml-6 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
-                                {session.actions.map((res, index) => {
-                                  const isAccepted = res.action === "ACCEPTED";
-                                  const timeStr = new Date(res.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                              {hasActions ? (
+                                <div className="space-y-3 relative before:absolute before:inset-0 before:ml-6 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
+                                  {session.actions.map((res, index) => {
+                                    const isAccepted = res.action === "ACCEPTED";
+                                    const timeStr = new Date(res.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-                                  // Calculate the exact question they saw when they clicked this button
-                                  let questionText = customData.question || "Will you be mine? 💖";
-                                  
-                                  if (demoId === "nasamajh-lakri") {
-                                    const secondChanceMessages = [
-                                      "piliiiiiizzzzzzzzzzzzzzzzzzzzz? 💔",
-                                      "Think again, piliiiiiizzzzzzzzzzzzzzzzzzzzzzz? 🌻",
-                                      "I really like you 🥺",
-                                      "Give me a chance to make you smile 💫",
-                                      "I promise to bring you chocolates 🍫",
-                                      "Let's create memories together 📸",
-                                      "I will make you laugh every day 😂",
-                                      "You deserve all the love 🌹",
-                                      "I won't give up easily 😌",
-                                      "piliiiiiizzzzzzzzzzzzzzzzzzzzzzz say yes this time 💖",
-                                      "Nasamajh larki 😌🌸",
-                                      "Your smile means everything 💛",
-                                      "Say yes and make my day brighter ☀️",
-                                      "You and I, best team ever? 👫",
-                                      "I will bring coffee and care 🫶",
-                                      "Your yes will be the best gift 🎁",
-                                      "Your yes will make me the happiest 🌈",
-                                      "One yes, and I'll bring you ice cream 🍦",
-                                      "I promise to always support you 🤝",
-                                      "Say yes, let's start our story together 📖",
-                                      "Waiting for you, like coffee waits for morning ☕💕"
-                                    ];
-                                    
-                                    // The index of this action in the actions array tells us how many times they answered before
-                                    // For example, if index is 0, they saw the initial question.
-                                    // If index is 1, they saw secondChanceMessages[0]
-                                    if (index > 0) {
-                                      const msgIndex = (index - 1) % secondChanceMessages.length;
-                                      questionText = secondChanceMessages[msgIndex];
+                                    // Calculate the exact question they saw when they clicked this button
+                                    let questionText = customData.question || "Will you be mine? 💖";
+
+                                    if (demoId === "nasamajh-lakri") {
+                                      const secondChanceMessages = [
+                                        "piliiiiiizzzzzzzzzzzzzzzzzzzzz? 💔",
+                                        "Think again, piliiiiiizzzzzzzzzzzzzzzzzzzzzzz? 🌻",
+                                        "I really like you 🥺",
+                                        "Give me a chance to make you smile 💫",
+                                        "I promise to bring you chocolates 🍫",
+                                        "Let's create memories together 📸",
+                                        "I will make you laugh every day 😂",
+                                        "You deserve all the love 🌹",
+                                        "I won't give up easily 😌",
+                                        "piliiiiiizzzzzzzzzzzzzzzzzzzzzzz say yes this time 💖",
+                                        "Nasamajh larki 😌🌸",
+                                        "Your smile means everything 💛",
+                                        "Say yes and make my day brighter ☀️",
+                                        "You and I, best team ever? 👫",
+                                        "I will bring coffee and care 🫶",
+                                        "Your yes will be the best gift 🎁",
+                                        "Your yes will make me the happiest 🌈",
+                                        "One yes, and I'll bring you ice cream 🍦",
+                                        "I promise to always support you 🤝",
+                                        "Say yes, let's start our story together 📖",
+                                        "Waiting for you, like coffee waits for morning ☕💕"
+                                      ];
+
+                                      // The index of this action in the actions array tells us how many times they answered before
+                                      // For example, if index is 0, they saw the initial question.
+                                      // If index is 1, they saw secondChanceMessages[0]
+                                      if (index > 0) {
+                                        const msgIndex = (index - 1) % secondChanceMessages.length;
+                                        questionText = secondChanceMessages[msgIndex];
+                                      }
                                     }
-                                  }
 
-                                  return (
-                                    <div key={res.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                                      {/* Timeline dot */}
-                                      <div className="flex items-center justify-center w-6 h-6 rounded-full border-4 border-slate-50 bg-white absolute left-6 -translate-x-1/2 md:left-1/2 shadow-sm z-10">
-                                        <div className={`w-2 h-2 rounded-full ${isAccepted ? 'bg-green-500' : 'bg-rose-500'}`} />
-                                      </div>
-                                      
-                                      {/* Card */}
-                                      <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2rem)] ml-12 md:ml-0 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition">
-                                        <div className="flex items-start justify-between gap-3">
-                                          <div className="flex items-start gap-3">
-                                            <div className={`p-2.5 rounded-xl shadow-sm shrink-0 mt-0.5 ${isAccepted ? "bg-green-500 text-white" : "bg-rose-500 text-white"}`}>
-                                              {isAccepted ? <Heart className="w-4 h-4 fill-white" /> : <HeartOff className="w-4 h-4" />}
+                                    return (
+                                      <div key={res.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                                        {/* Timeline dot */}
+                                        <div className="flex items-center justify-center w-6 h-6 rounded-full border-4 border-slate-50 bg-white absolute left-6 -translate-x-1/2 md:left-1/2 shadow-sm z-10">
+                                          <div className={`w-2 h-2 rounded-full ${isAccepted ? 'bg-green-500' : 'bg-rose-500'}`} />
+                                        </div>
+
+                                        {/* Card */}
+                                        <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2rem)] ml-12 md:ml-0 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition">
+                                          <div className="flex items-start justify-between gap-3">
+                                            <div className="flex items-start gap-3">
+                                              <div className={`p-2.5 rounded-xl shadow-sm shrink-0 mt-0.5 ${isAccepted ? "bg-green-500 text-white" : "bg-rose-500 text-white"}`}>
+                                                {isAccepted ? <Heart className="w-4 h-4 fill-white" /> : <HeartOff className="w-4 h-4" />}
+                                              </div>
+                                              <div>
+                                                <p className="text-sm text-slate-800 font-bold mb-1">
+                                                  "{questionText}"
+                                                </p>
+                                                <p className={`font-bold text-xs ${isAccepted ? 'text-green-600' : 'text-rose-600'}`}>
+                                                  {isAccepted ? "Answered: YES! 😍" : "Answered: No 🙈"}
+                                                </p>
+                                              </div>
                                             </div>
-                                            <div>
-                                              <p className="text-sm text-slate-800 font-bold mb-1">
-                                                "{questionText}"
-                                              </p>
-                                              <p className={`font-bold text-xs ${isAccepted ? 'text-green-600' : 'text-rose-600'}`}>
-                                                {isAccepted ? "Answered: YES! 😍" : "Answered: No 🙈"}
-                                              </p>
-                                            </div>
+                                            <p className="text-xs text-slate-400 font-medium whitespace-nowrap mt-1">
+                                              {timeStr}
+                                            </p>
                                           </div>
-                                          <p className="text-xs text-slate-400 font-medium whitespace-nowrap mt-1">
-                                            {timeStr}
-                                          </p>
                                         </div>
                                       </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            ) : (
-                              <div className="text-center py-6 bg-white rounded-2xl border border-dashed border-slate-200 text-slate-500 text-sm">
-                                The recipient opened the page but didn't click any buttons during this visit.
-                              </div>
-                            )}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                );
-              }))}
+                                    );
+                                  })}
+                                </div>
+                              ) : (
+                                <div className="text-center py-6 bg-white rounded-2xl border border-dashed border-slate-200 text-slate-500 text-sm">
+                                  The recipient opened the page but didn't click any buttons during this visit.
+                                </div>
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                }))}
             </div>
           </div>
         )}

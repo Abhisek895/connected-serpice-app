@@ -21,7 +21,6 @@ export default function DashboardSidebar() {
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Create Event", href: "/dashboard/builder", icon: PlusCircle },
-    { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3, badge: hasUnread ? "NEW" : null },
     { name: "Settings", href: "/dashboard/settings", icon: Settings },
   ];
 
@@ -38,8 +37,7 @@ export default function DashboardSidebar() {
         </Link>
 
         {/* Notification Bell Icon */}
-        <Link
-          href="/dashboard/analytics"
+        <button
           onClick={() => setHasUnread(false)}
           className={`p-2 rounded-full relative transition ${hasUnread ? "bg-rose-50 text-rose-500 hover:bg-rose-100" : "bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
             }`}
@@ -49,7 +47,7 @@ export default function DashboardSidebar() {
           {hasUnread && (
             <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full border border-white" />
           )}
-        </Link>
+        </button>
       </div>
 
       {/* User Info Pill */}
@@ -83,11 +81,7 @@ export default function DashboardSidebar() {
             <Link
               key={item.href}
               href={item.href}
-              onClick={() => {
-                if (item.href === "/dashboard/analytics") {
-                  setHasUnread(false);
-                }
-              }}
+              onClick={() => {}}
               className={`flex items-center justify-between px-4 py-3 rounded-xl font-medium transition ${isActive
                 ? "bg-rose-50 text-rose-600 shadow-sm shadow-rose-100"
                 : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
@@ -97,11 +91,6 @@ export default function DashboardSidebar() {
                 <Icon className="w-5 h-5" />
                 <span>{item.name}</span>
               </div>
-              {item.badge && (
-                <span className="bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  {item.badge}
-                </span>
-              )}
             </Link>
           );
         })}

@@ -59,9 +59,10 @@ export default function RomanticLoveTemplate({
   };
 
   // Separate media into images and audio
-  const imageMedia = media.filter(m => m.type === "IMAGE");
-  const audioMedia = media.find(m => m.type === "AUDIO");
-  const displayPhoto = photoUrl || (imageMedia.length > 0 ? imageMedia[0].url : null);
+  const imageMedia = media?.filter(m => m.type === "IMAGE") || [];
+  const audioMedia = media?.find(m => m.type === "AUDIO");
+  const displayPhoto = photoUrl || (imageMedia.length > 0 ? imageMedia[0].url : "/demos/ankita-surprise/cute_woman.png");
+  const audioUrl = audioMedia?.url || "/demos/ankita-surprise/loveSong.mp3";
 
   // Determine theme classes based on themeName
   let bgClass = "from-pink-100 to-rose-200"

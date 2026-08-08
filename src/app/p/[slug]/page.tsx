@@ -4,7 +4,7 @@ import ProposalClient from "./ProposalClient"
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  
+
   const event = await prisma.event.findUnique({
     where: { slug },
     include: { theme: true, media: true }
@@ -20,11 +20,11 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   } catch (err) {
     console.error("Failed to parse customData for slug:", slug, err);
   }
-  
+
   return (
-    <ProposalClient 
+    <ProposalClient
       slug={slug}
-      themeName={event.theme.name} 
+      themeName={event.theme.name}
       title={(customData as any).title || ""}
       question={(customData as any).question || ""}
       acceptBtn={(customData as any).acceptBtn || ""}
