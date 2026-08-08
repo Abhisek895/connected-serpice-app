@@ -240,6 +240,16 @@ export async function deleteEventAction(eventId: string) {
   return { success: true };
 }
 
+export async function deleteAllEventsAction() {
+  const { userId } = await getCurrentUser();
+
+  await prisma.event.deleteMany({
+    where: { userId }
+  });
+
+  return { success: true };
+}
+
 export async function toggleEventStatusAction(eventId: string) {
   const { userId } = await getCurrentUser();
 

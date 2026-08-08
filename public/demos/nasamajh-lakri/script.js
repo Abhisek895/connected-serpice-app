@@ -131,24 +131,7 @@ Generated:
 ${new Date().toLocaleString()}
 `;
 
-    emailjs.send(
-        "service_4ssqd0a",
-        "template_04jpqfo",
-        {
-            title: "Crush Proposal Game Data",
-            name: "Proposal Game",
-            email: "noreply@example.com",
-            message: summaryMessage
-        }
-    )
-        .then((response) => {
-            console.log("SUCCESS!", response);
-        })
-        .catch((error) => {
-            console.error("FULL ERROR:", error);
-            console.error("STATUS:", error.status);
-            console.error("TEXT:", error.text);
-        });
+    console.log("Summary:", summaryMessage);
 }
 
 function confetti() {

@@ -35,11 +35,16 @@ export default function NasamajhLakriTemplate({
   question,
   acceptBtn,
   rejectBtn,
+  dodgeMessages,
 }: ProposalClientProps) {
-  const [stage, setStage] = useState(0) // 0: Landing, 1: Question, 2: Accepted, 3: Rejected
+  const [stage, setStage] = useState(1) // 1: Question, 2: Accepted, 3: Rejected
   const [attempt, setAttempt] = useState(0)
   const [currentQuestion, setCurrentQuestion] = useState(question || "Will you be mine? 💖")
   const [confetti, setConfetti] = useState<{ id: number, emoji: string, left: string, duration: string, size: string }[]>([])
+
+  const messagesToUse = dodgeMessages
+    ? dodgeMessages.split('\n').map(m => m.trim()).filter(Boolean)
+    : secondChanceMessages;
 
   const startMusicRef = useRef<HTMLAudioElement | null>(null);
   const yesMusicRef = useRef<HTMLAudioElement | null>(null);
@@ -62,13 +67,16 @@ export default function NasamajhLakriTemplate({
     if (noMusicRef.current) noMusicRef.current.volume = 0.3;
   }, [slug]);
 
-  const handleStart = () => {
-    setStage(1);
-    if (startMusicRef.current) {
-      startMusicRef.current.currentTime = 0;
-      startMusicRef.current.play().catch(e => console.log("Audio play blocked", e));
-    }
-  };
+  useEffect(() => {
+    const playMusicOnInteraction = () => {
+      if (startMusicRef.current && stage === 1) {
+        startMusicRef.current.play().catch(e => console.log("Audio play blocked", e));
+      }
+      document.removeEventListener("click", playMusicOnInteraction);
+    };
+    document.addEventListener("click", playMusicOnInteraction);
+    return () => document.removeEventListener("click", playMusicOnInteraction);
+  }, [stage]);
 
   const generateConfetti = () => {
     const possibleEmojis = ["💖", "🌸", "💕", "💗", "❤️", "✨", "🥰", "😍", "💞", "💝"];
@@ -99,7 +107,7 @@ export default function NasamajhLakriTemplate({
   const handleReject = () => {
     recordResponseAction(slug, "REJECTED");
 
-    if (attempt >= secondChanceMessages.length) {
+    if (attempt >= messagesToUse.length) {
       setStage(3);
       if (startMusicRef.current) startMusicRef.current.pause();
       if (yesMusicRef.current) yesMusicRef.current.pause();
@@ -108,7 +116,7 @@ export default function NasamajhLakriTemplate({
         noMusicRef.current.play().catch(e => console.log("Audio play blocked", e));
       }
     } else {
-      setCurrentQuestion(secondChanceMessages[attempt]);
+      setCurrentQuestion(messagesToUse[attempt]);
       setAttempt(attempt + 1);
     }
   };
@@ -159,19 +167,7 @@ export default function NasamajhLakriTemplate({
           </motion.div>
         )}
 
-        {stage === 0 && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-          >
-            <button
-              onClick={handleStart}
-              className="px-6 py-3 bg-gradient-to-br from-[#ff758c] to-[#ff7eb3] text-white font-bold rounded-xl shadow-lg hover:scale-105 hover:shadow-xl transition-all"
-            >
-              Tap to continue 💌
-            </button>
-          </motion.div>
-        )}
+
 
         {stage === 1 && (
           <motion.div

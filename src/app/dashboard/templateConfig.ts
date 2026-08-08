@@ -220,6 +220,13 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
             type: "text",
             placeholder: "No 🙈",
           },
+          {
+            key: "dodgeMessages",
+            label: "Funny 'No' Button Messages (One per line)",
+            type: "textarea",
+            placeholder: "piliiiiiizzzzzzzzzzzzzzzzzzzzz? 💔\nThink again, piliiiiiizzzzzzzzzzzzzzzzzzzzzzz? 🌻",
+            hint: "These messages show up one by one every time your partner tries to click 'No'. Put each message on a new line.",
+          },
         ],
       },
     ],

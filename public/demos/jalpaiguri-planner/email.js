@@ -19,20 +19,5 @@ She tried to click "No" ${dodgeCount} times before giving up and saying Yes! ðŸ˜
 Generated: ${new Date().toLocaleString()}
 `;
 
-    emailjs.send(
-        "service_4ssqd0a",
-        "template_04jpqfo",
-        {
-            title: "Crush Proposal Game Data",
-            name: "Proposal Game",
-            email: "noreply@example.com",
-            message: summaryMessage
-        }
-    )
-    .then((response) => {
-        console.log("SUCCESS! Email sent.", response.status, response.text);
-    })
-    .catch((error) => {
-        console.error("FAILED to send email.", error);
-    });
+    console.log("Summary:", summaryMessage);
 };

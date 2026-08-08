@@ -22,6 +22,7 @@ type ProposalClientProps = {
   photoUrl?: string;
   demoId?: string;
   recipientName?: string;
+  dodgeMessages?: string;
   media: MediaItem[];
 };
 

@@ -2,6 +2,7 @@ import DashboardDemos from "./DashboardDemos";
 import EventCardContainer from "./EventCardContainer";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
+import DeleteAllButton from "./DeleteAllButton";
 
 export default async function DashboardPage() {
   const { userId } = await getCurrentUser();
@@ -36,6 +37,7 @@ export default async function DashboardPage() {
                 Your generated proposal links stay saved here permanently even after refreshing the page!
               </p>
             </div>
+            <DeleteAllButton />
           </div>
 
           <EventCardContainer events={events} />
