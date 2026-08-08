@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Explore Demos & Template Actions 💖 | For You 💌</title>
+  <title>Jalpaiguri Date Night Planner 🌿 | For You 💌</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
     href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=Quicksand:wght@400;500;600;700&display=swap"
@@ -878,17 +878,18 @@
       }
     }
 
-    /* ---------- GATEWAY OVERLAY ---------- */
+    /* ---------- GATEWAY OVERLAY (Premium Envelope) ---------- */
     #gateway {
       position: fixed;
       inset: 0;
-      background: linear-gradient(160deg, var(--blush-soft), var(--blush) 40%, #ffd6e6 100%);
+      background: linear-gradient(160deg, #fff0f5, #ffe1ec 45%, #ffd6e6 100%);
       z-index: 99999;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      transition: opacity 0.8s ease, visibility 0.8s ease;
+      transition: opacity 1s ease, visibility 1s ease;
+      overflow: hidden;
     }
 
     #gateway.hidden {
@@ -897,14 +898,109 @@
       pointer-events: none;
     }
 
+    /* Floating petals in background */
+    .gateway-petal {
+      position: absolute;
+      font-size: clamp(18px, 3vw, 28px);
+      opacity: 0.6;
+      animation: gatewaySway 5s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes gatewaySway {
+      0%, 100% { transform: translateY(0) rotate(-10deg); }
+      50% { transform: translateY(-22px) rotate(10deg); }
+    }
+
+    /* Envelope container */
+    .envelope-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+      z-index: 2;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .envelope-icon {
+      font-size: clamp(64px, 14vw, 100px);
+      animation: envelopePulse 2s ease-in-out infinite;
+      filter: drop-shadow(0 8px 24px rgba(224, 53, 106, 0.35));
+      cursor: default;
+    }
+
+    @keyframes envelopePulse {
+      0%, 100% { transform: scale(1) rotate(-3deg); }
+      50%       { transform: scale(1.08) rotate(3deg); }
+    }
+
+    .gateway-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--rose-dark);
+      opacity: 0.75;
+    }
+
     #gateway h2 {
       font-family: 'Dancing Script', cursive;
-      font-size: clamp(36px, 8vw, 64px);
+      font-size: clamp(32px, 7vw, 62px);
       color: var(--rose-dark);
-      margin-bottom: 30px;
+      line-height: 1.25;
       text-align: center;
       padding: 0 20px;
-      text-shadow: 0 4px 15px rgba(255, 77, 125, 0.2);
+      text-shadow: 0 4px 18px rgba(255, 77, 125, 0.25);
+      margin: 0;
+      max-width: 600px;
+    }
+
+    .gateway-sub {
+      font-size: clamp(14px, 2.5vw, 17px);
+      color: var(--plum-soft);
+      max-width: 360px;
+      line-height: 1.6;
+      font-weight: 500;
+    }
+
+    #gatewayBtn {
+      background: linear-gradient(135deg, var(--rose), var(--rose-dark));
+      color: #fff;
+      box-shadow: 0 14px 36px rgba(224, 53, 106, .45);
+      font-size: clamp(16px, 3vw, 20px);
+      padding: 18px 52px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #gatewayBtn::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -75%;
+      width: 50%;
+      height: 200%;
+      background: rgba(255,255,255,0.3);
+      transform: skewX(-20deg);
+      animation: shimmer 2.4s infinite;
+    }
+
+    @keyframes shimmer {
+      0%   { left: -75%; }
+      100% { left: 130%; }
+    }
+
+    #gatewayBtn:hover {
+      transform: scale(1.06);
+      box-shadow: 0 18px 44px rgba(224, 53, 106, .55);
+    }
+
+    .gateway-hint {
+      font-size: 13px;
+      color: var(--plum-soft);
+      opacity: 0.65;
+      margin-top: -8px;
     }
 
     /* ---------- FLOATING MUSIC WIDGET ---------- */
@@ -1108,29 +1204,29 @@
 
 <body>
 
-  <!-- GATEWAY QUESTION OVERLAY (Hidden by default until launching a demo) -->
-  <div id="gateway" class="hidden">
-    <h2 id="gatewayHeading">I have a question for you...<br>Are you ready?</h2>
-    <button id="gatewayBtn" class="btn"
-      style="background: linear-gradient(135deg, var(--rose), var(--rose-dark)); color: #fff; box-shadow: 0 12px 30px rgba(224, 53, 106, .4);">Yes
-      💖</button>
+  <!-- GATEWAY ENVELOPE OVERLAY (Shown by default — tap to unlock audio & open page) -->
+  <div id="gateway">
+    <!-- Floating ambient petals -->
+    <span class="gateway-petal" style="top:8%;  left:7%;  animation-delay:0s;">🌸</span>
+    <span class="gateway-petal" style="top:12%; right:9%; animation-delay:1.1s;">💗</span>
+    <span class="gateway-petal" style="top:72%; left:5%;  animation-delay:2s;">✨</span>
+    <span class="gateway-petal" style="top:80%; right:6%; animation-delay:0.6s;">🌷</span>
+    <span class="gateway-petal" style="top:45%; left:2%;  animation-delay:1.8s;">💕</span>
+    <span class="gateway-petal" style="top:40%; right:3%; animation-delay:3s;">🌸</span>
+
+    <div class="envelope-wrap">
+      <div class="envelope-icon">💌</div>
+      <span class="gateway-eyebrow">A special surprise, just for you</span>
+      <h2 id="gatewayHeading">I have a question for you...<br>Are you ready? 🥺</h2>
+      <p class="gateway-sub">Someone made this entire little corner of the internet, just for you. Tap below to open your surprise 💖</p>
+      <button id="gatewayBtn" class="btn">Open My Surprise 💌</button>
+      <p class="gateway-hint">🔊 Music will play when you open</p>
+    </div>
   </div>
 
   <div id="bg-hearts"></div>
 
-  <!-- EXPLORE DEMOS & TEMPLATE ACTIONS SECTION (LANDING SECTION AT TOP) -->
-  <div class="explore-demos-wrapper" id="exploreDemosSection">
-    <div class="explore-demos-card">
-      <div class="explore-demos-header">
-        <h2>Explore Demos & Template Actions 💖</h2>
-        <p>Preview demo pages live, or customize them with your own photos & questions to make them yours!</p>
-      </div>
 
-      <div class="explore-demos-grid" id="onPageExploreGrid">
-        <!-- Rendered dynamically: Card 1, Card 2, Card 3, Card 4, and NEW Card 5 (Jalpaiguri Date Night Planner 🌿) -->
-      </div>
-    </div>
-  </div>
 
   <!-- HERO -->
   <section id="hero">
@@ -1323,7 +1419,7 @@
   <!-- TOAST NOTIFICATION -->
   <div id="toast">Link copied to clipboard! 💖</div>
 
-  <footer>made with 💗 and a little bit of code | Explore Demos & Template Actions</footer>
+  <footer>made with 💗 and a little bit of code, just for you</footer>
 
   <script>
     /* ============ ALL PRESETS CATALOG DATA ============ */
@@ -1869,9 +1965,27 @@
     const gatewayBtn = document.getElementById('gatewayBtn');
     const gateway = document.getElementById('gateway');
     gatewayBtn.addEventListener('click', () => {
-      gateway.classList.add('hidden');
+      // 1. Animate the envelope icon bursting into hearts
+      const envelopeEl = gateway.querySelector('.envelope-icon');
+      if (envelopeEl) {
+        envelopeEl.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+        envelopeEl.style.transform = 'scale(1.5) rotate(10deg)';
+        envelopeEl.style.opacity = '0';
+      }
+
+      // 2. Mini heart burst from center of screen
+      burstHearts();
+
+      // 3. Fade out the gateway overlay after a short delay
+      setTimeout(() => {
+        gateway.classList.add('hidden');
+      }, 350);
+
+      // 4. Start music (iOS-safe: triggered by explicit user gesture)
       playAudio();
-      setTimeout(() => playHeroLines(0), 1000);
+
+      // 5. Start typewriter and floating background hearts
+      setTimeout(() => playHeroLines(0), 1200);
       setInterval(spawnBgHeart, 700);
       for (let i = 0; i < 8; i++) setTimeout(spawnBgHeart, i * 300);
     });

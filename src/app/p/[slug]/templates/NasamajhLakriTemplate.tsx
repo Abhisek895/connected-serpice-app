@@ -37,7 +37,7 @@ export default function NasamajhLakriTemplate({
   rejectBtn,
   dodgeMessages,
 }: ProposalClientProps) {
-  const [stage, setStage] = useState(1) // 1: Question, 2: Accepted, 3: Rejected
+  const [stage, setStage] = useState(0) // 0: Gateway, 1: Question, 2: Accepted, 3: Rejected
   const [attempt, setAttempt] = useState(0)
   const [currentQuestion, setCurrentQuestion] = useState(question || "Will you be mine? 💖")
   const [confetti, setConfetti] = useState<{ id: number, emoji: string, left: string, duration: string, size: string }[]>([])
@@ -67,16 +67,12 @@ export default function NasamajhLakriTemplate({
     if (noMusicRef.current) noMusicRef.current.volume = 0.3;
   }, [slug]);
 
-  useEffect(() => {
-    const playMusicOnInteraction = () => {
-      if (startMusicRef.current && stage === 1) {
-        startMusicRef.current.play().catch(e => console.log("Audio play blocked", e));
-      }
-      document.removeEventListener("click", playMusicOnInteraction);
-    };
-    document.addEventListener("click", playMusicOnInteraction);
-    return () => document.removeEventListener("click", playMusicOnInteraction);
-  }, [stage]);
+  const handleContinue = () => {
+    setStage(1);
+    if (startMusicRef.current) {
+      startMusicRef.current.play().catch(e => console.log("Audio play blocked", e));
+    }
+  };
 
   const generateConfetti = () => {
     const possibleEmojis = ["💖", "🌸", "💕", "💗", "❤️", "✨", "🥰", "😍", "💞", "💝"];
@@ -143,31 +139,88 @@ export default function NasamajhLakriTemplate({
           </div>
         ))}
       </div>
+      </div>
 
       <style dangerouslySetInnerHTML={{
         __html: `
+        .nasamajh-root {
+          font-family: 'Segoe UI', sans-serif;
+        }
+        .nasamajh-container {
+          text-align: center;
+          background: rgba(255, 240, 245, 0.92);
+          padding: 30px;
+          border-radius: 20px;
+          box-shadow: 0 0 30px rgba(255, 182, 193, 0.4);
+          width: 90%;
+          max-width: 400px;
+          backdrop-filter: blur(8px);
+          margin: 0 auto;
+        }
+        .nasamajh-h1 {
+          font-size: 2em;
+          margin-bottom: 10px;
+          color: #e75480;
+          font-weight: bold;
+        }
+        .nasamajh-p {
+          font-size: 1.2em;
+          margin-bottom: 20px;
+          color: #d36c6c;
+        }
+        .nasamajh-btn {
+          padding: 12px 20px;
+          margin: 10px;
+          border: none;
+          background: linear-gradient(135deg, #ff758c, #ff7eb3);
+          color: white;
+          font-size: 1em;
+          font-weight: normal;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: 0.4s, transform 0.2s, box-shadow 0.3s;
+          box-shadow: 0 4px 14px rgba(255, 105, 135, 0.4);
+        }
+        .nasamajh-btn:hover {
+          background: linear-gradient(135deg, #ff6a88, #ff99ac);
+          transform: scale(1.07);
+          box-shadow: 0 6px 20px rgba(255, 105, 135, 0.5);
+        }
         @keyframes fall {
           to { transform: translateY(110vh) rotate(360deg); }
         }
       `}} />
 
-      <div className="bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-2xl text-center w-[90%] max-w-md border border-white/50">
+      <div className="nasamajh-root nasamajh-container">
 
         {stage < 2 && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            <h1 className="text-3xl font-bold text-[#e75480] mb-4">
+            <h1 className="nasamajh-h1">
               {title || "Hi, Nasamajh Lakri 😊"}
             </h1>
-            <p className="text-xl text-[#d36c6c] mb-6">
+            <p className="nasamajh-p">
               I have something to ask you...
             </p>
           </motion.div>
         )}
 
-
+        {stage === 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center mt-2"
+          >
+            <button
+              onClick={handleContinue}
+              className="nasamajh-btn"
+            >
+              Tap to continue 💌
+            </button>
+          </motion.div>
+        )}
 
         {stage === 1 && (
           <motion.div
@@ -175,19 +228,19 @@ export default function NasamajhLakriTemplate({
             animate={{ opacity: 1, scale: 1 }}
             className="flex flex-col items-center"
           >
-            <p className="text-2xl text-[#d36c6c] font-bold mb-8">
+            <p className="nasamajh-p font-bold mb-4" style={{ color: '#e75480' }}>
               {currentQuestion}
             </p>
-            <div className="flex flex-wrap justify-center gap-4 w-full">
+            <div className="flex flex-wrap justify-center w-full">
               <button
                 onClick={handleAccept}
-                className="px-6 py-3 bg-gradient-to-br from-[#ff758c] to-[#ff7eb3] text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all"
+                className="nasamajh-btn"
               >
                 {acceptBtn || "Yes 😍"}
               </button>
               <button
                 onClick={handleReject}
-                className="px-6 py-3 bg-gradient-to-br from-[#ff758c] to-[#ff7eb3] text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all"
+                className="nasamajh-btn"
               >
                 {rejectBtn || "No 🙈"}
               </button>

@@ -61,7 +61,7 @@ export default function DatePlannerTemplate({
   demoId,
   recipientName,
 }: ProposalClientProps) {
-  const [stage, setStage] = useState(1); // 1: Hero+Reasons, 2: Yay, 3: Places, 4: Foods, 5: Date, 6: Summary
+  const [stage, setStage] = useState(0); // 0: Envelope Gateway, 1: Hero+Reasons, 2: Yay, 3: Places, 4: Foods, 5: Date, 6: Summary
   const [showHearts, setShowHearts] = useState(true);
   const [dodgeCount, setDodgeCount] = useState(0);
   
@@ -127,16 +127,15 @@ export default function DatePlannerTemplate({
     }
   }, [stage]);
 
-  useEffect(() => {
-    const playMusicOnInteraction = () => {
-      if (audioRef.current) {
-        audioRef.current.play().catch(e => console.log("Audio play blocked", e));
-      }
-      document.removeEventListener("click", playMusicOnInteraction);
-    };
-    document.addEventListener("click", playMusicOnInteraction);
-    return () => document.removeEventListener("click", playMusicOnInteraction);
-  }, []);
+  const handleOpenEnvelope = () => {
+    setStage(1);
+    // iOS-safe: audio started inside a user gesture handler
+    if (audioRef.current) {
+      audioRef.current.volume = 0.4;
+      audioRef.current.play().catch(e => console.log("Audio play blocked", e));
+      setIsPlaying(true);
+    }
+  };
 
   const handleNoHover = (e: React.MouseEvent<HTMLButtonElement>) => {
     setDodgeCount(prev => prev + 1);
@@ -208,6 +207,33 @@ export default function DatePlannerTemplate({
         .date-planner-root h1.script,
         .date-planner-root h2.script-title {
           font-family: 'Dancing Script', cursive;
+        /* ---------- GATEWAY ---------- */
+        .gateway-overlay {
+          position: fixed;
+          inset: 0;
+          background: linear-gradient(160deg, #fff0f5, #ffe1ec 40%, #ffd6e6 100%);
+          z-index: 99999;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        .gateway-overlay.hidden {
+          opacity: 0;
+          visibility: hidden;
+          pointer-events: none;
+        }
+
+        .gateway-overlay h2 {
+          font-family: 'Dancing Script', cursive;
+          font-size: clamp(36px, 8vw, 64px);
+          color: #e0356a;
+          margin-bottom: 30px;
+          text-align: center;
+          padding: 0 20px;
+          text-shadow: 0 4px 15px rgba(255, 77, 125, 0.2);
         }
 
         /* Background hearts */
@@ -353,6 +379,24 @@ export default function DatePlannerTemplate({
 
       <AnimatePresence>
       </AnimatePresence>
+
+      {/* ---- STAGE 0: GATEWAY QUESTION ---- */}
+      {stage === 0 && (
+        <div className="gateway-overlay">
+          <h2>I have a question for you...<br />Are you ready?</h2>
+          <button
+            onClick={handleOpenEnvelope}
+            className="btn"
+            style={{
+              background: 'linear-gradient(135deg, #ff4d7d, #e0356a)',
+              color: '#fff',
+              boxShadow: '0 12px 30px rgba(224, 53, 106, .4)'
+            }}
+          >
+            Yes 💖
+          </button>
+        </div>
+      )}
 
       {stage === 1 && (
         <>

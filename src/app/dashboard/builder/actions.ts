@@ -233,6 +233,15 @@ export async function deleteEventAction(eventId: string) {
 
   if (!event) return { success: false, error: "Unauthorized or not found" };
 
+  // Delete related responses and media to prevent SQLite foreign key constraint errors
+  await prisma.response.deleteMany({
+    where: { eventId }
+  });
+
+  await prisma.media.deleteMany({
+    where: { eventId }
+  });
+
   await prisma.event.delete({
     where: { id: eventId }
   });
@@ -243,9 +252,27 @@ export async function deleteEventAction(eventId: string) {
 export async function deleteAllEventsAction() {
   const { userId } = await getCurrentUser();
 
-  await prisma.event.deleteMany({
-    where: { userId }
+  const userEvents = await prisma.event.findMany({
+    where: { userId },
+    select: { id: true }
   });
+
+  const eventIds = userEvents.map((e) => e.id);
+
+  if (eventIds.length > 0) {
+    // Delete related responses and media to prevent SQLite foreign key constraint errors
+    await prisma.response.deleteMany({
+      where: { eventId: { in: eventIds } }
+    });
+
+    await prisma.media.deleteMany({
+      where: { eventId: { in: eventIds } }
+    });
+
+    await prisma.event.deleteMany({
+      where: { userId }
+    });
+  }
 
   return { success: true };
 }
