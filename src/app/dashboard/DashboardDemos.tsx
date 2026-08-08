@@ -132,7 +132,7 @@ export default function DashboardDemos() {
         setPublishedTitle(eventTitle || activeFormDemo.title);
         setActiveFormDemo(null);
         router.refresh();
-        
+
         // Auto-dismiss after 5 seconds
         setTimeout(() => {
           setPublishedUrl(null);
@@ -213,7 +213,7 @@ export default function DashboardDemos() {
       </AnimatePresence>
 
       {/* Grid of Demo Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 relative z-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
         {demos.map((demo) => {
           const Icon = demo.icon;
 
@@ -230,11 +230,14 @@ export default function DashboardDemos() {
                   <img
                     src={demo.image}
                     alt={demo.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover object-[center_25%] group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent" />
 
-                  <span className={`absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-bold tracking-wide shadow-sm ${demo.badgeColor}`}>
+                  <span
+                    className={`absolute top-0 left-0 px-2.5 py-1 rounded-br-lg uppercase font-bold tracking-wider shadow-sm ${demo.badgeColor}`}
+                    style={{ fontSize: '9px', lineHeight: '12px' }}
+                  >
                     {demo.badge}
                   </span>
                 </div>

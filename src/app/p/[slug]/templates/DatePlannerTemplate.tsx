@@ -181,31 +181,42 @@ export default function DatePlannerTemplate({ slug, demoId, title }: ProposalCli
 
     /* ---------- INITIALIZATION ---------- */
     window.initializeDatePlanner = function (presetKey, recordResponseActionFn) {
-      if (recordResponseActionFn) recordResponseActionFn("VIEWED");
+      if (window.__isDatePlannerInitialized) {
+        // Just update the tracking function if re-initialized by React
+        window.__datePlannerTracker = recordResponseActionFn;
+        return;
+      }
+      window.__isDatePlannerInitialized = true;
+      window.__datePlannerTracker = recordResponseActionFn;
+
+      if (window.__datePlannerTracker) window.__datePlannerTracker("VIEWED");
 
       // Make preset logic work with absolute paths for images if needed
       loadTemplate(presetKey);
 
       const noBtn = document.getElementById('noBtn');
       if (noBtn) {
-        noBtn.addEventListener('click', () => {
-          if (recordResponseActionFn) recordResponseActionFn("REJECTED");
-        });
+        noBtn.onclick = () => {
+          if (window.__datePlannerTracker) window.__datePlannerTracker("REJECTED");
+        };
       }
 
       const confirmBtn = document.getElementById('confirmDateBtn');
       if (confirmBtn) {
-        confirmBtn.addEventListener('click', () => {
-          if (recordResponseActionFn) {
+        confirmBtn.onclick = () => {
+          if (confirmBtn.disabled) return;
+          confirmBtn.disabled = true;
+          
+          if (window.__datePlannerTracker) {
             const finalSelections = {
               place: document.getElementById('summaryPlace').textContent,
               food: document.getElementById('summaryFood').textContent,
               date: document.getElementById('summaryDate').textContent,
               time: document.getElementById('summaryTime').textContent
             };
-            recordResponseActionFn("ACCEPTED", JSON.stringify(finalSelections));
+            window.__datePlannerTracker("ACCEPTED", JSON.stringify(finalSelections));
           }
-        });
+        };
       }
     };
     function loadTemplate(key) {

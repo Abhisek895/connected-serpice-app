@@ -37,7 +37,8 @@ export default function DashboardSidebar() {
         </Link>
 
         {/* Notification Bell Icon */}
-        <button
+        <Link
+          href="/dashboard/notifications"
           onClick={() => setHasUnread(false)}
           className={`p-2 rounded-full relative transition ${hasUnread ? "bg-rose-50 text-rose-500 hover:bg-rose-100" : "bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
             }`}
@@ -47,7 +48,7 @@ export default function DashboardSidebar() {
           {hasUnread && (
             <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full border border-white" />
           )}
-        </button>
+        </Link>
       </div>
 
       {/* User Info Pill */}

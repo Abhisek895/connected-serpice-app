@@ -100,28 +100,12 @@ export default function AnalyticsClient({ event, customData }: AnalyticsClientPr
 
         {/* Metrics Overview */}
         <div className="p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-6 bg-white">
-          <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 text-center shadow-sm">
+          <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 text-center shadow-sm max-w-sm w-full">
             <div className="bg-blue-100 text-blue-600 p-3 rounded-xl w-fit mx-auto mb-3">
               <Eye className="w-6 h-6" />
             </div>
             <p className="text-sm text-slate-500 font-medium">Total Views</p>
             <p className="text-3xl font-bold text-slate-900 mt-1">{views}</p>
-          </div>
-
-          <div className="bg-green-50/50 p-6 rounded-2xl border border-green-100 text-center shadow-sm">
-            <div className="bg-green-100 text-green-600 p-3 rounded-xl w-fit mx-auto mb-3">
-              <Heart className="w-6 h-6 fill-green-600" />
-            </div>
-            <p className="text-sm text-green-700 font-medium">Yes! 😍 Answers</p>
-            <p className="text-3xl font-bold text-green-700 mt-1">{accepts}</p>
-          </div>
-
-          <div className="bg-rose-50/50 p-6 rounded-2xl border border-rose-100 text-center shadow-sm">
-            <div className="bg-rose-100 text-rose-600 p-3 rounded-xl w-fit mx-auto mb-3">
-              <HeartOff className="w-6 h-6" />
-            </div>
-            <p className="text-sm text-rose-700 font-medium">No 🙈 Answers</p>
-            <p className="text-3xl font-bold text-rose-700 mt-1">{rejects}</p>
           </div>
         </div>
       </div>
@@ -237,8 +221,14 @@ export default function AnalyticsClient({ event, customData }: AnalyticsClientPr
                               {hasActions ? (
                                 <div className="space-y-3 relative before:absolute before:inset-0 before:ml-6 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
                                   {session.actions.map((res, index) => {
-                                    const isAccepted = res.action === "ACCEPTED";
+                                    const [baseAction, metaStr] = res.action.split('|');
+                                    const isAccepted = baseAction === "ACCEPTED";
                                     const timeStr = new Date(res.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+                                    let metaObj: any = null;
+                                    if (metaStr) {
+                                      try { metaObj = JSON.parse(metaStr); } catch (e) {}
+                                    }
 
                                     // Calculate the exact question they saw when they clicked this button
                                     let questionText = customData.question || "Will you be mine? 💖";
@@ -298,6 +288,32 @@ export default function AnalyticsClient({ event, customData }: AnalyticsClientPr
                                                 <p className={`font-bold text-xs ${isAccepted ? 'text-green-600' : 'text-rose-600'}`}>
                                                   {isAccepted ? "Answered: YES! 😍" : "Answered: No 🙈"}
                                                 </p>
+                                                {metaObj && (
+                                                  <div className="mt-3 bg-slate-50 p-3.5 rounded-xl border border-slate-100 space-y-3 shadow-sm">
+                                                    {metaObj.place && (
+                                                      <div>
+                                                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">Place</span>
+                                                        <span className="text-sm font-medium text-slate-800">📍 We are going to:<br/>{metaObj.place}</span>
+                                                      </div>
+                                                    )}
+                                                    {metaObj.food && (
+                                                      <div>
+                                                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">Food</span>
+                                                        <span className="text-sm font-medium text-slate-800">🍽️ We are eating:<br/>{metaObj.food}</span>
+                                                      </div>
+                                                    )}
+                                                    {(metaObj.date || metaObj.time) && (
+                                                      <div>
+                                                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">Date & Time</span>
+                                                        <span className="text-sm font-medium text-slate-800">
+                                                          {metaObj.date && <>📅 See you on: {metaObj.date}</>}
+                                                          {metaObj.date && metaObj.time && <br />}
+                                                          {metaObj.time && <>⏰ At exactly: {metaObj.time}</>}
+                                                        </span>
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                )}
                                               </div>
                                             </div>
                                             <p className="text-xs text-slate-400 font-medium whitespace-nowrap mt-1">

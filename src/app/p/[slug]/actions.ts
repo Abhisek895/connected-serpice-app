@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 
-export async function recordResponseAction(slug: string, action: string) {
+export async function recordResponseAction(slug: string, action: string, metadata?: string) {
   try {
     const event = await prisma.event.findUnique({
       where: { slug },
@@ -11,10 +11,12 @@ export async function recordResponseAction(slug: string, action: string) {
 
     if (!event) return { success: false, error: "Event not found" };
 
+    const finalAction = metadata ? `${action}|${metadata}` : action;
+
     await prisma.response.create({
       data: {
         eventId: event.id,
-        action,
+        action: finalAction,
         device: "Desktop/Mobile",
         browser: "Web Browser",
       }
