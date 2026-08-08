@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Sparkles, ExternalLink, Compass, Zap, Loader2, CheckCircle2, Copy, Edit3, Eye, Gift, Heart, X, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { createInstantEventFromTemplate } from "./builder/actions";
+import { createInstantEventFromTemplate, uploadMedia } from "./builder/actions";
 
 type DemoItem = {
   id: string;
@@ -33,6 +33,10 @@ export default function DashboardDemos() {
   const [eventTitle, setEventTitle] = useState("");
   const [recipientName, setRecipientName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [customPhoto, setCustomPhoto] = useState<File | null>(null);
+  const [customMessage, setCustomMessage] = useState("");
+  const [isCustomizing, setIsCustomizing] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const demos: DemoItem[] = [
     {
@@ -102,10 +106,13 @@ export default function DashboardDemos() {
     }
   ];
 
-  const openConfigureModal = (demo: DemoItem) => {
+  const openConfigureModal = (demo: DemoItem, isCustomizingForm: boolean = false) => {
     setActiveFormDemo(demo);
     setEventTitle(demo.title);
     setRecipientName("My Love 💕");
+    setCustomPhoto(null);
+    setCustomMessage("");
+    setIsCustomizing(isCustomizingForm);
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -116,14 +123,29 @@ export default function DashboardDemos() {
     setLoadingId(activeFormDemo.id);
 
     try {
+      let extraData: any = {};
+      if (activeFormDemo.id === "ankita-surprise") {
+         if (customMessage) extraData.loveMessage = customMessage;
+      }
+      
       const res = await createInstantEventFromTemplate(
         activeFormDemo.builderTheme,
         eventTitle || activeFormDemo.title,
         recipientName || "My Love",
-        activeFormDemo.id
+        activeFormDemo.id,
+        extraData
       );
 
-      if (res.success) {
+      if (res.success && res.eventId) {
+        if (customPhoto) {
+          const formData = new FormData();
+          formData.append("file", customPhoto);
+          formData.append("type", "image");
+          const uploadRes = await uploadMedia(res.eventId, formData);
+          if (uploadRes && !uploadRes.success) {
+            throw new Error(uploadRes.error || "File upload failed.");
+          }
+        }
         let finalUrl = `${window.location.origin}${res.customUrl}`;
         if (recipientName) {
           finalUrl += `?name=${encodeURIComponent(recipientName)}`;
@@ -139,8 +161,10 @@ export default function DashboardDemos() {
           setPublishedTitle(null);
         }, 5000);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Form submit failed:", err);
+      setToastMessage(err.message || "An error occurred while uploading. File might be too large.");
+      setTimeout(() => setToastMessage(null), 4000);
     }
     setIsSubmitting(false);
     setLoadingId(null);
@@ -156,6 +180,21 @@ export default function DashboardDemos() {
 
   return (
     <div className="bg-gradient-to-r from-rose-50/60 via-purple-50/40 to-slate-50 border border-rose-100/80 rounded-3xl p-6 md:p-8 shadow-sm relative overflow-hidden mb-8">
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 50 }}
+            className="fixed top-4 right-4 z-[100] bg-rose-500 text-white px-6 py-3 rounded-xl shadow-2xl font-bold flex items-center gap-2"
+          >
+            <X className="w-5 h-5 cursor-pointer" onClick={() => setToastMessage(null)} />
+            {toastMessage}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Decorative Blur */}
       <div className="absolute top-0 right-0 -translate-y-12 translate-x-12 w-64 h-64 bg-rose-200/30 rounded-full blur-3xl pointer-events-none" />
 
@@ -273,7 +312,7 @@ export default function DashboardDemos() {
                 {/* BUTTON 2: Instant Use As-Is */}
                 {demo.hasInstantUse && (
                   <button
-                    onClick={() => openConfigureModal(demo)}
+                    onClick={() => openConfigureModal(demo, false)}
                     className="w-full py-2 px-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition shadow-sm shadow-rose-200 flex items-center justify-between"
                   >
                     <span className="flex items-center gap-1.5">
@@ -284,16 +323,28 @@ export default function DashboardDemos() {
                 )}
 
                 {/* BUTTON 3: Edit & Customize */}
-                <Link
-                  href={`/dashboard/builder?demoId=${demo.id}`}
-                  className={`w-full py-2 px-3 rounded-xl text-white text-xs font-bold transition shadow-sm flex items-center justify-between ${!demo.hasInstantUse ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200' : 'bg-slate-900 hover:bg-slate-800'
-                    }`}
-                >
-                  <span className="flex items-center gap-1.5">
-                    <Edit3 className="w-3.5 h-3.5" /> {!demo.hasInstantUse ? '2. Edit & Customize' : '3. Edit & Customize'}
-                  </span>
-                  <span className="text-[10px] opacity-80 font-normal">Add Your Text/Photos</span>
-                </Link>
+                {demo.id === 'ankita-surprise' ? (
+                  <button
+                    onClick={() => openConfigureModal(demo, true)}
+                    className="w-full py-2 px-3 rounded-xl text-white text-xs font-bold transition shadow-sm flex items-center justify-between bg-slate-900 hover:bg-slate-800"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Edit3 className="w-3.5 h-3.5" /> {!demo.hasInstantUse ? '2. Edit & Customize' : '3. Edit & Customize'}
+                    </span>
+                    <span className="text-[10px] opacity-80 font-normal">Add Your Text/Photos</span>
+                  </button>
+                ) : (
+                  <Link
+                    href={`/dashboard/builder?demoId=${demo.id}`}
+                    className={`w-full py-2 px-3 rounded-xl text-white text-xs font-bold transition shadow-sm flex items-center justify-between ${!demo.hasInstantUse ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200' : 'bg-slate-900 hover:bg-slate-800'
+                      }`}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Edit3 className="w-3.5 h-3.5" /> {!demo.hasInstantUse ? '2. Edit & Customize' : '3. Edit & Customize'}
+                    </span>
+                    <span className="text-[10px] opacity-80 font-normal">Add Your Text/Photos</span>
+                  </Link>
+                )}
 
               </div>
             </motion.div>
@@ -356,6 +407,33 @@ export default function DashboardDemos() {
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
                   />
                 </div>
+
+                {activeFormDemo.id === "ankita-surprise" && isCustomizing && (
+                  <>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Surprise Photo (Front/Back)
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setCustomPhoto(e.target.files?.[0] || null)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Secret Love Letter (Back Text)
+                      </label>
+                      <textarea
+                        value={customMessage}
+                        onChange={(e) => setCustomMessage(e.target.value)}
+                        placeholder="Write a cute message..."
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 h-24 resize-none"
+                      />
+                    </div>
+                  </>
+                )}
 
                 <div className="bg-rose-50/60 p-3.5 rounded-2xl border border-rose-100 flex items-start gap-2.5 text-xs text-rose-800">
                   <Sparkles className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />

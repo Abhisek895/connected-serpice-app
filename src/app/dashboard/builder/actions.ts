@@ -124,7 +124,7 @@ export async function publishEvent(eventId: string) {
   return { success: true, slug: event.slug };
 }
 
-export async function createInstantEventFromTemplate(themeName: string, title?: string, recipientName?: string, demoId?: string) {
+export async function createInstantEventFromTemplate(themeName: string, title?: string, recipientName?: string, demoId?: string, extraData?: any) {
   const { userId } = await getCurrentUser();
 
   let theme = await prisma.theme.findFirst({ where: { name: themeName } });
@@ -184,6 +184,7 @@ export async function createInstantEventFromTemplate(themeName: string, title?: 
   }
 
   const customData = {
+    ...classSpecificData,
     title: title || classSpecificData.title || `${themeName} for ${recipientName || "My Love"}`,
     recipientName: recipientName || "My Love",
     demoId: demoId || "custom",
@@ -191,7 +192,7 @@ export async function createInstantEventFromTemplate(themeName: string, title?: 
     hasDefaultMusic: true,
     hasSummaryCard: true,
     isInstant: true,
-    ...classSpecificData
+    ...(extraData || {})
   };
 
   const event = await prisma.event.create({
