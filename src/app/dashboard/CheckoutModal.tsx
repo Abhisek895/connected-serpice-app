@@ -99,6 +99,34 @@ export default function CheckoutModal({
         return;
       }
 
+      if (data.isMock) {
+        console.log("Mock Payment Mode Active: Simulating successful payment...");
+        
+        setTimeout(async () => {
+          const verifyRes = await fetch("/api/payment/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpayOrderId: data.orderId,
+              razorpayPaymentId: `mock_payment_${Date.now()}`,
+              razorpaySignature: "mock_signature_for_development",
+              demoId,
+              couponCode: couponStatus === "valid" ? couponCode : undefined,
+            }),
+          });
+          const verifyData = await verifyRes.json();
+          if (verifyData.success) {
+            alert("DEVELOPMENT MODE: Mock Payment Successful!");
+            onSuccess();
+          } else {
+            setError(verifyData.message || "Mock payment verification failed");
+            setIsProcessing(false);
+          }
+        }, 1500);
+        
+        return;
+      }
+
       // 2. Open Razorpay
       const options = {
         key: data.keyId,

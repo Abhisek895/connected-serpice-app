@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Settings, User, Mail, CreditCard, Shield, Zap, Lock, Key } from "lucide-react"
+import { Settings, User, Mail, CreditCard, Shield, Zap, Lock, Key, Loader2, CheckCircle2, Eye, EyeOff } from "lucide-react"
 
 type UserProps = {
   displayName: string;
@@ -11,6 +11,84 @@ type UserProps = {
 
 export default function SettingsClient({ user }: { user: UserProps }) {
   const [activeTab, setActiveTab] = useState("profile");
+
+  // Password Update State
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+  
+  // Password Visibility Toggle
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+
+  const handleRequestOtp = async () => {
+    setError("");
+    setSuccessMsg("");
+    if (!currentPassword || !newPassword) {
+      setError("Please fill in all password fields.");
+      return;
+    }
+    if (newPassword.length < 6) {
+      setError("New password must be at least 6 characters.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/settings/password/request-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIsOtpSent(true);
+      } else {
+        setError(data.error || "Failed to request OTP.");
+      }
+    } catch (err) {
+      setError("Something went wrong.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    setError("");
+    setSuccessMsg("");
+    if (!otp) {
+      setError("Please enter the 6-digit OTP.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/settings/password/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ otp, newPassword })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSuccessMsg("Password updated successfully!");
+        // Reset states
+        setCurrentPassword("");
+        setNewPassword("");
+        setOtp("");
+        setIsOtpSent(false);
+      } else {
+        setError(data.error || "Failed to update password.");
+      }
+    } catch (err) {
+      setError("Something went wrong.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
@@ -170,23 +248,106 @@ export default function SettingsClient({ user }: { user: UserProps }) {
                   <Lock className="w-4 h-4 text-slate-400" /> Password
                 </h4>
                 <div className="space-y-4 max-w-sm">
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">Current Password</label>
-                    <div className="relative">
-                      <Key className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <input type="password" placeholder="••••••••" className="w-full border border-slate-200 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-700" />
+                  {error && (
+                    <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100">
+                      {error}
                     </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">New Password</label>
-                    <div className="relative">
-                      <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <input type="password" placeholder="New password" className="w-full border border-slate-200 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-700" />
+                  )}
+                  {successMsg && (
+                    <div className="p-3 bg-emerald-50 text-emerald-600 text-sm rounded-xl border border-emerald-100 flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4" /> {successMsg}
                     </div>
-                  </div>
-                  <button className="w-full px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition mt-2">
-                    Update Password
-                  </button>
+                  )}
+
+                  {!isOtpSent ? (
+                    <>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Current Password</label>
+                        <div className="relative">
+                          <Key className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                          <input 
+                            type={showCurrentPassword ? "text" : "password"}
+                            placeholder="••••••••" 
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
+                            className="w-full border border-slate-200 rounded-xl pl-10 pr-12 py-3 focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-700" 
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition p-1"
+                          >
+                            {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                          </button>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">New Password</label>
+                        <div className="relative">
+                          <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                          <input 
+                            type={showNewPassword ? "text" : "password"}
+                            placeholder="New password" 
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="w-full border border-slate-200 rounded-xl pl-10 pr-12 py-3 focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-700" 
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition p-1"
+                          >
+                            {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                          </button>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={handleRequestOtp}
+                        disabled={isLoading}
+                        className="w-full flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl transition mt-2 disabled:opacity-70"
+                      >
+                        {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                        Request OTP
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl mb-4">
+                        <p className="text-sm text-slate-600 mb-3">
+                          We've sent a 6-digit OTP to your email. Please enter it below to confirm your password change.
+                        </p>
+                        
+                        <div className="relative">
+                          <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                          <input 
+                            type="text" 
+                            placeholder="Enter 6-digit OTP" 
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value)}
+                            maxLength={6}
+                            className="w-full border border-slate-200 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-700 font-mono tracking-widest" 
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-3 mt-2">
+                        <button 
+                          onClick={() => setIsOtpSent(false)}
+                          disabled={isLoading}
+                          className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition disabled:opacity-70"
+                        >
+                          Cancel
+                        </button>
+                        <button 
+                          onClick={handleVerifyOtp}
+                          disabled={isLoading}
+                          className="flex-[2] flex items-center justify-center gap-2 px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl transition disabled:opacity-70"
+                        >
+                          {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                          Verify & Update
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
