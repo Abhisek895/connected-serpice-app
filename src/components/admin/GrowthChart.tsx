@@ -25,10 +25,10 @@ export default function GrowthChart({ data }: { data: any[] }) {
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-          <XAxis 
-            dataKey="date" 
-            stroke="#64748b" 
-            fontSize={12} 
+          <XAxis
+            dataKey="date"
+            stroke="#64748b"
+            fontSize={12}
             tickLine={false}
             axisLine={false}
             tickFormatter={(value) => {
@@ -37,28 +37,28 @@ export default function GrowthChart({ data }: { data: any[] }) {
             }}
           />
           <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-          <Tooltip 
+          <Tooltip
             contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f8fafc', borderRadius: '8px' }}
             itemStyle={{ color: '#818cf8' }}
           />
           <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-          <Line 
-            type="monotone" 
-            dataKey="users" 
-            name="New Users" 
-            stroke="#818cf8" 
+          <Line
+            type="monotone"
+            dataKey="users"
+            name="New Users"
+            stroke="#818cf8"
             strokeWidth={3}
             dot={false}
-            activeDot={{ r: 6, fill: '#818cf8', stroke: '#1e293b', strokeWidth: 2 }} 
+            activeDot={{ r: 6, fill: '#818cf8', stroke: '#1e293b', strokeWidth: 2 }}
           />
-          <Line 
-            type="monotone" 
-            dataKey="messages" 
-            name="Messages Sent" 
-            stroke="#10b981" 
+          <Line
+            type="monotone"
+            dataKey="messages"
+            name="Messages Sent"
+            stroke="#10b981"
             strokeWidth={3}
             dot={false}
-            activeDot={{ r: 6, fill: '#10b981', stroke: '#1e293b', strokeWidth: 2 }} 
+            activeDot={{ r: 6, fill: '#10b981', stroke: '#1e293b', strokeWidth: 2 }}
           />
         </LineChart>
       </ResponsiveContainer>
