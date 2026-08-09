@@ -13,6 +13,30 @@ async function checkAuth() {
   return session;
 }
 
+// ─── User Detail ─────────────────────────────────────────────────────────────
+export async function getAdminUserById(id: string) {
+  await checkAuth();
+  const user = await prisma.user.findUnique({
+    where: { id },
+    select: {
+      id: true, name: true, email: true, role: true, plan: true,
+      createdAt: true, updatedAt: true, image: true,
+      events: { select: { id: true, slug: true, status: true, themeId: true, createdAt: true } },
+      payments: { select: { id: true, amount: true, plan: true, status: true, createdAt: true } },
+    },
+  });
+  if (!user) throw new Error("User not found");
+  return user;
+}
+
+export async function updateAdminUserRole(id: string, newRole: string) {
+  const session = await checkAuth();
+  const callerRole = (session?.user as any)?.role;
+  if (callerRole !== "super_admin") throw new Error("Only super_admin can change roles");
+  const updated = await prisma.user.update({ where: { id }, data: { role: newRole } });
+  return updated;
+}
+
 // ─── Overview Stats ─────────────────────────────────────────────────────────
 export async function getLocalAdminStats() {
   await checkAuth();
