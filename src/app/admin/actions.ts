@@ -91,7 +91,10 @@ export async function getAdminPayments() {
     await checkAuth();
     const payments = await prisma.payment.findMany({
       orderBy: { createdAt: "desc" },
-      include: { user: { select: { name: true, email: true } } },
+      include: { 
+        user: { select: { name: true, email: true } },
+        coupon: true 
+      },
     });
     return { success: true, payments };
   } catch (error) {
@@ -183,4 +186,94 @@ export async function getAdminAiInsights() {
 
   const acceptRate = viewedResponses > 0 ? Math.round((acceptedResponses / viewedResponses) * 100) : 0;
   return { acceptedResponses, rejectedResponses, viewedResponses, acceptRate, topEvents };
+}
+
+// ─── Themes / Pricing ────────────────────────────────────────────────────────
+export async function getAdminThemes() {
+  await checkAuth();
+  const themes = await prisma.theme.findMany({
+    orderBy: { name: "asc" }
+  });
+  return { success: true, themes };
+}
+
+export async function upsertThemePricing(
+  demoId: string,
+  price: number,
+  durationDays: number,
+  isActive: boolean,
+  content?: { title?: string; description?: string; thumbnailUrl?: string }
+) {
+  await checkAuth();
+  const theme = await prisma.theme.upsert({
+    where: { name: demoId },
+    update: {
+      price,
+      durationDays,
+      isActive,
+      ...(content?.title !== undefined && { title: content.title }),
+      ...(content?.description !== undefined && { description: content.description }),
+      ...(content?.thumbnailUrl !== undefined && { thumbnailUrl: content.thumbnailUrl }),
+    },
+    create: {
+      name: demoId,
+      price,
+      durationDays,
+      isActive,
+      title: content?.title,
+      description: content?.description,
+      thumbnailUrl: content?.thumbnailUrl,
+    }
+  });
+  return { success: true, theme };
+}
+
+// ─── Coupons ────────────────────────────────────────────────────────────────
+export async function getAdminCoupons() {
+  await checkAuth();
+  const coupons = await prisma.coupon.findMany({
+    orderBy: { createdAt: "desc" }
+  });
+  return { success: true, coupons };
+}
+
+export async function createCoupon(data: any) {
+  await checkAuth();
+  try {
+    const coupon = await prisma.coupon.create({ data });
+    return { success: true, coupon };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function updateCoupon(id: string, data: any) {
+  await checkAuth();
+  try {
+    const coupon = await prisma.coupon.update({ where: { id }, data });
+    return { success: true, coupon };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function toggleCoupon(id: string) {
+  await checkAuth();
+  const coupon = await prisma.coupon.findUnique({ where: { id } });
+  if (!coupon) return { success: false, error: "Not found" };
+  const updated = await prisma.coupon.update({
+    where: { id },
+    data: { isActive: !coupon.isActive }
+  });
+  return { success: true, coupon: updated };
+}
+
+export async function deleteCoupon(id: string) {
+  await checkAuth();
+  try {
+    await prisma.coupon.delete({ where: { id } });
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
 }

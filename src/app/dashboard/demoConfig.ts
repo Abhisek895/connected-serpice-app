@@ -12,6 +12,8 @@ export type DemoItem = {
   icon: any;
   borderColor: string;
   hasInstantUse: boolean;
+  price?: number;
+  durationDays?: number;
 };
 
 export const demos: DemoItem[] = [
@@ -21,7 +23,7 @@ export const demos: DemoItem[] = [
     badge: "Requires Customization",
     badgeColor: "bg-rose-500 text-white",
     description: "Interactive romantic surprise with floating heart animations, love song (loveSong.mp3), photo showcase, & love letter reveal.",
-    previewUrl: "/p/demo-romantic",
+    previewUrl: "/demos/surprise/index.html",
     builderTheme: "Romantic",
     image: "/demos/surprise/images.jpeg",
     icon: Sparkles,
@@ -34,7 +36,7 @@ export const demos: DemoItem[] = [
     badge: "Requires Customization",
     badgeColor: "bg-amber-500 text-white",
     description: "Interactive birthday card with photo slideshow gallery, birthday music (hbd.mp3), confetti, & custom love message reveal.",
-    previewUrl: "/p/demo-birthday",
+    previewUrl: "/demos/birthday-wish/index.html",
     builderTheme: "Romantic",
     image: "/demos/birthday-wish/s0.jpeg",
     icon: Gift,

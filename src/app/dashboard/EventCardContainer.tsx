@@ -12,6 +12,7 @@ type EventItem = {
   slug: string;
   status: string;
   createdAt: string | Date;
+  expiresAt: string | Date | null;
   theme: { name: string };
   customData: string | null;
   responses: Array<{
@@ -78,14 +79,43 @@ export default function EventCardContainer({ events }: { events: EventItem[] }) 
                 </div>
 
                 <div className="flex items-center gap-2 text-sm font-medium mb-6">
-                  <div
-                    className={`w-2.5 h-2.5 rounded-full ${
-                      isPublished ? "bg-green-500 animate-pulse" : "bg-amber-500"
-                    }`}
-                  />
-                  <span className={isPublished ? "text-green-600" : "text-amber-600"}>
-                    {isPublished ? "Active (Expires in 30 days)" : "Disabled"}
-                  </span>
+                  {(() => {
+                    if (!isPublished) {
+                      return (
+                        <>
+                          <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                          <span className="text-amber-600">Disabled</span>
+                        </>
+                      );
+                    }
+                    if (event.expiresAt) {
+                      const exp = new Date(event.expiresAt);
+                      const now = new Date();
+                      if (now > exp) {
+                        return (
+                          <>
+                            <div className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                            <span className="text-rose-600">⚠️ Expired</span>
+                          </>
+                        );
+                      } else {
+                        const daysLeft = Math.ceil((exp.getTime() - now.getTime()) / (1000 * 3600 * 24));
+                        return (
+                          <>
+                            <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
+                            <span className="text-green-600">Active (Expires in {daysLeft} days)</span>
+                          </>
+                        );
+                      }
+                    } else {
+                      return (
+                        <>
+                          <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
+                          <span className="text-green-600">Active (No Expiry)</span>
+                        </>
+                      );
+                    }
+                  })()}
                 </div>
 
                 {/* Analytics */}

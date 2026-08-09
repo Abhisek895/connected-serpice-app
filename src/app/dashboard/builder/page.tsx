@@ -1,7 +1,7 @@
 "use client"
 import { useState, Suspense, useEffect } from "react"
 import { Sparkles, Image as ImageIcon, Music, Type, CheckCircle, ArrowRight, Loader2, AlertCircle, Bookmark, Heart, Mail } from "lucide-react"
-import { createDraftEvent, updateEventCustomData, uploadMedia, publishEvent } from "./actions"
+import { createDraftEvent, updateEventCustomData, uploadMedia, publishEvent, checkPaymentAccess } from "./actions"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
@@ -22,8 +22,23 @@ function BuilderWizard() {
   }
 
   const [eventId, setEventId] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  useEffect(() => {
+    async function verifyAccess() {
+      if (demoId !== "custom") {
+        const hasAccess = await checkPaymentAccess(demoId);
+        if (!hasAccess) {
+          alert("Please complete payment to access this template.");
+          router.push("/dashboard");
+          return;
+        }
+      }
+      setIsLoading(false);
+    }
+    verifyAccess();
+  }, [demoId, router]);
   
   const [title, setTitle] = useState("")
   const [theme, setTheme] = useState("Romantic")

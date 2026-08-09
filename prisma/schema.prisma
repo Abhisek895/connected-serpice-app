@@ -81,7 +81,11 @@ model Payment {
   currency          String    @default("INR")
   status            String    @default("PENDING") // "PENDING", "SUCCESS", "FAILED"
   plan              String
-  
+  couponId          String?
+  coupon            Coupon?   @relation(fields: [couponId], references: [id])
+  demoId            String?
+  finalAmount       Int?
+
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -108,12 +112,33 @@ model Response {
 
 // Available theme configurations
 model Theme {
-  id          String    @id @default(cuid())
-  name        String
-  isPremium   Boolean   @default(false)
-  defaultData String?
+  id           String    @id @default(cuid())
+  name         String    @unique
+  isPremium    Boolean   @default(false)
+  defaultData  String?
+  price        Int       @default(0)
+  durationDays Int       @default(7)
+  isActive     Boolean   @default(true)
+  title        String?   // Admin-overridable display title
+  description  String?   // Admin-overridable description
+  thumbnailUrl String?   // Admin-overridable thumbnail image
   
   events      Event[]
+}
+
+// Available theme configurations
+model Coupon {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  discountType   String    @default("FIXED")
+  discountValue  Int
+  maxUses        Int?
+  usedCount      Int       @default(0)
+  expiresAt      DateTime?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  payments       Payment[]
 }
 
 // NextAuth necessary models

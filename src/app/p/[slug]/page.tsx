@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import ProposalClient from "./ProposalClient"
+import ExpiredPage from "./ExpiredPage"
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -12,6 +13,10 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
 
   if (!event || event.status !== "PUBLISHED") {
     notFound();
+  }
+
+  if (event.expiresAt && new Date() > new Date(event.expiresAt)) {
+    return <ExpiredPage />;
   }
 
   let customData = {};

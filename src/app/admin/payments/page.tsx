@@ -63,7 +63,9 @@ export default function PaymentsPage() {
                 <th className="px-6 py-4 font-semibold">Transaction ID</th>
                 <th className="px-6 py-4 font-semibold">User</th>
                 <th className="px-6 py-4 font-semibold">Amount</th>
-                <th className="px-6 py-4 font-semibold">Plan</th>
+                <th className="px-6 py-4 font-semibold">Final Amount</th>
+                <th className="px-6 py-4 font-semibold">Coupon Used</th>
+                <th className="px-6 py-4 font-semibold">Template</th>
                 <th className="px-6 py-4 font-semibold">Status</th>
                 <th className="px-6 py-4 font-semibold">Date</th>
               </tr>
@@ -88,9 +90,17 @@ export default function PaymentsPage() {
                     <td className="px-6 py-4 font-medium text-emerald-400">
                       ₹{(payment.amount / 100).toFixed(2)}
                     </td>
+                    <td className="px-6 py-4 font-medium text-indigo-400">
+                      {payment.finalAmount !== null ? `₹${(payment.finalAmount / 100).toFixed(2)}` : "-"}
+                    </td>
+                    <td className="px-6 py-4 text-xs font-medium text-slate-300">
+                      {payment.couponId && payment.coupon ? (
+                        <span className="bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded uppercase tracking-wider">{payment.coupon.code}</span>
+                      ) : "-"}
+                    </td>
                     <td className="px-6 py-4">
                       <span className="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider">
-                        {payment.plan}
+                        {payment.demoId || payment.plan}
                       </span>
                     </td>
                     <td className="px-6 py-4">

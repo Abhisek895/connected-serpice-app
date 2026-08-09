@@ -2,8 +2,8 @@ import AdminAuthProvider from "@/components/admin/AdminAuthProvider";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 
 export const metadata = {
-  title: "VibePass Admin",
-  description: "Admin & CEO Dashboard for VibePass",
+  title: "OurStory Admin",
+  description: "Admin & CEO Dashboard for OurStory",
 };
 
 export default function AdminLayout({

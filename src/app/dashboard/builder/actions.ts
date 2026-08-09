@@ -3,6 +3,25 @@
 import { getCurrentUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 
+export async function checkPaymentAccess(demoId: string) {
+  const { userId } = await getCurrentUser();
+  if (!userId) return false;
+
+  const theme = await prisma.theme.findUnique({ where: { name: demoId } });
+  if (!theme || theme.price === 0) return true; // Free
+
+  // Check if there is a SUCCESS payment for this template
+  const payment = await prisma.payment.findFirst({
+    where: {
+      userId,
+      demoId,
+      status: "SUCCESS"
+    }
+  });
+
+  return !!payment;
+}
+
 export async function createDraftEvent(themeName: string) {
   const { userId } = await getCurrentUser();
 

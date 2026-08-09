@@ -17,10 +17,20 @@ export default async function DashboardPage() {
     orderBy: { createdAt: "desc" }
   });
 
+  const themePricing = (await prisma.theme.findMany()) as unknown as Array<{
+    name: string;
+    price: number;
+    durationDays: number;
+    isActive: boolean;
+    title?: string | null;
+    description?: string | null;
+    thumbnailUrl?: string | null;
+  }>;
+
   return (
     <div className="space-y-8">
       {/* Interactive Demo Showcase & Pre-Configured Templates */}
-      <DashboardDemos />
+      <DashboardDemos themePricing={themePricing} />
 
       {/* Persistent Saved Events & Links Section */}
       {events.length > 0 && (

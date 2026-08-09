@@ -13,7 +13,9 @@ import {
   Activity,
   LogOut,
   ChevronRight,
-  CreditCard
+  CreditCard,
+  Tag,
+  Ticket
 } from "lucide-react";
 import { useAdminAuth } from "./AdminAuthProvider";
 
@@ -26,6 +28,8 @@ export default function AdminSidebar() {
   const navItems = [
     { name: "Overview", href: "/admin/overview", icon: LayoutDashboard, roles: ["admin", "super_admin", "moderator"] },
     { name: "Users", href: "/admin/users", icon: Users, roles: ["admin", "super_admin"] },
+    { name: "Pricing & Themes", href: "/admin/themes", icon: Tag, roles: ["admin", "super_admin"] },
+    { name: "Coupons", href: "/admin/coupons", icon: Ticket, roles: ["admin", "super_admin"] },
     { name: "Payments", href: "/admin/payments", icon: CreditCard, roles: ["admin", "super_admin"] },
     { name: "Reports", href: "/admin/reports", icon: Flag, roles: ["admin", "super_admin", "moderator"] },
     { name: "Content", href: "/admin/content", icon: ShieldAlert, roles: ["admin", "super_admin", "moderator"] },
@@ -55,7 +59,7 @@ export default function AdminSidebar() {
         <Link href="/admin/overview">
           <h1 className="text-xl font-bold text-indigo-500 tracking-wider flex items-center gap-2">
             <ShieldAlert className="w-6 h-6" />
-            VibePass Admin
+            OurStory Admin
           </h1>
         </Link>
       </div>
