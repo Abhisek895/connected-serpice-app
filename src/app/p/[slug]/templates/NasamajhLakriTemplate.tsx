@@ -16,7 +16,7 @@ const secondChanceMessages = [
   "You deserve all the love 🌹",
   "I won't give up easily 😌",
   "piliiiiiizzzzzzzzzzzzzzzzzzzzzzz say yes this time 💖",
-  "Nasamajh larki 😌🌸",
+  "Cute Mey 😌🌸",
   "Your smile means everything 💛",
   "Say yes and make my day brighter ☀️",
   "You and I, best team ever? 👫",
@@ -139,7 +139,6 @@ export default function NasamajhLakriTemplate({
           </div>
         ))}
       </div>
-      </div>
 
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -199,7 +198,7 @@ export default function NasamajhLakriTemplate({
             animate={{ opacity: 1, scale: 1 }}
           >
             <h1 className="nasamajh-h1">
-              {title || "Hi, Nasamajh Lakri 😊"}
+              {title || "Hi, Cute Mey 😊"}
             </h1>
             <p className="nasamajh-p">
               I have something to ask you...

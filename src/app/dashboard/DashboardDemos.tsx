@@ -19,6 +19,10 @@ export default function DashboardDemos() {
   // CustomizeModal state
   const [customizeModalDemoId, setCustomizeModalDemoId] = useState<string | null>(null);
 
+  // Instant Use Modal state
+  const [instantModalDemo, setInstantModalDemo] = useState<(typeof demos)[0] | null>(null);
+  const [instantModalTitle, setInstantModalTitle] = useState("");
+
   const demos = [
     {
       id: "surprise",
@@ -46,7 +50,7 @@ export default function DashboardDemos() {
     },
     {
       id: "nasamajh-lakri",
-      title: "Nasamajh Lakri Proposal ❤️",
+      title: "Cute Mey Proposal ❤️",
       badge: "Instant Available",
       badgeColor: "bg-pink-600 text-white",
       description: "Interactive Valentine proposal with romantic audio tracks (Start.mp3, yess.mp3, no.mp3), playful buttons, & gradient aesthetic.",
@@ -82,17 +86,18 @@ export default function DashboardDemos() {
     },
   ];
 
-  const handleInstantUse = async (demo: (typeof demos)[0]) => {
+  const handleInstantUse = async (demo: (typeof demos)[0], customTitle: string) => {
     setLoadingId(demo.id);
+    setInstantModalDemo(null);
     try {
       // Use As-Is → object === class (100% default data)
       const tmplClass = TEMPLATE_CLASSES.find((t) => t.id === demo.id);
       const res = await createInstantEventFromTemplate(
         "Romantic",
         tmplClass?.defaultData.title,
-        "My Love 💕",
+        "Someone Special ✨",
         demo.id,
-        {}
+        { internalTitle: customTitle }
       );
 
       if (res.success && res.customUrl) {
@@ -253,7 +258,10 @@ export default function DashboardDemos() {
                 {/* 2. Use As-Is (Instant) — only for instant templates */}
                 {demo.hasInstantUse && (
                   <button
-                    onClick={() => handleInstantUse(demo)}
+                    onClick={() => {
+                      setInstantModalDemo(demo);
+                      setInstantModalTitle(demo.title);
+                    }}
                     disabled={isLoadingThis}
                     className="w-full py-2 px-3 rounded-xl bg-rose-500 hover:bg-rose-600 disabled:opacity-70 text-white text-xs font-bold transition shadow-sm shadow-rose-200 flex items-center justify-between"
                   >
@@ -299,6 +307,59 @@ export default function DashboardDemos() {
             demoId={customizeModalDemoId}
             onClose={() => setCustomizeModalDemoId(null)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Instant Use Modal */}
+      <AnimatePresence>
+        {instantModalDemo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-3xl p-6 shadow-2xl max-w-sm w-full border border-slate-100"
+            >
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Give it a Title 🎀</h3>
+              <p className="text-sm text-slate-500 mb-4">
+                What would you like to call this event? This helps you distinguish it on your dashboard if you create multiple.
+              </p>
+              
+              <div className="mb-5">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                  Event Title
+                </label>
+                <input
+                  type="text"
+                  value={instantModalTitle}
+                  onChange={(e) => setInstantModalTitle(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-rose-400 focus:ring-4 focus:ring-rose-100 transition outline-none text-slate-800"
+                  placeholder="e.g. For Sarah ❤️"
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setInstantModalDemo(null)}
+                  className="flex-1 px-4 py-3 rounded-xl text-slate-600 font-bold bg-slate-100 hover:bg-slate-200 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleInstantUse(instantModalDemo, instantModalTitle)}
+                  className="flex-1 px-4 py-3 rounded-xl text-white font-bold bg-rose-500 hover:bg-rose-600 transition shadow-sm shadow-rose-200 flex items-center justify-center gap-2"
+                >
+                  Create Now
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

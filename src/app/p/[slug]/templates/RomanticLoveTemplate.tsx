@@ -17,6 +17,7 @@ export type ProposalClientProps = {
   demoId?: string;
   recipientName?: string;
   dodgeMessages?: string;
+  patternText?: string;
   media: { id: string; url: string; type: string }[];
 };
 
@@ -41,8 +42,9 @@ function TextArtPortrait({
     const charsPerLine = Math.ceil((w * multiplier) / 5);
     const totalLines = Math.ceil((h * multiplier) / 8);
     const totalChars = charsPerLine * totalLines * 1.5;
-    const repeatCount = Math.ceil(totalChars / phrase.length);
-    wall.innerText = phrase.repeat(repeatCount);
+    const repeatPhrase = phrase.trim() + "  "; // Add spacing so words don't stick together
+    const repeatCount = Math.ceil(totalChars / repeatPhrase.length);
+    wall.innerText = repeatPhrase.repeat(repeatCount);
   }, [phrase]);
 
   useEffect(() => {
@@ -245,6 +247,7 @@ export default function RomanticLoveTemplate({
   rejectBtn,
   loveMessage,
   recipientName,
+  patternText,
   media,
 }: ProposalClientProps) {
   // 0 = landing, 1 = fade-to-black, 2 = portrait, 3 = proposal, 4 = accepted, 5 = rejected
@@ -482,7 +485,7 @@ export default function RomanticLoveTemplate({
               exit={{ opacity: 0 }}
               transition={{ duration: 1 }}
             >
-              <TextArtPortrait src={displayPhoto} phrase="LOVE YOU" />
+              <TextArtPortrait src={displayPhoto} phrase={patternText || "love you"} />
 
               {/* Love letter */}
               {!showLetter ? (

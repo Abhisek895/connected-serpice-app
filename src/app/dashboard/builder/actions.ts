@@ -163,6 +163,7 @@ export async function createInstantEventFromTemplate(themeName: string, title?: 
       rejectBtn: "No 🙈",
       loveMessage: "A little surprise from someone who truly cares…",
       hasDefaultMusic: true,
+      patternText: "love you",
     },
     "birthday-wish": {
       title: "Happy Birthday! 🎂",
@@ -171,7 +172,7 @@ export async function createInstantEventFromTemplate(themeName: string, title?: 
       hasDefaultMusic: true,
     },
     "nasamajh-lakri": {
-      title: "Hi, Nasamajh Lakri 😊",
+      title: "Hi, Cute Mey 😊",
       question: "Will you be mine? 💖",
       acceptBtn: "Yes 😍",
       rejectBtn: "No 🙈",
@@ -201,8 +202,8 @@ export async function createInstantEventFromTemplate(themeName: string, title?: 
     // 1. Start with class defaults (object == class)
     ...classDefaults,
     // 2. Apply user title/recipient overrides
-    title: title || classDefaults.title || `${themeName} for ${recipientName || "My Love"}`,
-    recipientName: recipientName || "My Love",
+    title: title || classDefaults.title || `${themeName} for ${recipientName || "Someone Special ✨"}`,
+    recipientName: recipientName || "Someone Special ✨",
     // 3. Class identity — ALWAYS stored so /p/[slug] knows which template to render
     demoId: demoId || "surprise",
     customUrl: defaultUrl,

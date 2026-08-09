@@ -24,7 +24,6 @@ export default function DashboardSidebar() {
 
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Create Event", href: "/dashboard/builder", icon: PlusCircle },
     { name: "Notifications", href: "/dashboard/notifications", icon: Bell, badge: hasUnread },
     { name: "Settings", href: "/dashboard/settings", icon: Settings },
   ];

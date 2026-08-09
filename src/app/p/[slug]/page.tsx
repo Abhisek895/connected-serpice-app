@@ -34,6 +34,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       demoId={(customData as any).demoId || ""}
       recipientName={(customData as any).recipientName || ""}
       dodgeMessages={(customData as any).dodgeMessages || ""}
+      patternText={(customData as any).patternText || ""}
       media={event.media.map(m => ({ id: m.id, url: m.url, type: m.type }))}
     />
   );

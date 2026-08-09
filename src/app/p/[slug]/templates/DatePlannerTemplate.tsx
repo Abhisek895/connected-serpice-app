@@ -43,7 +43,12 @@ const jalpaiguriPlaces = [
 const jalpaiguriFoods = [
   { name: "Hot Steamed Momo", img: "/demos/jalpaiguri-planner/food_momo_1785674624905.png" },
   { name: "Special Biryani", img: "/demos/jalpaiguri-planner/food_biryani_1785674635340.png" },
-  { name: "Tangy Fuchka", img: "/demos/jalpaiguri-planner/food_fuchka_1785674646896.png" }
+  { name: "Tangy Fuchka", img: "/demos/jalpaiguri-planner/food_fuchka_1785674646896.png" },
+  { name: "Kathi Roll", img: "/demos/date-planner/food_roll_1785674656539.png" },
+  { name: "Chowmein", img: "/demos/date-planner/food_chowmein_1785674895686.png" },
+  { name: "Coffee & Snacks", img: "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=600&auto=format&fit=crop" },
+  { name: "Pizza", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=600&auto=format&fit=crop" },
+  { name: "Desserts", img: "https://images.unsplash.com/photo-1551024601-bec78aea704b?q=80&w=600&auto=format&fit=crop" }
 ];
 
 const REASONS = [
@@ -55,6 +60,15 @@ const REASONS = [
   "Being around you just feels... easy. And nice."
 ];
 
+const TIME_OPTIONS = [
+  "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
+  "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM",
+  "2:00 PM", "2:30 PM", "3:00 PM", "3:30 PM",
+  "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM",
+  "6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM",
+  "8:00 PM", "8:30 PM", "9:00 PM", "9:30 PM"
+];
+
 export default function DatePlannerTemplate({
   slug,
   title,
@@ -63,6 +77,7 @@ export default function DatePlannerTemplate({
 }: ProposalClientProps) {
   const [stage, setStage] = useState(0); // 0: Envelope Gateway, 1: Hero+Reasons, 2: Yay, 3: Places, 4: Foods, 5: Date, 6: Summary
   const [showHearts, setShowHearts] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const [dodgeCount, setDodgeCount] = useState(0);
   
   const [selectedPlace, setSelectedPlace] = useState<{name: string, img: string} | null>(null);
@@ -86,6 +101,7 @@ export default function DatePlannerTemplate({
   const [typewriterText, setTypewriterText] = useState("");
 
   useEffect(() => {
+    setMounted(true);
     if (!hasViewedRef.current) {
       recordResponseAction(slug, "VIEWED");
       hasViewedRef.current = true;
@@ -190,6 +206,13 @@ export default function DatePlannerTemplate({
     }
   };
 
+  const getFormattedDate = (dateString: string) => {
+    if (!dateString) return "";
+    // Ensure we parse the date correctly by appending timezone to prevent off-by-one day bugs
+    const d = new Date(dateString + 'T12:00:00');
+    return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  };
+
   return (
     <div className="date-planner-root">
       <style dangerouslySetInnerHTML={{ __html: `
@@ -207,6 +230,7 @@ export default function DatePlannerTemplate({
         .date-planner-root h1.script,
         .date-planner-root h2.script-title {
           font-family: 'Dancing Script', cursive;
+        }
         /* ---------- GATEWAY ---------- */
         .gateway-overlay {
           position: fixed;
@@ -365,7 +389,7 @@ export default function DatePlannerTemplate({
         </div>
       )}
 
-      {showHearts && (
+      {showHearts && mounted && (
         <div className="bg-hearts">
           {Array.from({ length: 15 }).map((_, i) => (
             <div key={i} className="bg-heart" style={{
@@ -481,13 +505,19 @@ export default function DatePlannerTemplate({
             <input type="date" className="w-full p-4 font-['Quicksand'] text-[18px] text-[#4a1942] border-2 border-[#ff8fab] rounded-xl outline-none focus:border-[#e0356a]" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} />
             <select className="w-full p-4 font-['Quicksand'] text-[18px] text-[#4a1942] border-2 border-[#ff8fab] rounded-xl outline-none focus:border-[#e0356a]" value={selectedTime} onChange={e => setSelectedTime(e.target.value)}>
               <option value="" disabled>Pick a time... ⏰</option>
-              <option value="10:00 AM">10:00 AM</option>
-              <option value="1:00 PM">1:00 PM</option>
-              <option value="6:00 PM">6:00 PM</option>
-              <option value="8:00 PM">8:00 PM</option>
+              {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
             <button className="btn w-full mt-4" onClick={() => {
-              if (selectedDate && selectedTime) setStage(6);
+              if (selectedDate && selectedTime) {
+                const metaObj = {
+                  place: selectedPlace?.name,
+                  food: selectedFood?.name,
+                  date: getFormattedDate(selectedDate),
+                  time: selectedTime
+                };
+                recordResponseAction(slug, `ACCEPTED|${JSON.stringify(metaObj)}`);
+                setStage(6);
+              }
               else alert("Please pick a date and time!");
             }}>It's a Date! 💖</button>
           </div>
@@ -496,23 +526,29 @@ export default function DatePlannerTemplate({
 
       {stage === 6 && (
         <section className="full-screen-section bg-gradient-radial from-white to-[#fff0f5]">
-          <div className="bg-white p-12 rounded-[30px] shadow-[0_20px_50px_rgba(224,53,106,.2)] border-2 border-[#ff8fab]/40 max-w-[600px] w-full text-center">
-            <h2 className="script-title !mb-5">It's a Date! 🎉💖</h2>
-            <div className="flex justify-center gap-10 mb-8 flex-wrap">
-              <div className="flex flex-col items-center max-w-[180px]">
-                <img src={selectedPlace?.img} className="w-[140px] h-[140px] object-cover rounded-2xl border-4 border-[#ff8fab] shadow-lg mb-4" />
-                <p className="text-[18px]">📍 We are going to:<br/><span className="font-bold text-[#ff4d7d]">{selectedPlace?.name}</span></p>
+          <div className="bg-white p-10 rounded-[36px] shadow-[0_20px_60px_rgba(255,143,171,0.2)] max-w-[550px] w-full text-center border border-[#ff8fab]/20">
+            <h2 className="font-['Dancing_Script'] text-[42px] text-[#e0356a] mb-8">It's a Date! 🎉 💖</h2>
+            
+            <div className="flex justify-center gap-8 mb-8 flex-wrap">
+              <div className="flex flex-col items-center max-w-[160px]">
+                <img src={selectedPlace?.img} className="w-[130px] h-[130px] object-cover rounded-[28px] shadow-[0_0_20px_rgba(255,143,171,0.5)] mb-4 border-2 border-transparent hover:border-[#ff8fab] transition-all" />
+                <p className="text-[14px] text-[#7a3b63] opacity-80 mb-1">📍 We are going to:</p>
+                <p className="font-bold text-[#ff4d7d] text-[16px]">{selectedPlace?.name}</p>
               </div>
-              <div className="flex flex-col items-center max-w-[180px]">
-                <img src={selectedFood?.img} className="w-[140px] h-[140px] object-cover rounded-2xl border-4 border-[#ff8fab] shadow-lg mb-4" />
-                <p className="text-[18px]">🍽️ We are eating:<br/><span className="font-bold text-[#ff4d7d]">{selectedFood?.name}</span></p>
+              
+              <div className="flex flex-col items-center max-w-[160px]">
+                <img src={selectedFood?.img} className="w-[130px] h-[130px] object-cover rounded-[28px] shadow-[0_0_20px_rgba(255,143,171,0.5)] mb-4 border-2 border-transparent hover:border-[#ff8fab] transition-all" />
+                <p className="text-[14px] text-[#7a3b63] opacity-80 mb-1">🍽️ We are eating:</p>
+                <p className="font-bold text-[#ff4d7d] text-[16px]">{selectedFood?.name}</p>
               </div>
             </div>
-            <p className="text-[22px] my-4">📅 See you on: <span className="font-bold text-[#ff4d7d]">{selectedDate}</span></p>
-            <p className="text-[22px] my-4">⏰ At exactly: <span className="font-bold text-[#ff4d7d]">{selectedTime}</span></p>
-            <p className="mt-8 text-[18px] text-[#7a3b63]">Take a screenshot so you don't forget! 🥰</p>
             
-            <button className="btn mt-6 py-3 px-6 text-sm" onClick={copySummaryText}>📋 Copy Summary Details</button>
+            <div className="flex flex-col gap-2 mb-8 mt-2">
+              <p className="text-[17px] text-[#7a3b63]">📅 See you on: <span className="font-bold text-[#ff4d7d] text-[19px] ml-1">{getFormattedDate(selectedDate)}</span></p>
+              <p className="text-[17px] text-[#7a3b63]">⏰ At exactly: <span className="font-bold text-[#ff4d7d] text-[19px] ml-1">{selectedTime}</span></p>
+            </div>
+            
+            <p className="text-[15px] text-[#7a3b63] opacity-85">Take a screenshot so you don't forget! 🥰</p>
           </div>
         </section>
       )}

@@ -23,6 +23,7 @@ type ProposalClientProps = {
   demoId?: string;
   recipientName?: string;
   dodgeMessages?: string;
+  patternText?: string;
   media: MediaItem[];
 };
 

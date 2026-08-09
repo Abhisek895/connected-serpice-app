@@ -227,7 +227,7 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, onClose 
         const res = await createInstantEventFromTemplate(
           "Romantic",
           formValues["title"] || tmpl.defaultData.title,
-          formValues["recipientName"] || "My Love",
+          formValues["recipientName"] || "Someone Special ✨",
           demoId,
           {}
         );
@@ -298,7 +298,7 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, onClose 
         const res = await createInstantEventFromTemplate(
           "Romantic",
           overrides["title"] || tmpl.defaultData.title,
-          overrides["recipientName"] || "My Love",
+          overrides["recipientName"] || "Someone Special ✨",
           demoId,
           overrides
         );

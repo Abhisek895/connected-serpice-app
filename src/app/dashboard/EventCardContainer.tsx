@@ -41,7 +41,7 @@ export default function EventCardContainer({ events }: { events: EventItem[] }) 
             console.error("Error parsing customData for event:", event.id);
           }
 
-          const displayTitle = customData.title || `Proposal for ${event.theme.name}`;
+          const displayTitle = customData.internalTitle || customData.title || `Proposal for ${event.theme.name}`;
           const views = event.responses.filter((r) => r.action === "VIEWED").length;
           const isPublished = event.status === "PUBLISHED";
           const demoId: string = customData.demoId || "";

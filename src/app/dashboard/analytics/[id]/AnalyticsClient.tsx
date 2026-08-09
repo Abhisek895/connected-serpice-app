@@ -289,29 +289,31 @@ export default function AnalyticsClient({ event, customData }: AnalyticsClientPr
                                                   {isAccepted ? "Answered: YES! 😍" : "Answered: No 🙈"}
                                                 </p>
                                                 {metaObj && (
-                                                  <div className="mt-3 bg-slate-50 p-3.5 rounded-xl border border-slate-100 space-y-3 shadow-sm">
-                                                    {metaObj.place && (
-                                                      <div>
-                                                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">Place</span>
-                                                        <span className="text-sm font-medium text-slate-800">📍 We are going to:<br/>{metaObj.place}</span>
-                                                      </div>
-                                                    )}
-                                                    {metaObj.food && (
-                                                      <div>
-                                                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">Food</span>
-                                                        <span className="text-sm font-medium text-slate-800">🍽️ We are eating:<br/>{metaObj.food}</span>
-                                                      </div>
-                                                    )}
-                                                    {(metaObj.date || metaObj.time) && (
-                                                      <div>
-                                                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">Date & Time</span>
-                                                        <span className="text-sm font-medium text-slate-800">
-                                                          {metaObj.date && <>📅 See you on: {metaObj.date}</>}
-                                                          {metaObj.date && metaObj.time && <br />}
-                                                          {metaObj.time && <>⏰ At exactly: {metaObj.time}</>}
-                                                        </span>
-                                                      </div>
-                                                    )}
+                                                  <div className="mt-3 bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-sm font-['Quicksand']">
+                                                    <h3 className="font-['Dancing_Script'] text-2xl text-[#e0356a] mb-4 text-center">It's a Date! 🎉 💖</h3>
+                                                    <div className="space-y-4">
+                                                      {metaObj.place && (
+                                                        <div>
+                                                          <p className="text-[14px] text-slate-500 mb-0.5">📍 We are going to:</p>
+                                                          <p className="text-[15px] font-bold text-[#ff4d7d]">{metaObj.place}</p>
+                                                        </div>
+                                                      )}
+                                                      {metaObj.food && (
+                                                        <div>
+                                                          <p className="text-[14px] text-slate-500 mb-0.5">🍽️ We are eating:</p>
+                                                          <p className="text-[15px] font-bold text-[#ff4d7d]">{metaObj.food}</p>
+                                                        </div>
+                                                      )}
+                                                      {(metaObj.date || metaObj.time) && (
+                                                        <div className="pt-2">
+                                                          {metaObj.date && <p className="text-[15px] text-slate-600 mb-1">📅 See you on: <span className="font-bold text-[#ff4d7d]">{metaObj.date}</span></p>}
+                                                          {metaObj.time && <p className="text-[15px] text-slate-600">⏰ At exactly: <span className="font-bold text-[#ff4d7d]">{metaObj.time}</span></p>}
+                                                        </div>
+                                                      )}
+                                                    </div>
+                                                    <p className="mt-5 text-[13px] text-slate-500 text-center italic">
+                                                      Take a screenshot so you don't forget! 🥰
+                                                    </p>
                                                   </div>
                                                 )}
                                               </div>
