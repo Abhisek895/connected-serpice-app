@@ -41,7 +41,7 @@ export default function EventCardContainer({ events }: { events: EventItem[] }) 
             console.error("Error parsing customData for event:", event.id);
           }
 
-          const displayTitle = customData.internalTitle || customData.title || `Proposal for ${event.theme.name}`;
+          const displayTitle = customData.internalTitle || customData.title || `Proposal for ${event.theme?.name || "Unknown Theme"}`;
           const views = event.responses.filter((r) => r.action === "VIEWED").length;
           const isPublished = event.status === "PUBLISHED";
           const demoId: string = customData.demoId || "";
@@ -54,7 +54,7 @@ export default function EventCardContainer({ events }: { events: EventItem[] }) 
               <div>
                 <div className="flex justify-between items-start mb-4">
                   <div className="bg-rose-100 text-rose-600 px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" /> {event.theme.name}
+                    <Sparkles className="w-3 h-3" /> {event.theme?.name || "Unknown Theme"}
                   </div>
 
                   {/* Interactive 3-Dots Menu */}

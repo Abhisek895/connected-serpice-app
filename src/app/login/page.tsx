@@ -4,7 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Heart, Lock, Mail, ArrowRight, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
+import { Heart, Lock, Mail, ArrowRight, Eye, EyeOff, Loader2, AlertCircle, ShieldAlert } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");

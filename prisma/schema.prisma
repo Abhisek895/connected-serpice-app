@@ -17,6 +17,7 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?   // Hashed password for credentials auth
+  role          String    @default("USER") // "USER", "admin", "super_admin"
   plan          String    @default("FREE") // "FREE", "PREMIUM", "LIFETIME"
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

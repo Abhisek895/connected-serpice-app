@@ -282,11 +282,10 @@ export default function DashboardDemos() {
                 {/* Edit & Customize — all templates */}
                 <button
                   onClick={() => setCustomizeModalDemoId(demo.id)}
-                  className={`w-full py-2 px-3 rounded-xl text-white text-xs font-bold transition shadow-sm flex items-center justify-between ${
-                    !demo.hasInstantUse
-                      ? "bg-rose-500 hover:bg-rose-600 shadow-rose-200"
-                      : "bg-slate-900 hover:bg-slate-800"
-                  }`}
+                  className={`w-full py-2 px-3 rounded-xl text-white text-xs font-bold transition shadow-sm flex items-center justify-between ${!demo.hasInstantUse
+                    ? "bg-rose-500 hover:bg-rose-600 shadow-rose-200"
+                    : "bg-slate-900 hover:bg-slate-800"
+                    }`}
                 >
                   <span className="flex items-center gap-1.5">
                     <Edit3 className="w-3.5 h-3.5" />
@@ -329,7 +328,7 @@ export default function DashboardDemos() {
               <p className="text-sm text-slate-500 mb-4">
                 What would you like to call this event? This helps you distinguish it on your dashboard if you create multiple.
               </p>
-              
+
               <div className="mb-5">
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                   Event Title

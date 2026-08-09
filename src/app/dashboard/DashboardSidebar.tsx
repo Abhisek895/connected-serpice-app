@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { LayoutDashboard, PlusCircle, Settings, LogOut, Bell, User, Menu, X, ChevronRight } from "lucide-react";
+import { LayoutDashboard, PlusCircle, Settings, LogOut, Bell, User, Menu, X, ChevronRight, ShieldAlert } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function DashboardSidebar() {
@@ -27,6 +27,10 @@ export default function DashboardSidebar() {
     { name: "Notifications", href: "/dashboard/notifications", icon: Bell, badge: hasUnread },
     { name: "Settings", href: "/dashboard/settings", icon: Settings },
   ];
+
+  if ((session?.user as any)?.role === "super_admin" || (session?.user as any)?.role === "admin") {
+    navItems.push({ name: "Admin Panel", href: "/admin/overview", icon: ShieldAlert });
+  }
 
   const handleSignOut = () => {
     signOut({ callbackUrl: "/login" });
