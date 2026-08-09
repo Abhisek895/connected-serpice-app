@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function DashboardSidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const [hasUnread, setHasUnread] = useState(true);
+  const [hasUnread, setHasUnread] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Mark notification read when visiting analytics or notifications

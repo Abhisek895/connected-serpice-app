@@ -68,34 +68,17 @@ export default function NotificationsClient({ events }: { events: EventItem[] })
         list.push({
           id: `viewed-${event.id}`,
           eventId: event.id,
-          title: "Your crush opened the proposal 👀",
+          title: "Event Created 🚀",
           message: `Proposal link "${eventTitle}" is live! Click to view real-time reaction log and answers.`,
           time: new Date(event.createdAt).toLocaleDateString(),
           read: false,
-          type: "view",
+          type: "system",
           href: `/dashboard/analytics/${event.id}`,
           icon: Eye,
           color: "text-rose-500 bg-rose-100",
         });
       }
     });
-
-    // Fallback if user has no events created yet
-    if (list.length === 0) {
-      const firstEventId = events[0]?.id || "cmsk5bqgw00017217uhdu9t5v";
-      list.push({
-        id: "default-1",
-        eventId: firstEventId,
-        title: "Your crush opened the proposal 👀",
-        message: "Someone just opened your proposal link from a mobile device. Click to see their reaction in real-time!",
-        time: "Just now",
-        read: false,
-        type: "view",
-        href: `/dashboard/analytics/${firstEventId}`,
-        icon: Eye,
-        color: "text-rose-500 bg-rose-100",
-      });
-    }
 
     return list;
   };
