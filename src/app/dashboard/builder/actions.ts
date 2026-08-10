@@ -241,8 +241,13 @@ export async function createInstantEventFromTemplate(themeName: string, title?: 
     ...(extraData || {})
   };
 
+  const creatorUser = await prisma.user.findUnique({ where: { id: userId } });
+  const isPremiumCreator = creatorUser?.plan === "PREMIUM" || creatorUser?.role === "super_admin";
+
   let expiresAt: Date | null = null;
-  if (extraData?.expiresInDays) {
+  if (isPremiumCreator) {
+    expiresAt = null; // Premium accounts get NO EXPIRY on all proposals!
+  } else if (extraData?.expiresInDays) {
     expiresAt = new Date(Date.now() + extraData.expiresInDays * 24 * 60 * 60 * 1000);
   } else if (extraData?.isFreePass || ["FREE100%", "FREE100", "FREE1"].includes(extraData?.couponCode)) {
     expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 1-Day Trial Pass from FREE100% coupon!

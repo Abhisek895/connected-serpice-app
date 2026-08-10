@@ -109,6 +109,19 @@ export async function toggleSuspendAdminUser(id: string) {
   return { success: true, user: updated };
 }
 
+export async function toggleUserPlanAdminAction(id: string) {
+  await checkAuth();
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (!user) throw new Error("User not found");
+
+  const newPlan = user.plan === "PREMIUM" ? "FREE" : "PREMIUM";
+  const updated = await prisma.user.update({
+    where: { id },
+    data: { plan: newPlan },
+  });
+  return { success: true, user: updated };
+}
+
 // ─── Overview Stats ─────────────────────────────────────────────────────────
 export async function getLocalAdminStats() {
   await checkAuth();

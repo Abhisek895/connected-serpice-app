@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Loader2, Ban, CheckCircle2, Trash2, AlertCircle, AlertTriangle, X } from "lucide-react";
-import { getAdminUsers, deleteAdminUser, toggleSuspendAdminUser } from "@/app/admin/actions";
+import Link from "next/link";
+import { Search, Loader2, Ban, CheckCircle2, Trash2, AlertCircle, AlertTriangle, X, ExternalLink } from "lucide-react";
+import { getAdminUsers, deleteAdminUser, toggleSuspendAdminUser, toggleUserPlanAdminAction } from "@/app/admin/actions";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function AdminUsersPage() {
@@ -31,6 +32,26 @@ export default function AdminUsersPage() {
       setIsLoading(false);
     }
   }
+
+  const handleTogglePlan = async (userId: string, currentPlan: string) => {
+    setActionLoadingId(userId);
+    setMessage(null);
+    try {
+      const res = await toggleUserPlanAdminAction(userId);
+      if (res.success) {
+        const updatedPlan = res.user?.plan;
+        setMessage({
+          type: "success",
+          text: `User plan updated to ${updatedPlan}.`,
+        });
+        setUsers(users.map(u => u.id === userId ? { ...u, plan: updatedPlan } : u));
+      }
+    } catch (err: any) {
+      setMessage({ type: "error", text: err.message || "Failed to update user plan." });
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
 
   const handleToggleSuspend = async (userId: string, currentRole: string) => {
     setActionLoadingId(userId);
@@ -159,8 +180,17 @@ export default function AdminUsersPage() {
                   return (
                     <tr key={u.id} className="hover:bg-slate-800/30 transition-colors">
                       <td className="px-6 py-4">
-                        <div className="font-medium text-slate-200">{u.name || "—"}</div>
-                        <div className="text-xs text-slate-500">{u.email}</div>
+                        <Link
+                          href={`/admin/users/${u.id}`}
+                          className="group block"
+                          title="Click to view full user profile & manage promotion"
+                        >
+                          <div className="font-bold text-slate-200 group-hover:text-indigo-400 transition flex items-center gap-1.5">
+                            {u.name || "Unnamed User"}
+                            <ExternalLink className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-indigo-400 transition" />
+                          </div>
+                          <div className="text-xs text-slate-500 group-hover:text-slate-400 transition">{u.email}</div>
+                        </Link>
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${roleColors[u.role] || roleColors.USER}`}>
@@ -168,7 +198,18 @@ export default function AdminUsersPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="bg-indigo-500/10 text-indigo-400 text-xs px-2 py-0.5 rounded font-semibold">{u.plan}</span>
+                        <button
+                          onClick={() => handleTogglePlan(u.id, u.plan)}
+                          disabled={isActionBusy}
+                          className={`px-3 py-1 rounded-full text-xs font-bold transition border flex items-center gap-1 ${
+                            u.plan === "PREMIUM"
+                              ? "bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30"
+                              : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
+                          } disabled:opacity-50`}
+                          title={`Click to switch plan to ${u.plan === "PREMIUM" ? "FREE" : "PREMIUM"}`}
+                        >
+                          {u.plan === "PREMIUM" ? "👑 PREMIUM" : "FREE"}
+                        </button>
                       </td>
                       <td className="px-6 py-4 text-slate-400 text-xs">{new Date(u.createdAt).toLocaleDateString()}</td>
                       <td className="px-6 py-4 text-right">

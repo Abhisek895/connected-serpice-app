@@ -7,6 +7,21 @@ export async function POST(req: Request) {
     const { code, demoId } = await req.json();
     const { userId } = await getCurrentUser();
 
+    // Check if user is a PREMIUM account
+    if (userId) {
+      const dbUser = await prisma.user.findUnique({ where: { id: userId } });
+      if (dbUser && (dbUser.plan === "PREMIUM" || dbUser.role === "super_admin")) {
+        return NextResponse.json({
+          valid: true,
+          isPremium: true,
+          discountType: "PERCENTAGE",
+          discountValue: 100,
+          finalPrice: 0,
+          message: "👑 Premium Member: 100% FREE Access Granted!",
+        });
+      }
+    }
+
     if (!code) {
       return NextResponse.json({ valid: false, message: "No code provided" }, { status: 400 });
     }

@@ -7,6 +7,8 @@ import DashboardTourClient from "./DashboardTourClient";
 
 export default async function DashboardPage() {
   const { userId } = await getCurrentUser();
+  const dbUser = await prisma.user.findUnique({ where: { id: userId } });
+  const isPremiumUser = dbUser?.plan === "PREMIUM" || dbUser?.role === "super_admin";
 
   // Fetch real events created or published by the user from SQLite database
   const events = await prisma.event.findMany({
@@ -32,7 +34,7 @@ export default async function DashboardPage() {
     <DashboardTourClient>
       <div className="space-y-8">
         {/* Interactive Demo Showcase & Pre-Configured Templates */}
-        <DashboardDemos themePricing={themePricing} />
+        <DashboardDemos themePricing={themePricing} isPremiumUser={isPremiumUser} />
 
         {/* Persistent Saved Events & Links Section */}
         {events.length > 0 && (

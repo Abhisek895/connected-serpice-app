@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, User, ShieldAlert, Mail, Ban, ShieldCheck, Loader2, FileHeart, CreditCard } from "lucide-react";
-import { getAdminUserById, updateAdminUserRole } from "@/app/admin/actions";
+import { getAdminUserById, updateAdminUserRole, toggleUserPlanAdminAction } from "@/app/admin/actions";
 import { useAdminAuth } from "@/components/admin/AdminAuthProvider";
 
 export default function UserDetailPage() {
@@ -31,6 +31,22 @@ export default function UserDetailPage() {
       setUser({ ...user, role: newRole });
     } catch (err: any) {
       alert(err.message || "Failed to change role.");
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handlePlanToggle = async () => {
+    const targetPlan = user.plan === "PREMIUM" ? "FREE" : "PREMIUM";
+    if (!confirm(`Switch this user's plan to "${targetPlan}" in SQLite Database?`)) return;
+    setIsActionLoading(true);
+    try {
+      const res = await toggleUserPlanAdminAction(id as string);
+      if (res.success) {
+        setUser({ ...user, plan: res.user.plan });
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to update plan.");
     } finally {
       setIsActionLoading(false);
     }
@@ -125,6 +141,23 @@ export default function UserDetailPage() {
 
         {/* Actions */}
         <div className="space-y-4">
+          {/* Plan Promotion / Demotion Card */}
+          <div className="bg-[#111827] border border-amber-500/30 rounded-xl p-6 shadow-sm">
+            <h3 className="text-lg font-bold text-amber-400 mb-2 flex items-center gap-2">👑 Plan & Promotion</h3>
+            <p className="text-xs text-slate-400 mb-4">Current Database Plan: <span className="font-black text-amber-300 uppercase">{user.plan}</span></p>
+            <button
+              onClick={handlePlanToggle}
+              disabled={isActionLoading}
+              className={`w-full py-2.5 px-4 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 ${
+                user.plan === "PREMIUM"
+                  ? "bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"
+                  : "bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-slate-950 shadow-md shadow-amber-500/20"
+              }`}
+            >
+              {user.plan === "PREMIUM" ? "Demote to FREE User" : "Promote to PREMIUM 👑"}
+            </button>
+          </div>
+
           {currentUser?.role === "super_admin" && user.role !== "super_admin" && (
             <div className="bg-[#111827] border border-indigo-500/30 rounded-xl p-6 shadow-sm">
               <h3 className="text-lg font-bold text-indigo-400 mb-3">Role Management</h3>

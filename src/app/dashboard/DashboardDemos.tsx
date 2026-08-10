@@ -20,7 +20,13 @@ type ThemePricingItem = {
   thumbnailUrl?: string | null;
 };
 
-export default function DashboardDemos({ themePricing }: { themePricing?: ThemePricingItem[] }) {
+export default function DashboardDemos({
+  themePricing,
+  isPremiumUser
+}: {
+  themePricing?: ThemePricingItem[];
+  isPremiumUser?: boolean;
+}) {
   const router = useRouter();
   const [selectedDemo, setSelectedDemo] = useState<string | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -61,51 +67,59 @@ export default function DashboardDemos({ themePricing }: { themePricing?: ThemeP
     return true;
   });
 
+  const [pendingTitle, setPendingTitle] = useState<string>("");
+  const [appliedCouponCode, setAppliedCouponCode] = useState<string>("");
+
   const handleActionClick = (demoId: string, action: "instant" | "builder") => {
     if (action === "instant") {
-      const demo = activeDemos.find(d => d.id === demoId);
-      if (demo && demo.price && demo.price > 0) {
-        setCheckoutModal({
-          demoId: demo.id,
-          title: demo.title,
-          price: demo.price,
-          durationDays: demo.durationDays,
-          action: "instant"
-        });
-      } else {
-        setSelectedDemo(demoId);
-        setInstantModalTitle("");
-      }
+      // Step 1 FIRST: Open Title Modal to ask for title BEFORE payment!
+      setSelectedDemo(demoId);
+      setInstantModalTitle("");
     } else {
       // Try-Before-You-Buy: Always allow free customization first!
       setCustomizeModalDemoId(demoId);
     }
   };
 
-  const [appliedCouponCode, setAppliedCouponCode] = useState<string>("");
+  const handleTitleSubmit = (demoId: string, customTitle: string) => {
+    const demo = activeDemos.find((d) => d.id === demoId);
+    setSelectedDemo(null);
+    const finalTitle = customTitle.trim() || demo?.title || "Special Proposal ✨";
+    setPendingTitle(finalTitle);
 
-  const handlePaymentSuccess = (usedCouponCode?: string) => {
-    if (!checkoutModal) return;
-    const { action, demoId } = checkoutModal;
-    setCheckoutModal(null);
-    if (usedCouponCode) {
-      setAppliedCouponCode(usedCouponCode);
-    }
-    if (action === "instant") {
-      setSelectedDemo(demoId);
-      setInstantModalTitle("");
+    if (demo && demo.price && demo.price > 0) {
+      // Step 2 SECOND: Open Secure Checkout Modal with title already captured!
+      setCheckoutModal({
+        demoId: demo.id,
+        title: demo.title,
+        price: demo.price,
+        durationDays: demo.durationDays,
+        action: "instant"
+      });
     } else {
-      setCustomizeModalDemoId(demoId);
+      // If free template, create immediately
+      handleInstantUse(demoId, finalTitle, "");
     }
   };
 
-  const handleInstantUse = async (demoId: string, customTitle: string) => {
+  const handlePaymentSuccess = async (usedCouponCode?: string) => {
+    if (!checkoutModal) return;
+    const { demoId } = checkoutModal;
+    const activeCoupon = usedCouponCode || "";
+    setCheckoutModal(null);
+    
+    // Create the event using the captured title and coupon
+    await handleInstantUse(demoId, pendingTitle, activeCoupon);
+    setPendingTitle("");
+  };
+
+  const handleInstantUse = async (demoId: string, customTitle: string, couponCodeOverride?: string) => {
     const demo = activeDemos.find(d => d.id === demoId);
     if (!demo) return;
     setLoadingId(demo.id);
-    setSelectedDemo(null);
     try {
       const tmplClass = TEMPLATE_CLASSES.find((t) => t.id === demo.id);
+      const activeCoupon = couponCodeOverride !== undefined ? couponCodeOverride : appliedCouponCode;
       const res = await createInstantEventFromTemplate(
         "Romantic",
         tmplClass?.defaultData.title,
@@ -113,15 +127,15 @@ export default function DashboardDemos({ themePricing }: { themePricing?: ThemeP
         demo.id,
         {
           internalTitle: customTitle,
-          couponCode: appliedCouponCode,
-          isFreePass: ["FREE100%", "FREE100", "FREE1"].includes(appliedCouponCode),
+          couponCode: activeCoupon,
+          isFreePass: ["FREE100%", "FREE100", "FREE1"].includes(activeCoupon),
         }
       );
       setAppliedCouponCode("");
       if (res.success && res.customUrl) {
         const finalUrl = `${window.location.origin}${res.customUrl}`;
         setPublishedUrl(finalUrl);
-        setPublishedTitle(demo.title);
+        setPublishedTitle(customTitle || demo.title);
         router.refresh();
         setTimeout(() => { setPublishedUrl(null); setPublishedTitle(null); }, 8000);
       }
@@ -368,10 +382,10 @@ export default function DashboardDemos({ themePricing }: { themePricing?: ThemeP
               <div className="flex items-center gap-3">
                 <button onClick={() => setSelectedDemo(null)} className="flex-1 px-4 py-3 rounded-xl text-slate-600 font-bold bg-slate-100 hover:bg-slate-200 transition">Cancel</button>
                 <button
-                  onClick={() => handleInstantUse(selectedDemo, instantModalTitle)}
+                  onClick={() => handleTitleSubmit(selectedDemo, instantModalTitle)}
                   className="flex-1 px-4 py-3 rounded-xl text-white font-bold bg-rose-500 hover:bg-rose-600 transition shadow-sm shadow-rose-200 flex items-center justify-center gap-2"
                 >
-                  Create Now
+                  Continue ➔
                 </button>
               </div>
             </motion.div>
@@ -397,6 +411,7 @@ export default function DashboardDemos({ themePricing }: { themePricing?: ThemeP
             templateName={checkoutModal.title}
             originalPrice={checkoutModal.price}
             durationDays={checkoutModal.durationDays}
+            isPremiumUser={isPremiumUser}
             onClose={() => setCheckoutModal(null)}
             onSuccess={handlePaymentSuccess}
           />

@@ -50,6 +50,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: "User account not found. Please sign in again." }, { status: 401 });
     }
 
+    const isPremiumUser = existingUser.plan === "PREMIUM" || existingUser.role === "super_admin";
+    if (isPremiumUser) {
+      finalAmount = 0;
+    }
+
     // Ensure coupon exists in DB if couponId was resolved
     if (couponId) {
       const existingCoupon = await prisma.coupon.findUnique({ where: { id: couponId } });

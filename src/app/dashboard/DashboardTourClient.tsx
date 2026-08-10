@@ -20,7 +20,7 @@ export default function DashboardTourClient({ children }: { children: React.Reac
   }, []);
 
   const handleNextStep = () => {
-    if (currentStep >= 4) {
+    if (currentStep >= 6) {
       localStorage.setItem("ourstory_onboarding_completed", "true");
       setIsTourActive(false);
     } else {
@@ -69,7 +69,7 @@ export default function DashboardTourClient({ children }: { children: React.Reac
         <>
           <OnboardingProgressBar
             currentStep={currentStep}
-            totalSteps={4}
+            totalSteps={6}
             onReplayTour={handleStartTour}
           />
 

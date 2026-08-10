@@ -4,12 +4,14 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, CreditCard, Tag, Loader2, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
 import Script from "next/script";
+import { useSession } from "next-auth/react";
 
 type CheckoutModalProps = {
   demoId: string;
   templateName: string;
   originalPrice: number; // in paise
   durationDays: number;
+  isPremiumUser?: boolean;
   onClose: () => void;
   onSuccess: (usedCouponCode?: string) => void;
 };
@@ -19,23 +21,35 @@ export default function CheckoutModal({
   templateName,
   originalPrice,
   durationDays,
+  isPremiumUser,
   onClose,
   onSuccess,
 }: CheckoutModalProps) {
-  const [couponCode, setCouponCode] = useState("");
-  const [couponStatus, setCouponStatus] = useState<"idle" | "validating" | "valid" | "invalid">("idle");
-  const [couponMessage, setCouponMessage] = useState("");
-  const [finalPrice, setFinalPrice] = useState(originalPrice);
+  const { data: session } = useSession();
+  const userObj = session?.user as any;
+  const isPremiumAccount = Boolean(isPremiumUser) || userObj?.plan === "PREMIUM" || userObj?.role === "super_admin";
+
+  const [couponCode, setCouponCode] = useState(isPremiumAccount ? "PREMIUM_FREE" : "");
+  const [couponStatus, setCouponStatus] = useState<"idle" | "validating" | "valid" | "invalid">(isPremiumAccount ? "valid" : "idle");
+  const [couponMessage, setCouponMessage] = useState(isPremiumAccount ? "👑 Premium Member: 100% FREE Access Granted!" : "");
+  const [finalPrice, setFinalPrice] = useState(isPremiumAccount ? 0 : originalPrice);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
   const [isFree1Eligible, setIsFree1Eligible] = useState<boolean | null>(null);
 
   const originalPriceINR = originalPrice / 100;
-  const finalPriceINR = finalPrice / 100;
+  const finalPriceINR = isPremiumAccount ? 0 : finalPrice / 100;
   const discountINR = originalPriceINR - finalPriceINR;
 
-  // On mount: Check FREE100% eligibility automatically for new vs returning users
+  // On mount: Check FREE100% eligibility automatically for regular users
   useEffect(() => {
+    if (isPremiumAccount) {
+      setFinalPrice(0);
+      setCouponMessage("👑 Premium Member: 100% FREE Access Granted!");
+      setCouponStatus("valid");
+      return;
+    }
+
     async function checkFree1Eligibility() {
       try {
         const res = await fetch("/api/coupon/validate", {
@@ -44,6 +58,12 @@ export default function CheckoutModal({
           body: JSON.stringify({ code: "FREE100%", demoId }),
         });
         const data = await res.json();
+        if (data.isPremium || data.message?.includes("Premium Member")) {
+          setFinalPrice(0);
+          setCouponMessage("👑 Premium Member: 100% FREE Access Granted!");
+          setCouponStatus("valid");
+          return;
+        }
         if (data.valid) {
           setIsFree1Eligible(true);
           setCouponCode("FREE100%");
@@ -57,9 +77,11 @@ export default function CheckoutModal({
       }
     }
     checkFree1Eligibility();
-  }, [demoId]);
+  }, [demoId, isPremiumAccount]);
 
   useEffect(() => {
+    if (isPremiumAccount) return;
+
     if (couponCode.length < 3) {
       setCouponStatus("idle");
       setFinalPrice(originalPrice);
@@ -72,7 +94,7 @@ export default function CheckoutModal({
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [couponCode]);
+  }, [couponCode, isPremiumAccount]);
 
   async function validateCoupon() {
     setCouponStatus("validating");
@@ -249,76 +271,88 @@ export default function CheckoutModal({
               <span className="font-bold">₹{originalPriceINR.toFixed(2)}</span>
             </div>
 
-            {/* Coupon Code Section */}
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
-                  <Tag className="w-4 h-4 text-rose-500" /> Apply Coupon Code
-                </span>
-                <span className="text-[11px] text-rose-600 font-semibold">Suggested for you 👇</span>
-              </label>
-
-              <div className="relative">
-                <input
-                  type="text"
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                  placeholder="Enter code (e.g. LOVE2026)"
-                  className="w-full pl-4 pr-10 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all uppercase placeholder:normal-case font-black text-slate-900 text-sm tracking-wide"
-                />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  {couponStatus === "validating" && <Loader2 className="w-4 h-4 text-rose-500 animate-spin" />}
-                  {couponStatus === "valid" && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
-                  {couponStatus === "invalid" && <AlertCircle className="w-5 h-5 text-rose-500" />}
+            {/* Coupon Code Section or Premium Member Banner */}
+            {couponMessage.includes("Premium Member") ? (
+              <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-2xl p-4 text-center space-y-1">
+                <div className="text-amber-800 font-black text-sm flex items-center justify-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-amber-600 fill-amber-500" />
+                  👑 Premium Unlimited Pass Active
                 </div>
-              </div>
-
-              {/* Conditional Coupon Chips */}
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {/* Show FREE100% ONLY if the user has 1 pass count remaining */}
-                {isFree1Eligible && (
-                  <button
-                    type="button"
-                    onClick={() => setCouponCode("FREE100%")}
-                    className={`text-[11px] px-3 py-1.5 rounded-xl border font-black transition flex items-center gap-1.5 ${
-                      ["FREE100%", "FREE1"].includes(couponCode)
-                        ? "bg-rose-500 text-white border-rose-600 shadow-md shadow-rose-200 ring-2 ring-rose-300"
-                        : "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
-                    }`}
-                  >
-                    <Sparkles className="w-3 h-3 fill-white" />
-                    🎁 FREE100% (100% OFF 1-Day Pass)
-                  </button>
-                )}
-
-                {/* Standard coupons with crisp black text */}
-                {["LOVE2026", "SPECIAL50", "OURSTORY"].map((code) => (
-                  <button
-                    key={code}
-                    type="button"
-                    onClick={() => setCouponCode(code)}
-                    className={`text-[11px] px-3 py-1.5 rounded-xl border font-black transition flex items-center gap-1 ${
-                      couponCode === code
-                        ? "bg-amber-400 text-slate-950 border-amber-500 shadow-md ring-2 ring-amber-300"
-                        : "bg-slate-100 text-slate-950 border-slate-300 hover:bg-slate-200"
-                    }`}
-                  >
-                    🏷️ <span className="text-slate-950 font-black">{code}</span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Status Message */}
-              {couponMessage && (
-                <p className={`text-xs font-bold mt-1.5 ${couponStatus === "valid" ? "text-emerald-600" : "text-rose-500"}`}>
-                  {couponStatus === "valid" ? `✓ ${couponMessage}` : couponMessage}
+                <p className="text-xs text-amber-700 font-semibold">
+                  As a Premium Member ∞, you enjoy 100% FREE instant link activation with NO expiry on all templates!
                 </p>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Tag className="w-4 h-4 text-rose-500" /> Apply Coupon Code
+                  </span>
+                  <span className="text-[11px] text-rose-600 font-semibold">Suggested for you 👇</span>
+                </label>
+
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    placeholder="Enter code (e.g. LOVE2026)"
+                    className="w-full pl-4 pr-10 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all uppercase placeholder:normal-case font-black text-slate-900 text-sm tracking-wide"
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    {couponStatus === "validating" && <Loader2 className="w-4 h-4 text-rose-500 animate-spin" />}
+                    {couponStatus === "valid" && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
+                    {couponStatus === "invalid" && <AlertCircle className="w-5 h-5 text-rose-500" />}
+                  </div>
+                </div>
+
+                {/* Conditional Coupon Chips */}
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {/* Show FREE100% ONLY if the user has 1 pass count remaining */}
+                  {isFree1Eligible && (
+                    <button
+                      type="button"
+                      onClick={() => setCouponCode("FREE100%")}
+                      className={`text-[11px] px-3 py-1.5 rounded-xl border font-black transition flex items-center gap-1.5 ${
+                        ["FREE100%", "FREE1"].includes(couponCode)
+                          ? "bg-rose-500 text-white border-rose-600 shadow-md shadow-rose-200 ring-2 ring-rose-300"
+                          : "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
+                      }`}
+                    >
+                      <Sparkles className="w-3 h-3 fill-white" />
+                      🎁 FREE100% (100% OFF 1-Day Pass)
+                    </button>
+                  )}
+
+                  {/* Standard coupons with crisp black text */}
+                  {["LOVE2026", "SPECIAL50", "OURSTORY"].map((code) => (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => setCouponCode(code)}
+                      className={`text-[11px] px-3 py-1.5 rounded-xl border font-black transition flex items-center gap-1 ${
+                        couponCode === code
+                          ? "bg-amber-400 text-slate-950 border-amber-500 shadow-md ring-2 ring-amber-300"
+                          : "bg-slate-100 text-slate-950 border-slate-300 hover:bg-slate-200"
+                      }`}
+                    >
+                      🏷️ <span className="text-slate-950 font-black">{code}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Status Message */}
+                {couponMessage && (
+                  <p className={`text-xs font-bold mt-1.5 ${couponStatus === "valid" ? "text-emerald-600" : "text-rose-500"}`}>
+                    {couponStatus === "valid" ? `✓ ${couponMessage}` : couponMessage}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Discount Summary */}
             <div className="border-t border-slate-100 pt-4 space-y-3">
-              {discountINR > 0 && (
+              {discountINR > 0 && !couponMessage.includes("Premium Member") && (
                 <div className="flex justify-between items-center text-emerald-700 font-extrabold text-xs bg-emerald-50 p-3 rounded-2xl border border-emerald-200">
                   <span>Discount Applied 🎉 ({couponCode})</span>
                   <span>- ₹{discountINR.toFixed(2)}</span>
@@ -330,13 +364,19 @@ export default function CheckoutModal({
                 <div className="text-right">
                   <span className="text-2xl font-black text-rose-600">₹{finalPriceINR.toFixed(2)}</span>
                   {finalPriceINR === 0 && (
-                    <span className="block text-[10px] text-emerald-600 font-bold uppercase">100% FREE PASS</span>
+                    <span className="block text-[10px] text-amber-600 font-extrabold uppercase tracking-wide">
+                      {couponMessage.includes("Premium Member") ? "👑 PREMIUM MEMBER ∞" : "100% FREE PASS"}
+                    </span>
                   )}
                 </div>
               </div>
 
               <p className="text-xs text-slate-500 text-center bg-slate-50 py-2.5 rounded-xl border border-slate-100 font-medium">
-                Includes full access for <strong>{["FREE100%", "FREE100", "FREE1"].includes(couponCode) ? 1 : durationDays} days</strong> + instant link publishing.
+                {couponMessage.includes("Premium Member") ? (
+                  <>Includes <strong>Full Access for Premium Member ∞</strong> + instant link publishing.</>
+                ) : (
+                  <>Includes full access for <strong>{["FREE100%", "FREE100", "FREE1"].includes(couponCode) ? 1 : durationDays} days</strong> + instant link publishing.</>
+                )}
               </p>
             </div>
 
@@ -356,8 +396,14 @@ export default function CheckoutModal({
               {isProcessing ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  {finalPriceINR === 0 ? "Activating 1-Day Pass..." : "Processing Payment..."}
+                  {couponMessage.includes("Premium Member")
+                    ? "Activating Premium Link..."
+                    : finalPriceINR === 0
+                    ? "Activating 1-Day Pass..."
+                    : "Processing Payment..."}
                 </>
+              ) : couponMessage.includes("Premium Member") ? (
+                "🚀 Activate Link (Free for Premium Member ∞)"
               ) : finalPriceINR === 0 ? (
                 "🚀 Activate 1-Day Free Pass (₹0)"
               ) : (

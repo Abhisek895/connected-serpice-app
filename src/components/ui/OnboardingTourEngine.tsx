@@ -21,14 +21,18 @@ export default function OnboardingTourEngine({
     1: '[data-tour="preview-demo"]',
     2: '[data-tour="use-as-is"]',
     3: '[data-tour="event-card-root"]',
-    4: '[data-tour="event-card-analytics"]',
+    4: '[data-tour="view-answers-log"]',
+    5: '[data-tour="copy-direct-link"]',
+    6: '[data-tour="share-loved-one"]',
   };
 
   const badgeTexts: Record<number, string> = {
     1: "Click '1. Preview Demo' 👇",
     2: "Click '2. Use As-Is' 👇",
     3: "Your Saved Proposal Link 💌",
-    4: "View Answers & Log 👀",
+    4: "Click 'View Answers & Log' 👇",
+    5: "Click 'Copy Direct Link' 👇",
+    6: "Click 'Share 💖' to send via WhatsApp / Apps 👇",
   };
 
   const targetSelector = selectors[currentStep];
@@ -74,7 +78,7 @@ export default function OnboardingTourEngine({
     };
   }, [currentStep, targetSelector, onNextStep]);
 
-  if (!targetSelector || currentStep > 4) return null;
+  if (!targetSelector || currentStep > 6) return null;
 
   return (
     <AnimatePresence>

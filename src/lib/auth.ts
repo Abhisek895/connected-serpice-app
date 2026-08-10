@@ -80,14 +80,16 @@ export const authOptions: AuthOptions = {
       if (user) {
         token.sub = user.id;
         
-        // Always fetch latest role from database to support Google OAuth logins
+        // Always fetch latest role and plan from database
         try {
           const dbUser = await prisma.user.findUnique({
             where: { email: user.email as string }
           });
           token.role = dbUser?.role || "USER";
+          token.plan = dbUser?.plan || "FREE";
         } catch (e) {
           token.role = (user as any).role || "USER";
+          token.plan = (user as any).plan || "FREE";
         }
       }
       return token;
@@ -96,6 +98,7 @@ export const authOptions: AuthOptions = {
       if (token.sub && session.user) {
         session.user.id = token.sub;
         (session.user as any).role = token.role as string;
+        (session.user as any).plan = token.plan as string;
       }
       return session;
     },
