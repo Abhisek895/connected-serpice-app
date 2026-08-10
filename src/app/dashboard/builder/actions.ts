@@ -146,10 +146,20 @@ export async function publishEvent(eventId: string) {
 export async function createInstantEventFromTemplate(themeName: string, title?: string, recipientName?: string, demoId?: string, extraData?: any) {
   const { userId } = await getCurrentUser();
 
-  let theme = await prisma.theme.findFirst({ where: { name: themeName } });
+  const targetThemeName = demoId || themeName;
+  let theme = await prisma.theme.findFirst({
+    where: { name: targetThemeName }
+  });
+
+  if (!theme && themeName) {
+    theme = await prisma.theme.findFirst({
+      where: { name: themeName }
+    });
+  }
+
   if (!theme) {
     theme = await prisma.theme.create({
-      data: { name: themeName, isPremium: false }
+      data: { name: targetThemeName, isPremium: false, durationDays: 7 }
     });
   }
 
@@ -231,6 +241,21 @@ export async function createInstantEventFromTemplate(themeName: string, title?: 
     ...(extraData || {})
   };
 
+  let expiresAt: Date | null = null;
+  if (extraData?.expiresInDays) {
+    expiresAt = new Date(Date.now() + extraData.expiresInDays * 24 * 60 * 60 * 1000);
+  } else if (extraData?.isFreePass || ["FREE100%", "FREE100", "FREE1"].includes(extraData?.couponCode)) {
+    expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 1-Day Trial Pass from FREE100% coupon!
+  } else {
+    // Connect to Admin-configured duration (e.g. 7 days, 10 days)
+    const durationDays = theme?.durationDays || 7;
+    if (durationDays < 3650) {
+      expiresAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
+    } else {
+      expiresAt = null; // No expiry for 3650 days (unlimited)
+    }
+  }
+
   const event = await prisma.event.create({
     data: {
       userId,
@@ -238,6 +263,7 @@ export async function createInstantEventFromTemplate(themeName: string, title?: 
       slug: uniqueSlug,
       status: "PUBLISHED",
       customData: JSON.stringify(customData),
+      expiresAt,
     }
   });
 

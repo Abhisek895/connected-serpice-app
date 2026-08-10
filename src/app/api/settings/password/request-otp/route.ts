@@ -27,8 +27,8 @@ export async function POST(req: Request) {
       where: { email: session.user.email }
     });
 
-    if (!user || !user.password) {
-      return NextResponse.json({ error: "User not found or no password set" }, { status: 400 });
+    if (!user || !user.email || !user.password) {
+      return NextResponse.json({ error: "User or valid email not found" }, { status: 400 });
     }
 
     const isValid = await bcrypt.compare(currentPassword, user.password);

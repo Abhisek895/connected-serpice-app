@@ -27,6 +27,10 @@ export const authOptions: AuthOptions = {
           throw new Error("No user found with this email address. Try signing in with Google.");
         }
 
+        if (user.role === "SUSPENDED") {
+          throw new Error("Your account has been suspended by an administrator.");
+        }
+
         const isValidPassword = await bcrypt.compare(credentials.password, user.password);
 
         if (!isValidPassword) {

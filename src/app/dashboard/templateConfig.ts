@@ -16,6 +16,7 @@ export type TemplateField = {
   required?: boolean;
   accept?: string;       // for file inputs
   hint?: string;
+  presetSuggestions?: string[]; // 1-click inspiration chips
 };
 
 export type TemplateStep = {
@@ -58,6 +59,11 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
             label: "Surprise Title",
             type: "text",
             placeholder: "A Surprise For You... 😊",
+            presetSuggestions: [
+              "A Surprise For You... 😊",
+              "Happy Anniversary My Love! ❤️",
+              "You Make My World Sweeter 🌸",
+            ],
           },
           {
             key: "recipientName",
@@ -71,13 +77,19 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
             type: "text",
             placeholder: "love you",
             hint: "The repeating text that makes up the hidden portrait.",
+            presetSuggestions: ["love you", "forever yours", "my cutie"],
           },
           {
             key: "loveMessage",
             label: "Secret Love Letter (Back Text)",
             type: "textarea",
             placeholder: "Write a cute message…",
-            hint: "Revealed when they click '\ud83d\udc8c Read My Message' on the portrait page.",
+            hint: "Revealed when they click '💌 Read My Message' on the portrait page.",
+            presetSuggestions: [
+              "Every single day with you feels like a beautiful dream come true. You are my favorite person in the entire world! ❤️",
+              "Life is so much sweeter, funnier, and warmer with you by my side. Thank you for being you! ✨",
+              "I didn't believe in magic until I met you. Here's to us, forever and always! 💖",
+            ],
           },
         ],
       },

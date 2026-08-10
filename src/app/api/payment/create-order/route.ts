@@ -6,7 +6,7 @@ import Razorpay from "razorpay";
 export async function POST(req: Request) {
   try {
     const { userId } = await getCurrentUser();
-    
+
     if (!userId) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
@@ -27,23 +27,60 @@ export async function POST(req: Request) {
 
     let finalAmount = theme.price;
     let couponId = null;
+    const cleanCode = couponCode ? couponCode.trim().toUpperCase() : "";
 
     // Apply coupon if provided
-    if (couponCode && finalAmount > 0) {
-      const coupon = await prisma.coupon.findUnique({ where: { code: couponCode } });
+    if (cleanCode && finalAmount > 0) {
+      const coupon = await prisma.coupon.findFirst({ where: { code: cleanCode } });
       if (coupon && coupon.isActive && (!coupon.expiresAt || new Date() <= coupon.expiresAt) && (!coupon.maxUses || coupon.usedCount < coupon.maxUses)) {
         couponId = coupon.id;
-        if (coupon.discountType === "PERCENT") {
+        if (coupon.discountType === "PERCENT" || coupon.discountType === "PERCENTAGE") {
           const discount = Math.floor((finalAmount * coupon.discountValue) / 100);
           finalAmount = Math.max(0, finalAmount - discount);
         } else {
-          finalAmount = Math.max(0, finalAmount - coupon.discountValue);
+          const fixedDiscountPaise = coupon.discountValue < 500 ? coupon.discountValue * 100 : coupon.discountValue;
+          finalAmount = Math.max(0, finalAmount - fixedDiscountPaise);
         }
       }
     }
 
+    // Ensure user exists in DB to prevent foreign key violation
+    const existingUser = await prisma.user.findUnique({ where: { id: userId } });
+    if (!existingUser) {
+      return NextResponse.json({ success: false, message: "User account not found. Please sign in again." }, { status: 401 });
+    }
+
+    // Ensure coupon exists in DB if couponId was resolved
+    if (couponId) {
+      const existingCoupon = await prisma.coupon.findUnique({ where: { id: couponId } });
+      if (!existingCoupon) {
+        couponId = null;
+      }
+    }
+
     if (finalAmount === 0) {
-      // Free template or fully discounted, no Razorpay needed
+      // Free template or fully discounted coupon order
+      await prisma.payment.create({
+        data: {
+          userId,
+          razorpayOrderId: `free_order_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          amount: theme.price,
+          finalAmount: 0,
+          currency: "INR",
+          status: "SUCCESS",
+          plan: ["FREE100%", "FREE100", "FREE1"].includes(cleanCode) ? "1_DAY_FREE_PASS" : "DISCOUNTED_TEMPLATE_PURCHASE",
+          demoId,
+          couponId,
+        }
+      });
+
+      if (couponId) {
+        await prisma.coupon.update({
+          where: { id: couponId },
+          data: { usedCount: { increment: 1 } }
+        });
+      }
+
       return NextResponse.json({ success: true, amount: 0, orderId: "FREE" });
     }
 

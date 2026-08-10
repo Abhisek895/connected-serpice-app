@@ -14,6 +14,8 @@ type ResponseItem = {
   createdAt: string | Date;
 };
 
+import AnalyticsTourEngine from "@/components/ui/AnalyticsTourEngine";
+
 type AnalyticsClientProps = {
   event: any;
   customData: any;
@@ -21,6 +23,7 @@ type AnalyticsClientProps = {
 
 export default function AnalyticsClient({ event, customData }: AnalyticsClientProps) {
   const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
+  const [isTourActive, setIsTourActive] = useState<boolean>(true);
 
   const responses: ResponseItem[] = event.responses || [];
 
@@ -72,6 +75,10 @@ export default function AnalyticsClient({ event, customData }: AnalyticsClientPr
 
   return (
     <div className="max-w-5xl mx-auto pb-12">
+      {isTourActive && (
+        <AnalyticsTourEngine onCompleteTour={() => setIsTourActive(false)} />
+      )}
+
       <div className="mb-6">
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition">
           <ArrowLeft className="w-4 h-4" /> Back to Dashboard
@@ -99,7 +106,7 @@ export default function AnalyticsClient({ event, customData }: AnalyticsClientPr
         </div>
 
         {/* Metrics Overview */}
-        <div className="p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-6 bg-white">
+        <div className="p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-6 bg-white" data-tour="analytics-metrics">
           <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 text-center shadow-sm max-w-sm w-full">
             <div className="bg-blue-100 text-blue-600 p-3 rounded-xl w-fit mx-auto mb-3">
               <Eye className="w-6 h-6" />
@@ -111,7 +118,7 @@ export default function AnalyticsClient({ event, customData }: AnalyticsClientPr
       </div>
 
       {/* Response Feed / Answers History */}
-      <div>
+      <div data-tour="analytics-log-list">
         <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 mb-6 px-2">
           <Clock className="w-5 h-5 text-rose-500" /> Recipient Visit Log
         </h2>

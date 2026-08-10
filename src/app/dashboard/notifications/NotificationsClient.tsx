@@ -84,8 +84,15 @@ export default function NotificationsClient({ events }: { events: EventItem[] })
   };
 
   const [notifications, setNotifications] = useState<NotificationItem[]>(generateInitialNotifications());
+  const [filter, setFilter] = useState<"all" | "unread" | "views">("all");
 
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  const filteredNotifications = notifications.filter(n => {
+    if (filter === "unread") return !n.read;
+    if (filter === "views") return n.type === "view";
+    return true;
+  });
 
   const markAsRead = (id: string) => {
     setNotifications(notifications.map(n => 
@@ -104,7 +111,7 @@ export default function NotificationsClient({ events }: { events: EventItem[] })
   return (
     <div className="max-w-4xl mx-auto pb-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
           <Link 
             href="/dashboard"
@@ -136,14 +143,35 @@ export default function NotificationsClient({ events }: { events: EventItem[] })
         )}
       </div>
 
+      {/* Filter Tabs */}
+      <div className="flex gap-2 mb-6">
+        {[
+          { id: "all", label: `All (${notifications.length})` },
+          { id: "unread", label: `Unread (${unreadCount})` },
+          { id: "views", label: "Views 👀" },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setFilter(tab.id as any)}
+            className={`px-4 py-2 rounded-2xl text-xs font-bold transition ${
+              filter === tab.id
+                ? "bg-slate-900 text-white shadow-md"
+                : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* Notifications List */}
       <div className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
-        {notifications.length === 0 ? (
+        {filteredNotifications.length === 0 ? (
           <div className="p-12 text-center flex flex-col items-center">
             <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-slate-100">
               <Bell className="w-8 h-8 text-slate-300" />
             </div>
-            <h3 className="text-lg font-bold text-slate-700">No notifications yet</h3>
+            <h3 className="text-lg font-bold text-slate-700">No notifications found</h3>
             <p className="text-slate-500 text-sm mt-2 max-w-sm">
               When people view or interact with your surprises, you'll see real-time updates here.
             </p>
@@ -151,7 +179,7 @@ export default function NotificationsClient({ events }: { events: EventItem[] })
         ) : (
           <div className="divide-y divide-slate-100">
             <AnimatePresence>
-              {notifications.map((notif) => {
+              {filteredNotifications.map((notif) => {
                 const Icon = notif.icon;
                 return (
                   <motion.div 

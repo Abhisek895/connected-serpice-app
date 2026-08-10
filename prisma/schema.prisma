@@ -133,6 +133,7 @@ model Coupon {
   discountType   String    @default("FIXED")
   discountValue  Int
   maxUses        Int?
+  maxUsesPerUser Int?      @default(1)
   usedCount      Int       @default(0)
   expiresAt      DateTime?
   isActive       Boolean   @default(true)

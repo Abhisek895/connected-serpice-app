@@ -1,10 +1,13 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
 
-// Initialize razorpay instance
+// Initialize razorpay instance safely
+const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || "rzp_test_dummykey";
+const keySecret = process.env.RAZORPAY_KEY_SECRET || "dummysecret";
+
 export const razorpay = new Razorpay({
-  key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || "",
-  key_secret: process.env.RAZORPAY_KEY_SECRET || "",
+  key_id: keyId,
+  key_secret: keySecret,
 });
 
 /**

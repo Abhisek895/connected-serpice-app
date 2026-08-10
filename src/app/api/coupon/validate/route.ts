@@ -1,20 +1,26 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/session";
 
 export async function POST(req: Request) {
   try {
     const { code, demoId } = await req.json();
+    const { userId } = await getCurrentUser();
 
     if (!code) {
       return NextResponse.json({ valid: false, message: "No code provided" }, { status: 400 });
     }
 
-    const coupon = await prisma.coupon.findUnique({
-      where: { code },
+    const cleanCode = code.trim().toUpperCase();
+
+    const coupon = await prisma.coupon.findFirst({
+      where: {
+        code: cleanCode,
+      },
     });
 
     if (!coupon) {
-      return NextResponse.json({ valid: false, message: "Invalid coupon code" }, { status: 404 });
+      return NextResponse.json({ valid: false, message: `Invalid coupon code: "${cleanCode}"` }, { status: 404 });
     }
 
     if (!coupon.isActive) {
@@ -26,7 +32,29 @@ export async function POST(req: Request) {
     }
 
     if (coupon.maxUses && coupon.usedCount >= coupon.maxUses) {
-      return NextResponse.json({ valid: false, message: "Coupon usage limit reached" }, { status: 400 });
+      return NextResponse.json({ valid: false, message: "Coupon overall usage limit reached" }, { status: 400 });
+    }
+
+    // Enforce per-account usage limit (maxUsesPerUser)
+    if (coupon.maxUsesPerUser && userId) {
+      const isTrialCoupon = ["FREE100%", "FREE100", "FREE1"].includes(cleanCode);
+      const userUsesCount = await prisma.payment.count({
+        where: {
+          userId,
+          status: "SUCCESS",
+          OR: [
+            { couponId: coupon.id },
+            ...(isTrialCoupon ? [{ plan: "1_DAY_FREE_PASS" }] : [])
+          ]
+        }
+      });
+
+      if (userUsesCount >= coupon.maxUsesPerUser) {
+        return NextResponse.json({
+          valid: false,
+          message: `You have reached the limit of ${coupon.maxUsesPerUser} use(s) per account for coupon ${coupon.code}.`
+        }, { status: 400 });
+      }
     }
 
     // We fetch the theme to get the original price if demoId is provided
@@ -37,14 +65,16 @@ export async function POST(req: Request) {
       const theme = await prisma.theme.findUnique({
         where: { name: demoId },
       });
-      
+
       if (theme) {
         originalPrice = theme.price;
-        if (coupon.discountType === "PERCENT") {
+        if (coupon.discountType === "PERCENT" || coupon.discountType === "PERCENTAGE") {
           const discount = Math.floor((originalPrice * coupon.discountValue) / 100);
           finalPrice = Math.max(0, originalPrice - discount);
         } else {
-          finalPrice = Math.max(0, originalPrice - coupon.discountValue);
+          // FIXED discount: handle paise or INR unit conversion
+          const fixedDiscountPaise = coupon.discountValue < 500 ? coupon.discountValue * 100 : coupon.discountValue;
+          finalPrice = Math.max(0, originalPrice - fixedDiscountPaise);
         }
       }
     }

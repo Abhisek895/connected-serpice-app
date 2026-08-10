@@ -37,6 +37,78 @@ export async function updateAdminUserRole(id: string, newRole: string) {
   return updated;
 }
 
+export async function deleteAdminUser(id: string) {
+  const session = await checkAuth();
+  const callerId = session.user.id;
+  if (callerId === id) throw new Error("You cannot delete your own account");
+
+  const targetUser = await prisma.user.findUnique({ where: { id } });
+  if (!targetUser) throw new Error("User not found");
+
+  if (targetUser.email === "sarkarabhisek50@gmail.com" || targetUser.role === "super_admin") {
+    throw new Error("Superadmin account (sarkarabhisek50@gmail.com) is permanently protected and cannot be deleted.");
+  }
+
+  // 1. Find all events created by user
+  const userEvents = await prisma.event.findMany({
+    where: { userId: id },
+    select: { id: true }
+  });
+  const eventIds = userEvents.map(e => e.id);
+
+  // 2. Delete all responses/analytics recorded for user's events
+  if (eventIds.length > 0) {
+    await prisma.response.deleteMany({
+      where: { eventId: { in: eventIds } }
+    });
+  }
+
+  // 3. Delete all events owned by user
+  await prisma.event.deleteMany({
+    where: { userId: id }
+  });
+
+  // 4. Delete all payments owned by user
+  await prisma.payment.deleteMany({
+    where: { userId: id }
+  });
+
+  // 5. Delete associated OAuth accounts & sessions
+  await prisma.account.deleteMany({
+    where: { userId: id }
+  });
+  await prisma.session.deleteMany({
+    where: { userId: id }
+  });
+
+  // 6. Delete verification tokens linked to user email if any
+  if (targetUser.email) {
+    await prisma.verificationToken.deleteMany({
+      where: { identifier: targetUser.email }
+    });
+  }
+
+  // 7. Permanently delete user record
+  await prisma.user.delete({ where: { id } });
+
+  return { success: true };
+}
+
+export async function toggleSuspendAdminUser(id: string) {
+  const session = await checkAuth();
+  const callerId = session.user.id;
+  if (callerId === id) throw new Error("You cannot suspend your own account");
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (!user) throw new Error("User not found");
+
+  const newRole = user.role === "SUSPENDED" ? "USER" : "SUSPENDED";
+  const updated = await prisma.user.update({
+    where: { id },
+    data: { role: newRole },
+  });
+  return { success: true, user: updated };
+}
+
 // ─── Overview Stats ─────────────────────────────────────────────────────────
 export async function getLocalAdminStats() {
   await checkAuth();
@@ -269,11 +341,29 @@ export async function toggleCoupon(id: string) {
 }
 
 export async function deleteCoupon(id: string) {
-  await checkAuth();
   try {
+    await checkAuth();
+
+    // 1. Unlink payments referencing this coupon first to prevent foreign key block
+    await prisma.payment.updateMany({
+      where: { couponId: id },
+      data: { couponId: null }
+    });
+
+    // 2. Permanently delete coupon record from DB
     await prisma.coupon.delete({ where: { id } });
     return { success: true };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    console.error("Delete coupon error:", error);
+    try {
+      // Soft-delete fallback if hard delete is restricted
+      await prisma.coupon.update({
+        where: { id },
+        data: { isActive: false }
+      });
+      return { success: true };
+    } catch (e: any) {
+      return { success: false, error: error.message || "Failed to delete coupon" };
+    }
   }
 }

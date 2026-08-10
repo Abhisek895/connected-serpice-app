@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Sparkles, ChevronRight, ChevronLeft, Loader2, Send,
   CheckCircle2, Copy, ExternalLink, Image as ImageIcon, Music,
-  AlertCircle,
+  AlertCircle, MessageCircle, Smartphone,
 } from "lucide-react";
 import { getTemplateClass, TemplateClass, TemplateField } from "./templateConfig";
 import {
@@ -15,6 +15,8 @@ import {
   updatePublishedEvent,
 } from "./builder/actions";
 import { useRouter } from "next/navigation";
+import CanvasConfetti from "@/components/ui/CanvasConfetti";
+import LivePhonePreview from "@/components/ui/LivePhonePreview";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -82,6 +84,23 @@ function FieldInput({
           className={baseInput}
         />
         {field.hint && <p className="text-[11px] text-slate-400 mt-1">{field.hint}</p>}
+        {field.presetSuggestions && field.presetSuggestions.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5 items-center">
+            <span className="text-[10px] font-bold text-rose-500 flex items-center gap-1">
+              <Sparkles className="w-3 h-3" /> Quick Ideas:
+            </span>
+            {field.presetSuggestions.map((preset, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => onChange?.(preset)}
+                className="text-[11px] px-2 py-0.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200/60 text-rose-700 font-medium transition"
+              >
+                {preset}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
@@ -101,6 +120,23 @@ function FieldInput({
           className={`${baseInput} resize-none`}
         />
         {field.hint && <p className="text-[11px] text-slate-400 mt-1">{field.hint}</p>}
+        {field.presetSuggestions && field.presetSuggestions.length > 0 && (
+          <div className="mt-2 space-y-1">
+            <span className="text-[10px] font-bold text-rose-500 flex items-center gap-1">
+              <Sparkles className="w-3 h-3" /> Tap to fill love note inspiration:
+            </span>
+            {field.presetSuggestions.map((preset, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => onChange?.(preset)}
+                className="w-full text-left text-[11px] p-2 rounded-lg bg-rose-50/70 hover:bg-rose-100 border border-rose-200/60 text-rose-800 font-medium transition line-clamp-2"
+              >
+                "{preset}"
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
@@ -324,27 +360,41 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, onClose 
 
   // ── Published state ──
   if (publishedUrl) {
+    const whatsappText = `Hey ❤️! I made a special surprise link for you... Tap here to open 💌\n${publishedUrl}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappText)}`;
+
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <CanvasConfetti />
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-emerald-100 text-center"
+          className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-emerald-100 text-center relative z-10"
         >
           <div className="flex justify-center mb-4">
             <div className="bg-emerald-100 p-4 rounded-full">
-              <CheckCircle2 className="w-10 h-10 text-emerald-600" />
+              <CheckCircle2 className="w-10 h-10 text-emerald-600 animate-bounce" />
             </div>
           </div>
-          <h3 className="text-2xl font-bold text-slate-900 mb-2">Event Saved! 💖</h3>
-          <p className="text-slate-500 text-sm mb-6">Your personalized link is ready to share.</p>
-          <div className="bg-slate-50 rounded-2xl p-4 mb-6 font-mono text-xs text-slate-700 break-all border border-slate-200">
+          <h3 className="text-2xl font-bold text-slate-900 mb-1">Event Link Saved! 💖</h3>
+          <p className="text-slate-500 text-xs sm:text-sm mb-5">Your personalized memory page is live and ready to send.</p>
+          <div className="bg-slate-50 rounded-2xl p-3.5 mb-5 font-mono text-xs text-slate-700 break-all border border-slate-200">
             {publishedUrl}
           </div>
-          <div className="flex gap-3">
+
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full py-3.5 mb-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2"
+          >
+            <MessageCircle className="w-5 h-5 fill-white" /> Share on WhatsApp 💚
+          </a>
+
+          <div className="flex gap-2">
             <button
               onClick={copyUrl}
-              className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl shadow transition flex items-center justify-center gap-2"
+              className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5"
             >
               <Copy className="w-4 h-4" /> {copied ? "Copied!" : "Copy Link"}
             </button>
@@ -352,9 +402,9 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, onClose 
               href={publishedUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow transition flex items-center justify-center gap-2"
+              className="flex-1 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5"
             >
-              Open <ExternalLink className="w-4 h-4" />
+              Open Link <ExternalLink className="w-4 h-4" />
             </a>
           </div>
           <button
@@ -370,23 +420,16 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, onClose 
 
   // ── Main modal ──
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 10 }}
-        className="bg-white rounded-3xl max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-rose-100 relative"
+        className="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-rose-100 relative"
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white z-10 rounded-t-3xl border-b border-slate-100 px-6 pt-6 pb-4">
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition"
-          >
-            <X className="w-5 h-5" />
-          </button>
-
-          <div className="flex items-center gap-3 mb-3 pr-8">
+        <div className="sticky top-0 bg-white z-10 rounded-t-3xl border-b border-slate-100 px-6 pt-5 pb-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <div className="p-2.5 bg-rose-100 rounded-2xl text-rose-600 flex-shrink-0">
               <Sparkles className="w-5 h-5 fill-rose-500" />
             </div>
@@ -398,83 +441,105 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, onClose 
             </div>
           </div>
 
-          {/* Step Progress */}
-          {totalSteps > 1 && (
-            <div className="flex items-center gap-2 mt-1">
-              {tmpl.steps.map((s, i) => (
-                <div key={i} className="flex items-center gap-2 flex-1">
-                  <div
-                    className={`flex-1 h-1.5 rounded-full transition-all ${
-                      i <= currentStep ? "bg-rose-500" : "bg-slate-200"
-                    }`}
-                  />
-                  {i === tmpl.steps.length - 1 && null}
-                </div>
-              ))}
-              <span className="text-xs font-bold text-slate-400 whitespace-nowrap">
-                {currentStep + 1} / {totalSteps}
-              </span>
-            </div>
-          )}
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        {/* Body */}
-        <div className="px-6 py-5">
-          {/* Loading skeleton */}
-          {isLoading && (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-rose-400" />
-            </div>
-          )}
-
-          {!isLoading && (
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentStep}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-                className="space-y-4"
-              >
-                {/* Step header */}
-                <div className="mb-2">
-                  <h4 className="font-bold text-slate-900">{step.title}</h4>
-                  <p className="text-xs text-slate-500 mt-0.5">{step.description}</p>
-                </div>
-
-                {/* Fields */}
-                {step.fields.map((field) => (
-                  <FieldInput
-                    key={field.key}
-                    field={field}
-                    value={formValues[field.key]}
-                    onChange={(val) => handleFieldChange(field.key, val)}
-                    onFileChange={handleFileUpload}
-                    fileStatus={fileStatuses[field.key] as any}
-                    isLoading={isLoading || isSubmitting}
-                  />
+        {/* Grid Body: Left Inputs, Right Phone Mockup Preview */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 p-6">
+          <div className="md:col-span-7 space-y-4">
+            {/* Step Progress */}
+            {totalSteps > 1 && (
+              <div className="flex items-center gap-2 mb-2">
+                {tmpl.steps.map((s, i) => (
+                  <div key={i} className="flex items-center gap-2 flex-1">
+                    <div
+                      className={`flex-1 h-1.5 rounded-full transition-all ${
+                        i <= currentStep ? "bg-rose-500" : "bg-slate-200"
+                      }`}
+                    />
+                  </div>
                 ))}
-              </motion.div>
-            </AnimatePresence>
-          )}
+                <span className="text-xs font-bold text-slate-400 whitespace-nowrap">
+                  {currentStep + 1} / {totalSteps}
+                </span>
+              </div>
+            )}
 
-          {/* Error */}
-          {error && (
-            <div className="mt-4 flex items-start gap-2.5 bg-red-50 border border-red-200 rounded-2xl p-3.5 text-sm text-red-700">
-              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-              <span>{error}</span>
+            {/* Form Steps Body */}
+            <div>
+              {isLoading && (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-rose-400" />
+                </div>
+              )}
+
+              {!isLoading && (
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentStep}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                    className="space-y-4"
+                  >
+                    {/* Step header */}
+                    <div className="mb-2">
+                      <h4 className="font-bold text-slate-900">{step.title}</h4>
+                      <p className="text-xs text-slate-500 mt-0.5">{step.description}</p>
+                    </div>
+
+                    {/* Fields */}
+                    {step.fields.map((field) => (
+                      <FieldInput
+                        key={field.key}
+                        field={field}
+                        value={formValues[field.key]}
+                        onChange={(val) => handleFieldChange(field.key, val)}
+                        onFileChange={handleFileUpload}
+                        fileStatus={fileStatuses[field.key] as any}
+                        isLoading={isLoading || isSubmitting}
+                      />
+                    ))}
+                  </motion.div>
+                </AnimatePresence>
+              )}
+
+              {/* Error */}
+              {error && (
+                <div className="mt-4 flex items-start gap-2.5 bg-red-50 border border-red-200 rounded-2xl p-3.5 text-sm text-red-700">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {/* Permanent save note */}
+              <div className="mt-5 bg-rose-50/60 p-3.5 rounded-2xl border border-rose-100 flex items-start gap-2.5 text-xs text-rose-800">
+                <Sparkles className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
+                <p>
+                  This will save permanently under{" "}
+                  <strong>"My Saved Links &amp; Events 💌"</strong> — it won't disappear after
+                  refreshing!
+                </p>
+              </div>
             </div>
-          )}
+          </div>
 
-          {/* Permanent save note */}
-          <div className="mt-5 bg-rose-50/60 p-3.5 rounded-2xl border border-rose-100 flex items-start gap-2.5 text-xs text-rose-800">
-            <Sparkles className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
-            <p>
-              This will save permanently under{" "}
-              <strong>"My Saved Links &amp; Events 💌"</strong> — it won't disappear after
-              refreshing!
+          {/* Right Column: Interactive Live Phone Preview */}
+          <div className="hidden md:flex md:col-span-5 flex-col items-center justify-center bg-slate-50 rounded-2xl p-4 border border-slate-100">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+              <Smartphone className="w-4 h-4 text-rose-500" /> Live Recipient View
             </p>
+            <LivePhonePreview
+              demoId={demoId}
+              formValues={formValues}
+              defaultData={tmpl.defaultData}
+            />
           </div>
         </div>
 

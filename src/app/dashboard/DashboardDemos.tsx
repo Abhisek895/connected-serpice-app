@@ -41,6 +41,8 @@ export default function DashboardDemos({ themePricing }: { themePricing?: ThemeP
   const [customizeModalDemoId, setCustomizeModalDemoId] = useState<string | null>(null);
   const [instantModalTitle, setInstantModalTitle] = useState("");
 
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
   const activeDemos = demos.map(demo => {
     const dbPricing = themePricing?.find(t => t.name === demo.id);
     return {
@@ -52,32 +54,43 @@ export default function DashboardDemos({ themePricing }: { themePricing?: ThemeP
       description: dbPricing?.description || demo.description,
       image: dbPricing?.thumbnailUrl || demo.image,
     };
-  }).filter(d => d.isActive);
+  }).filter(d => d.isActive).filter(d => {
+    if (selectedCategory === "romantic") return d.id === "surprise" || d.id === "nasamajh-lakri";
+    if (selectedCategory === "birthday") return d.id === "birthday-wish";
+    if (selectedCategory === "planner") return d.id.includes("planner");
+    return true;
+  });
 
   const handleActionClick = (demoId: string, action: "instant" | "builder") => {
-    const demo = activeDemos.find(d => d.id === demoId);
-    if (demo && demo.price && demo.price > 0) {
-      setCheckoutModal({
-        demoId: demo.id,
-        title: demo.title,
-        price: demo.price,
-        durationDays: demo.durationDays,
-        action
-      });
-    } else {
-      if (action === "instant") {
+    if (action === "instant") {
+      const demo = activeDemos.find(d => d.id === demoId);
+      if (demo && demo.price && demo.price > 0) {
+        setCheckoutModal({
+          demoId: demo.id,
+          title: demo.title,
+          price: demo.price,
+          durationDays: demo.durationDays,
+          action: "instant"
+        });
+      } else {
         setSelectedDemo(demoId);
         setInstantModalTitle("");
-      } else {
-        setCustomizeModalDemoId(demoId);
       }
+    } else {
+      // Try-Before-You-Buy: Always allow free customization first!
+      setCustomizeModalDemoId(demoId);
     }
   };
 
-  const handlePaymentSuccess = () => {
+  const [appliedCouponCode, setAppliedCouponCode] = useState<string>("");
+
+  const handlePaymentSuccess = (usedCouponCode?: string) => {
     if (!checkoutModal) return;
     const { action, demoId } = checkoutModal;
     setCheckoutModal(null);
+    if (usedCouponCode) {
+      setAppliedCouponCode(usedCouponCode);
+    }
     if (action === "instant") {
       setSelectedDemo(demoId);
       setInstantModalTitle("");
@@ -98,8 +111,13 @@ export default function DashboardDemos({ themePricing }: { themePricing?: ThemeP
         tmplClass?.defaultData.title,
         "Someone Special ✨",
         demo.id,
-        { internalTitle: customTitle }
+        {
+          internalTitle: customTitle,
+          couponCode: appliedCouponCode,
+          isFreePass: ["FREE100%", "FREE100", "FREE1"].includes(appliedCouponCode),
+        }
       );
+      setAppliedCouponCode("");
       if (res.success && res.customUrl) {
         const finalUrl = `${window.location.origin}${res.customUrl}`;
         setPublishedUrl(finalUrl);
@@ -158,6 +176,28 @@ export default function DashboardDemos({ themePricing }: { themePricing?: ThemeP
             <p className="text-slate-500 text-sm md:text-base mt-1">
               Preview demo pages live, or customize them with your own photos &amp; questions to save permanently!
             </p>
+
+            {/* Category Filter Tabs */}
+            <div className="flex flex-wrap gap-2 mt-4">
+              {[
+                { id: "all", label: "✨ All Templates" },
+                { id: "romantic", label: "❤️ Romantic Proposals" },
+                { id: "birthday", label: "🎂 Birthday Cards" },
+                { id: "planner", label: "🌸 Date Planners" },
+              ].map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition shadow-xs ${
+                    selectedCategory === cat.id
+                      ? "bg-slate-900 text-white shadow-md"
+                      : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -249,10 +289,11 @@ export default function DashboardDemos({ themePricing }: { themePricing?: ThemeP
                     href={demo.previewUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full py-1.5 px-3 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold transition flex items-center justify-between"
+                    data-tour="preview-demo"
+                    className="w-full py-1.5 px-3 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold transition flex items-center justify-between group"
                   >
                     <span className="flex items-center gap-1.5">
-                      <Eye className="w-3.5 h-3.5 text-slate-500" /> 1. Preview Demo
+                      <Eye className="w-3.5 h-3.5 text-slate-500 group-hover:text-rose-500" /> 1. Preview Demo
                     </span>
                     <span className="text-[10px] text-slate-400 font-normal">Test Live</span>
                   </a>
@@ -262,6 +303,7 @@ export default function DashboardDemos({ themePricing }: { themePricing?: ThemeP
                     <button
                       onClick={() => handleActionClick(demo.id, "instant")}
                       disabled={isLoadingThis}
+                      data-tour="use-as-is"
                       className="w-full py-2 px-3 rounded-xl bg-rose-500 hover:bg-rose-600 disabled:opacity-70 text-white text-xs font-bold transition shadow-sm shadow-rose-200 flex items-center justify-between"
                     >
                       <span className="flex items-center gap-1.5">
@@ -279,6 +321,7 @@ export default function DashboardDemos({ themePricing }: { themePricing?: ThemeP
                   {/* Edit & Customize */}
                   <button
                     onClick={() => handleActionClick(demo.id, "builder")}
+                    data-tour="customize-demo"
                     className={`w-full py-2 px-3 rounded-xl text-white text-xs font-bold transition shadow-sm flex items-center justify-between ${!demo.hasInstantUse
                       ? "bg-rose-500 hover:bg-rose-600 shadow-rose-200"
                       : "bg-slate-900 hover:bg-slate-800"

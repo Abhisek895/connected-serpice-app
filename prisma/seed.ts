@@ -1,5 +1,5 @@
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 async function main() {
   const templates = [
@@ -19,23 +19,58 @@ async function main() {
     },
     {
       name: "nasamajh-lakri",
-      isPremium: false,
-      price: 0,
-      durationDays: 3650, // essentially unlimited
+      isPremium: true,
+      price: 3400, // ₹34
+      durationDays: 7,
       isActive: true,
     },
     {
       name: "date-planner",
-      isPremium: false,
-      price: 0,
-      durationDays: 3650,
+      isPremium: true,
+      price: 1500, // ₹15
+      durationDays: 7,
       isActive: true,
     },
     {
       name: "jalpaiguri-planner",
-      isPremium: false,
-      price: 0,
-      durationDays: 3650,
+      isPremium: true,
+      price: 1500, // ₹15
+      durationDays: 7,
+      isActive: true,
+    },
+  ];
+
+  const coupons = [
+    {
+      code: "FREE100%",
+      discountType: "PERCENTAGE",
+      discountValue: 100,
+      maxUses: 1000,
+      maxUsesPerUser: 1,
+      isActive: true,
+    },
+    {
+      code: "FREE1",
+      discountType: "PERCENTAGE",
+      discountValue: 100,
+      maxUses: 1000,
+      maxUsesPerUser: 1,
+      isActive: true,
+    },
+    {
+      code: "LOVE2026",
+      discountType: "PERCENTAGE",
+      discountValue: 20,
+      maxUses: 500,
+      maxUsesPerUser: 3,
+      isActive: true,
+    },
+    {
+      code: "SPECIAL50",
+      discountType: "PERCENTAGE",
+      discountValue: 50,
+      maxUses: 500,
+      maxUsesPerUser: 1,
       isActive: true,
     },
   ];
@@ -53,7 +88,15 @@ async function main() {
     });
   }
 
-  console.log("Database has been seeded with theme pricing! 🚀");
+  for (const c of coupons) {
+    await prisma.coupon.upsert({
+      where: { code: c.code },
+      update: c,
+      create: c,
+    });
+  }
+
+  console.log("Database has been seeded with FREE100% and FREE1 trial coupons! 🚀");
 }
 
 main()

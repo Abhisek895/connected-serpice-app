@@ -54,7 +54,9 @@ export const demos: DemoItem[] = [
     image: "/demos/birthday-wish/s0.jpeg",
     icon: Heart,
     borderColor: "border-pink-200",
-    hasInstantUse: true
+    hasInstantUse: true,
+    price: 3400,
+    durationDays: 7
   },
   {
     id: "date-planner",
@@ -67,7 +69,9 @@ export const demos: DemoItem[] = [
     image: "/demos/date-planner/victoria_memorial_1785673658927.png",
     icon: Compass,
     borderColor: "border-rose-200",
-    hasInstantUse: true
+    hasInstantUse: true,
+    price: 1500,
+    durationDays: 7
   },
   {
     id: "jalpaiguri-planner",
@@ -80,6 +84,8 @@ export const demos: DemoItem[] = [
     image: "/demos/jalpaiguri-planner/jalpaiguri_rajbari.png",
     icon: Compass,
     borderColor: "border-rose-200",
-    hasInstantUse: true
+    hasInstantUse: true,
+    price: 1500,
+    durationDays: 7
   }
 ];
