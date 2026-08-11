@@ -1,0 +1,212 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #05020a;
+    color: #ffffff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    overflow: hidden;
+    position: relative;
+}
+
+#starsBox {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.star {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(244, 114, 182, 0.5);
+    animation: floatStar 5s ease-in-out infinite;
+}
+
+@keyframes floatStar {
+    0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
+    50% { transform: translateY(-30px) scale(1.3); opacity: 0.9; }
+}
+
+/* Entry Box */
+.entry-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 30;
+    text-align: center;
+}
+
+.entry-box.hidden {
+    display: none;
+}
+
+.heart-pulse-wrap {
+    position: relative;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.heart-pulse-bg {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    background: #f43f5e;
+    border-radius: 50%;
+    filter: blur(20px);
+    opacity: 0.6;
+    animation: pingPulse 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes pingPulse {
+    75%, 100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+.heart-icon {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e11d48, #ec4899);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    box-shadow: 0 0 50px rgba(244, 63, 94, 0.8);
+    border: 1px solid rgba(254, 205, 211, 0.4);
+    animation: bounce 1.5s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.open-btn {
+    padding: 16px 40px;
+    background: linear-gradient(135deg, #f43f5e, #ec4899, #a855f7);
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 50px;
+    box-shadow: 0 0 40px rgba(244, 63, 94, 0.8);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.open-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 55px rgba(244, 63, 94, 1);
+}
+
+/* 3D Scene Box */
+.scene {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    height: 450px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 1100px;
+    z-index: 10;
+}
+
+.scene.hidden {
+    display: none;
+}
+
+.top-hint {
+    position: absolute;
+    top: 24px;
+    z-index: 20;
+    pointer-events: none;
+}
+
+.hint-badge {
+    font-size: 0.7rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #fecdd3;
+    background: rgba(76, 5, 25, 0.6);
+    border: 1px solid rgba(244, 63, 94, 0.4);
+    padding: 6px 16px;
+    border-radius: 30px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    backdrop-filter: blur(8px);
+}
+
+.ambient-light {
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(244, 63, 94, 0.35) 0%, rgba(168, 85, 247, 0.15) 50%, rgba(0,0,0,0) 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: pulseGlow 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes pulseGlow {
+    0% { transform: scale(0.9); opacity: 0.6; }
+    100% { transform: scale(1.2); opacity: 1; }
+}
+
+.heart-3d {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    animation: heartbeatPulse 2.2s ease-in-out infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.1s ease-out;
+}
+
+@keyframes heartbeatPulse {
+    0%, 100% { transform: scale(1); }
+    15% { transform: scale(1.06); }
+    25% { transform: scale(1.02); }
+    35% { transform: scale(1.05); }
+}
+
+.love_word {
+    position: absolute;
+    transform-style: preserve-3d;
+    font-size: 1.15rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.tap-sparkle {
+    position: absolute;
+    pointer-events: none;
+    font-size: 1.5rem;
+    z-index: 50;
+    animation: tapPop 0.8s ease-out forwards;
+}
+
+@keyframes tapPop {
+    0% { transform: scale(0.3) translateY(0); opacity: 1; }
+    100% { transform: scale(1.8) translateY(-40px); opacity: 0; }
+}

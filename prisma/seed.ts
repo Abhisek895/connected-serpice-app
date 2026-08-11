@@ -4,6 +4,13 @@ const prisma = new PrismaClient();
 async function main() {
   const templates = [
     {
+      name: "3d-glowing-heart",
+      isPremium: true,
+      price: 2900, // ₹29
+      durationDays: 7,
+      isActive: true,
+    },
+    {
       name: "she-cant-say-no",
       isPremium: true,
       price: 2500, // ₹25

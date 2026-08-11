@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3D Glowing Heart Proposal 💖</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Ambient Floating Stars -->
+    <div id="starsBox"></div>
+
+    <!-- Step 1: Entry Button Box -->
+    <div id="entryBox" class="entry-box">
+        <div class="heart-pulse-wrap">
+            <div class="heart-pulse-bg"></div>
+            <div class="heart-icon">💖</div>
+        </div>
+        <button id="openBtn" class="open-btn">✨ Open Special Surprise 💖</button>
+    </div>
+
+    <!-- Step 2: 3D Heart Scene (hidden initially) -->
+    <div id="sceneBox" class="scene hidden">
+        <div class="ambient-light"></div>
+        <div class="heart-3d" id="heartContainer"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -185,6 +185,10 @@ export async function createInstantEventFromTemplate(themeName: string, title?: 
   // Import class defaults from templateConfig to ensure object === class when not customized
   // We inline the defaults here to keep this as a server-only file
   const CLASS_DEFAULTS: Record<string, any> = {
+    "3d-glowing-heart": {
+      patternText: "i love you",
+      loveMessage: "Every single moment with you feels like magic. You bring warmth, laughter, and endless brightness into my life. I made this 3D glowing heart just for you to remind you how deeply loved you are! Forever & Always ❤️",
+    },
     "she-cant-say-no": {
       title: "Do you love me? 🤗",
       question: "Do you love me? 🤗",
