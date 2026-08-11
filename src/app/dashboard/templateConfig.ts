@@ -35,6 +35,65 @@ export type TemplateClass = {
 
 export const TEMPLATE_CLASSES: TemplateClass[] = [
   {
+    id: "im-sorry",
+    title: "Cute Forgive Me Proposal 🥺",
+    hasInstantUse: true,
+    defaultData: {
+      demoId: "im-sorry",
+      title: "I'm Really Sorry... 🥺",
+      question: "",
+      acceptBtn: "Yes, I Forgive You 🥰",
+      rejectBtn: "No 😤",
+      recipientName: "Someone Special ✨",
+      loveMessage: "I am so deeply sorry for making you upset. You mean the entire world to me, and seeing you hurt breaks my heart into a million pieces.\n\nI promise to listen better, cherish you more, and make it up to you every single day. Please give me another chance to make you smile! I love you endlessly ❤️",
+    },
+    steps: [
+      {
+        title: "Apology Page Customization",
+        description: "Customize your title, apology question, letter, and button labels.",
+        fields: [
+          {
+            key: "title",
+            label: "Header Title",
+            type: "text",
+            placeholder: "I'm Really Sorry... 🥺",
+          },
+          {
+            key: "question",
+            label: "Apology Question",
+            type: "text",
+            placeholder: "Will you please forgive me? 🥺❤️",
+          },
+          {
+            key: "recipientName",
+            label: "Recipient Name",
+            type: "text",
+            placeholder: "Someone Special ✨",
+          },
+          {
+            key: "loveMessage",
+            label: "Apology Letter Content",
+            type: "textarea",
+            placeholder: "Write your special heart-felt apology letter here...",
+            hint: "Revealed inside the 'Read My Apology Letter 💌' drawer modal.",
+          },
+          {
+            key: "acceptBtn",
+            label: "Forgive Button Label",
+            type: "text",
+            placeholder: "Yes, I Forgive You 🥰",
+          },
+          {
+            key: "rejectBtn",
+            label: "Runaway No Button Label",
+            type: "text",
+            placeholder: "No 😤",
+          },
+        ],
+      },
+    ],
+  },
+  {
     id: "3d-glowing-heart",
     title: "3D Glowing Text Heart Proposal 💖",
     hasInstantUse: true,

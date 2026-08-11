@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cute Forgive Me Proposal 🥺</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+    <!-- Ambient Sparkles -->
+    <div id="sparkleBox"></div>
+
+    <!-- Top Music Bar -->
+    <div class="top-bar flex-end">
+        <button id="musicBtn" class="music-btn">🎵 Play Music</button>
+    </div>
+
+    <!-- STAGE 0: UNBOXING GIFT PARCEL TEASER -->
+    <div id="giftStage" class="center-stage">
+        <div class="parcel-card" id="parcelBox">
+            <div class="parcel-icon">🎁</div>
+            <span class="parcel-badge">Special Apology Parcel</span>
+        </div>
+        <h1 class="main-title">I'm Really Sorry... 🥺</h1>
+        <p class="sub-question">I made a special surprise just for you to say sorry... 🥺❤️</p>
+        <button id="openGiftBtn" class="open-gift-btn">✨ Tap to Open My Apology 🎁</button>
+    </div>
+
+    <!-- STAGE 1 & 2: MAIN BEGGING & CELEBRATION STAGE -->
+    <div id="mainStage" class="center-stage hidden">
+        
+        <!-- STATE 1: BEGGING FORGIVENESS -->
+        <div id="beggingBox" class="stage-box">
+            <div class="cat-gif-wrap">
+                <img id="catImg" src="https://media.tenor.com/2s_1yP690yMAAAAC/cat-sorry.gif" alt="Sad Begging Cat" referrerpolicy="no-referrer" class="cat-img">
+            </div>
+
+            <h1 class="main-title mb-6">I'm Really Sorry... 🥺</h1>
+
+            <div class="action-buttons">
+                <button id="yesBtn" class="yes-btn">💖 Yes, I Forgive You 🥰</button>
+                <button id="noBtn" class="no-btn">No 😤</button>
+            </div>
+
+            <button id="openLetterBtn" class="letter-drawer-btn">
+                <span>Read My Apology Letter 💌</span>
+            </button>
+        </div>
+
+        <!-- STATE 2: CELEBRATION -->
+        <div id="celebrationBox" class="stage-box hidden">
+            <div class="cat-gif-wrap">
+                <img src="https://media.tenor.com/al4yRBO26akAAAAC/cat-goma.gif" alt="Happy Celebration Cat" referrerpolicy="no-referrer" class="cat-img">
+            </div>
+
+            <div class="granted-badge">✨ Forgiveness Granted ✨</div>
+            <h3 class="celeb-title">Yay! You Forgave Me! 🥰🎉</h3>
+            <p class="celeb-text">You just made my entire heart complete! I promise to give you all the love, hugs, boba tea, and happiness in the world! ❤️✨</p>
+
+            <button id="celebLetterBtn" class="letter-drawer-btn font-bold">
+                <span>Read Apology Letter 💌</span>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Letter Drawer Modal -->
+    <div id="letterModal" class="modal hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>A Letter From My Heart 💌</h3>
+                <button id="closeLetterBtn" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>I am so deeply sorry for making you upset. You mean the entire world to me, and seeing you hurt breaks my heart into a million pieces.<br><br>I promise to listen better, cherish you more, and make it up to you every single day. Please give me another chance to make you smile! I love you endlessly ❤️</p>
+            </div>
+            <div class="modal-footer">
+                <span>Forever Yours 💖</span>
+                <button id="modalCloseAction" class="modal-action-btn">Close Letter ✨</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

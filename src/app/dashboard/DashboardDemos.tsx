@@ -61,7 +61,7 @@ export default function DashboardDemos({
       image: dbPricing?.thumbnailUrl || demo.image,
     };
   }).filter(d => d.isActive).filter(d => {
-    if (selectedCategory === "romantic") return d.id === "surprise" || d.id === "nasamajh-lakri" || d.id === "she-cant-say-no" || d.id === "3d-glowing-heart";
+    if (selectedCategory === "romantic") return d.id === "surprise" || d.id === "nasamajh-lakri" || d.id === "she-cant-say-no" || d.id === "3d-glowing-heart" || d.id === "im-sorry";
     if (selectedCategory === "birthday") return d.id === "birthday-wish";
     if (selectedCategory === "planner") return d.id.includes("planner");
     return true;
@@ -107,7 +107,7 @@ export default function DashboardDemos({
     const { demoId } = checkoutModal;
     const activeCoupon = usedCouponCode || "";
     setCheckoutModal(null);
-    
+
     // Create the event using the captured title and coupon
     await handleInstantUse(demoId, pendingTitle, activeCoupon);
     setPendingTitle("");
@@ -202,11 +202,10 @@ export default function DashboardDemos({
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition shadow-xs ${
-                    selectedCategory === cat.id
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition shadow-xs ${selectedCategory === cat.id
                       ? "bg-slate-900 text-white shadow-md"
                       : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-                  }`}
+                    }`}
                 >
                   {cat.label}
                 </button>
@@ -339,7 +338,7 @@ export default function DashboardDemos({
                     className={`w-full py-2 px-3 rounded-xl text-white text-xs font-bold transition shadow-sm flex items-center justify-between ${!demo.hasInstantUse
                       ? "bg-rose-500 hover:bg-rose-600 shadow-rose-200"
                       : "bg-slate-900 hover:bg-slate-800"
-                    }`}
+                      }`}
                   >
                     <span className="flex items-center gap-1.5">
                       <Edit3 className="w-3.5 h-3.5" />

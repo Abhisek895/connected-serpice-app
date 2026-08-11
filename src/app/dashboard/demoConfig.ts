@@ -59,6 +59,21 @@ export const demos: DemoItem[] = [
     durationDays: 7
   },
   {
+    id: "im-sorry",
+    title: "Apology Storybook & Love Battery 💌🔋",
+    badge: "Instant Available",
+    badgeColor: "bg-[#e11d48] text-white",
+    description: "Heartwarming interactive storybook with typewriter apology note, Polaroid memory cards, Love Battery meter & Peace Contract stamp seal!",
+    previewUrl: "/demos/im-sorry/index.html",
+    builderTheme: "Romantic",
+    image: "https://media.tenor.com/2s_1yP690yMAAAAC/cat-sorry.gif",
+    icon: Sparkles,
+    borderColor: "border-rose-300",
+    hasInstantUse: true,
+    price: 2100,
+    durationDays: 7
+  },
+  {
     id: "she-cant-say-no",
     title: "She Can't Say No Proposal 💖",
     badge: "Instant Available",

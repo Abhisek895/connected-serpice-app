@@ -185,6 +185,14 @@ export async function createInstantEventFromTemplate(themeName: string, title?: 
   // Import class defaults from templateConfig to ensure object === class when not customized
   // We inline the defaults here to keep this as a server-only file
   const CLASS_DEFAULTS: Record<string, any> = {
+    "im-sorry": {
+      title: "I'm Really Sorry... 🥺",
+      question: "Will you please forgive me? 🥺❤️",
+      acceptBtn: "Yes, I Forgive You 🥰",
+      rejectBtn: "No 😤",
+      recipientName: "Someone Special ✨",
+      loveMessage: "I am so deeply sorry for making you upset. You mean the entire world to me, and seeing you hurt breaks my heart into a million pieces.\n\nI promise to listen better, cherish you more, and make it up to you every single day. Please give me another chance to make you smile! I love you endlessly ❤️",
+    },
     "3d-glowing-heart": {
       patternText: "i love you",
       loveMessage: "Every single moment with you feels like magic. You bring warmth, laughter, and endless brightness into my life. I made this 3D glowing heart just for you to remind you how deeply loved you are! Forever & Always ❤️",

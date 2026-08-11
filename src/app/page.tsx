@@ -1,5 +1,34 @@
 import Link from "next/link";
 import { Heart, Sparkles, Image as ImageIcon, Music, ArrowRight, ShieldCheck, Zap, Star } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "OurStory | Digital Memories & Proposals",
+  description:
+    "Create beautiful, interactive proposal & memory pages in minutes — add music, photos, and magical effects with zero code. 8+ templates ready to share on WhatsApp!",
+  openGraph: {
+    title: "OurStory | Digital Memories & Proposals 💖",
+    description:
+      "Create beautiful, interactive proposal & memory pages in minutes. 8+ templates for proposals, birthdays, apologies & more!",
+    siteName: "OurStory 💖",
+    type: "website",
+    url: "https://ourstory.love",
+    images: [
+      {
+        url: "https://ourstory.love/og-default.png",
+        width: 1200,
+        height: 630,
+        alt: "OurStory — Digital Memories & Proposals",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "OurStory | Digital Memories & Proposals 💖",
+    description: "Create beautiful interactive proposal & memory pages. 8+ templates!",
+    images: ["https://ourstory.love/og-default.png"],
+  },
+};
 
 export default function Home() {
   return (
@@ -40,7 +69,7 @@ export default function Home() {
         {/* Top Badge */}
         <div className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-rose-100/80 border border-rose-200/50 text-rose-600 text-xs sm:text-sm font-semibold mb-6 sm:mb-8 shadow-xs">
           <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-500 fill-rose-400" />
-          <span>The #1 No-Code Digital Memory & Proposal Builder</span>
+          <span>The #1 No-Code Digital Memory &amp; Proposal Builder</span>
         </div>
 
         {/* Main Title */}
@@ -88,9 +117,42 @@ export default function Home() {
         </div>
 
         {/* ========================================================= */}
-        {/* 3. FEATURE CARDS GRID (Responsive: 1 col mobile, 3 col desktop) */}
+        {/* 3. TEMPLATE COUNT / VARIETY STRIP                         */}
         {/* ========================================================= */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 max-w-5xl w-full mt-16 sm:mt-24 text-left">
+        <div className="w-full mt-14 sm:mt-20 rounded-3xl bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 p-px">
+          <div className="bg-white rounded-3xl px-6 sm:px-10 py-6 sm:py-8">
+            <p className="text-xs sm:text-sm font-semibold text-rose-500 uppercase tracking-widest mb-4 text-center">
+              ✨ 8 Ready-To-Use Templates — More Added Every Week
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              {[
+                { emoji: "🥺", label: "Cute Forgive Me", color: "bg-pink-50 text-pink-700 border-pink-200" },
+                { emoji: "💖", label: "3D Glowing Heart", color: "bg-rose-50 text-rose-700 border-rose-200" },
+                { emoji: "💕", label: "She Can&apos;t Say No", color: "bg-red-50 text-red-700 border-red-200" },
+                { emoji: "🎁", label: "Romantic Surprise", color: "bg-purple-50 text-purple-700 border-purple-200" },
+                { emoji: "🎂", label: "Birthday Wish", color: "bg-amber-50 text-amber-700 border-amber-200" },
+                { emoji: "🌸", label: "Cute Mey Proposal", color: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200" },
+                { emoji: "🌆", label: "Kolkata Date Night", color: "bg-sky-50 text-sky-700 border-sky-200" },
+                { emoji: "🌿", label: "Jalpaiguri Date", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+              ].map((t) => (
+                <div key={t.label} className={`flex items-center gap-2 px-3 py-2.5 rounded-2xl border text-xs sm:text-sm font-semibold ${t.color}`}>
+                  <span className="text-base sm:text-lg">{t.emoji}</span>
+                  <span className="leading-tight" dangerouslySetInnerHTML={{ __html: t.label }} />
+                </div>
+              ))}
+            </div>
+            <div className="mt-5 text-center">
+              <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors">
+                Browse all templates <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* ========================================================= */}
+        {/* 4. FEATURE CARDS GRID                                     */}
+        {/* ========================================================= */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 max-w-5xl w-full mt-12 sm:mt-16 text-left">
 
           {/* Card 1 */}
           <div className="bg-white/80 backdrop-blur-xs p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 hover:border-rose-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
@@ -98,9 +160,9 @@ export default function Home() {
               <div className="w-12 h-12 sm:w-14 sm:h-14 bg-rose-100/80 text-rose-500 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
                 <ImageIcon className="w-6 h-6 sm:w-7 sm:h-7" />
               </div>
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">Stunning Themes</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">8+ Stunning Themes</h2>
               <p className="text-slate-500 text-xs sm:text-sm leading-relaxed">
-                Choose from Kolkata Date Night, Nasamajh Lakri, Romantic Love, or Birthday themes tailored for any sweet surprise.
+                Choose from magical templates — proposals, apologies, birthdays, date planners and more. New themes added weekly!
               </p>
             </div>
           </div>
@@ -111,7 +173,7 @@ export default function Home() {
               <div className="w-12 h-12 sm:w-14 sm:h-14 bg-purple-100/80 text-purple-500 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
                 <Music className="w-6 h-6 sm:w-7 sm:h-7" />
               </div>
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">Audio & Memories</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">Audio &amp; Memories</h2>
               <p className="text-slate-500 text-xs sm:text-sm leading-relaxed">
                 Add background romantic audio tracks (Tum Se Hi, LoveSong), photo slideshow galleries, and love notes.
               </p>
@@ -126,16 +188,34 @@ export default function Home() {
               </div>
               <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">Real-Time Analytics</h2>
               <p className="text-slate-500 text-xs sm:text-sm leading-relaxed">
-                Get notified instantly when your partner opens your link, answers "YES!", or selects date locations and menus.
+                Get notified instantly when your partner opens your link, answers &quot;YES!&quot;, or selects date locations and menus.
               </p>
             </div>
           </div>
 
         </div>
+
+        {/* ========================================================= */}
+        {/* 5. WHATSAPP SHARE CALLOUT                                 */}
+        {/* ========================================================= */}
+        <div className="w-full max-w-3xl mt-12 sm:mt-16 rounded-3xl bg-slate-900 px-6 sm:px-10 py-8 sm:py-10 text-center text-white">
+          <div className="text-3xl mb-3">💌</div>
+          <h2 className="text-xl sm:text-2xl font-extrabold mb-2">Your partner will actually open this</h2>
+          <p className="text-slate-400 text-sm sm:text-base max-w-md mx-auto mb-6">
+            Every link you share shows a beautiful WhatsApp &amp; Instagram preview card — so they know something special is waiting for them.
+          </p>
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white font-bold px-7 py-3.5 rounded-full transition-all shadow-lg shadow-rose-900/30"
+          >
+            <Sparkles className="w-4 h-4" /> Start for Free
+          </Link>
+        </div>
+
       </main>
 
       {/* ========================================================= */}
-      {/* 4. FOOTER                                                 */}
+      {/* 6. FOOTER                                                 */}
       {/* ========================================================= */}
       <footer className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 border-t border-slate-200/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs sm:text-sm text-slate-400 font-medium">
         <div className="flex items-center gap-2">

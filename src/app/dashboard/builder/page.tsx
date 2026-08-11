@@ -196,10 +196,10 @@ function BuilderWizard() {
     <div className="w-full max-w-4xl bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
       
       {/* Wizard Header */}
-      <div className="bg-slate-900 px-8 py-6 text-white flex justify-between items-center relative overflow-hidden">
+      <div className="bg-slate-900 px-5 sm:px-8 py-5 sm:py-6 text-white flex justify-between items-center relative overflow-hidden">
         <div className="relative z-10">
-          <h1 className="text-2xl font-bold font-pacifico tracking-wider text-rose-400">OurStory Builder</h1>
-          <p className="text-slate-400 text-sm mt-1">Design your digital memory step by step.</p>
+          <h1 className="text-xl sm:text-2xl font-bold font-pacifico tracking-wider text-rose-400">OurStory Builder</h1>
+          <p className="text-slate-400 text-xs sm:text-sm mt-1">Design your digital memory step by step.</p>
         </div>
         <div className="flex gap-2 relative z-10">
           {[1, 2, 3].map((i) => (
@@ -221,17 +221,17 @@ function BuilderWizard() {
       )}
 
       {/* Wizard Body */}
-      <div className="p-8 md:p-12 min-h-[400px] relative overflow-hidden">
+      <div className="p-5 sm:p-8 md:p-12 min-h-[400px] relative overflow-hidden">
         <AnimatePresence mode="wait">
           
           {/* STEP 1: Customization & Integrated Theme Selector */}
           {step === 1 && (
-            <motion.div key="step1" variants={stepVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.3 }} className="space-y-8">
+            <motion.div key="step1" variants={stepVariants} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.3 }} className="space-y-6 sm:space-y-8">
               <div>
-                <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                  <Type className="text-rose-500" /> Customize Your Proposal & Theme
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
+                  <Type className="text-rose-500 w-5 h-5 shrink-0" /> Customize Your Proposal & Theme
                 </h2>
-                <p className="text-slate-500 text-sm mt-1">Enter your event title, custom message, and select your visual style.</p>
+                <p className="text-slate-500 text-xs sm:text-sm mt-1">Enter your event title, custom message, and select your visual style.</p>
               </div>
 
               {/* Form Input Fields */}
@@ -276,7 +276,7 @@ function BuilderWizard() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-2">Accept Button Text</label>
                     <input 
@@ -284,7 +284,7 @@ function BuilderWizard() {
                       value={acceptBtn} 
                       onChange={e => setAcceptBtn(e.target.value)} 
                       placeholder="Yes! 😍" 
-                      className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 transition-shadow" 
+                      className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 transition-shadow text-base" 
                     />
                   </div>
                   <div>
@@ -294,7 +294,7 @@ function BuilderWizard() {
                       value={rejectBtn} 
                       onChange={e => setRejectBtn(e.target.value)} 
                       placeholder="No 🙈" 
-                      className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-500 transition-shadow" 
+                      className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-500 transition-shadow text-base" 
                     />
                   </div>
                 </div>
@@ -355,18 +355,18 @@ function BuilderWizard() {
               </div>
 
               {/* Upload Dropzones */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <motion.label whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className={`border-2 border-dashed border-rose-200 rounded-2xl p-8 flex flex-col items-center justify-center transition-colors cursor-pointer relative ${isLoading ? 'bg-slate-100 opacity-50' : 'bg-rose-50/50 hover:bg-rose-50 hover:border-rose-400 text-rose-500'}`}>
-                  {isLoading ? <Loader2 className="w-10 h-10 mb-4 animate-spin text-rose-500" /> : <ImageIcon className="w-10 h-10 mb-4" />}
-                  <p className="font-bold text-slate-800">{isLoading ? 'Uploading...' : 'Upload Custom Photo *'}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <motion.label whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className={`border-2 border-dashed border-rose-200 rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-center transition-colors cursor-pointer relative ${isLoading ? 'bg-slate-100 opacity-50' : 'bg-rose-50/50 hover:bg-rose-50 hover:border-rose-400 text-rose-500'}`}>
+                  {isLoading ? <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 mb-3 sm:mb-4 animate-spin text-rose-500" /> : <ImageIcon className="w-8 h-8 sm:w-10 sm:h-10 mb-3 sm:mb-4" />}
+                  <p className="font-bold text-slate-800 text-sm sm:text-base">{isLoading ? 'Uploading...' : 'Upload Custom Photo *'}</p>
                   <p className="text-xs mt-1 text-slate-500">PNG, JPG up to 5MB</p>
                   {photoUrl && <p className="text-xs mt-2 font-bold text-green-600">✓ Photo Selected & Uploaded</p>}
                   <input type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={(e) => handleFileUpload(e, 'image')} disabled={isLoading} />
                 </motion.label>
 
-                <motion.label whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className={`border-2 border-dashed border-slate-200 rounded-2xl p-8 flex flex-col items-center justify-center transition-colors cursor-pointer relative ${isLoading ? 'bg-slate-100 opacity-50' : 'hover:bg-slate-50 hover:border-slate-300 text-slate-400'}`}>
-                  {isLoading ? <Loader2 className="w-10 h-10 mb-4 animate-spin text-rose-500" /> : <Music className="w-10 h-10 mb-4" />}
-                  <p className="font-medium text-slate-700">{isLoading ? 'Uploading...' : 'Upload Background Music'}</p>
+                <motion.label whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className={`border-2 border-dashed border-slate-200 rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-center transition-colors cursor-pointer relative ${isLoading ? 'bg-slate-100 opacity-50' : 'hover:bg-slate-50 hover:border-slate-300 text-slate-400'}`}>
+                  {isLoading ? <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 mb-3 sm:mb-4 animate-spin text-rose-500" /> : <Music className="w-8 h-8 sm:w-10 sm:h-10 mb-3 sm:mb-4" />}
+                  <p className="font-medium text-slate-700 text-sm sm:text-base">{isLoading ? 'Uploading...' : 'Upload Background Music'}</p>
                   <p className="text-xs mt-1 text-slate-400">MP3 up to 10MB</p>
                   <input type="file" accept="audio/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={(e) => handleFileUpload(e, 'audio')} disabled={isLoading} />
                 </motion.label>
@@ -427,12 +427,12 @@ function BuilderWizard() {
         </AnimatePresence>
       </div>
 
-      {/* Wizard Footer Controls */}
-      <div className="bg-slate-50 border-t border-slate-100 p-6 flex justify-between">
+      {/* Wizard Footer Controls — sticky on mobile */}
+      <div className="bg-slate-50 border-t border-slate-100 px-5 sm:px-6 py-4 sm:py-5 flex justify-between items-center sticky bottom-0">
         <button 
           disabled={step === 1 || isLoading || !!publishedSlug} 
           onClick={() => setStep(step - 1)}
-          className="px-6 py-3 rounded-xl font-medium text-slate-600 hover:bg-slate-200 hover:text-slate-900 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
+          className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-200 hover:text-slate-900 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
         >
           Back
         </button>
@@ -442,10 +442,10 @@ function BuilderWizard() {
             whileTap={{ scale: 0.95 }}
             disabled={isLoading}
             onClick={handleNextStep}
-            className="px-8 py-3 rounded-xl font-bold bg-slate-900 text-white flex items-center gap-2 hover:bg-slate-800 transition-colors disabled:opacity-70 disabled:scale-100 shadow-md"
+            className="px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl font-bold text-sm bg-slate-900 text-white flex items-center gap-2 hover:bg-slate-800 transition-colors disabled:opacity-70 disabled:scale-100 shadow-md"
           >
-            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Next Step'} 
-            {!isLoading && <ArrowRight className="w-5 h-5" />}
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Next Step'} 
+            {!isLoading && <ArrowRight className="w-4 h-4" />}
           </motion.button>
         )}
       </div>
@@ -456,7 +456,7 @@ function BuilderWizard() {
 
 export default function BuilderPage() {
   return (
-    <div className="bg-slate-50 flex flex-col items-center font-sans">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-start py-6 sm:py-12 px-3 sm:px-6 font-sans">
       <Suspense fallback={
         <div className="w-full max-w-4xl bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden flex items-center justify-center min-h-[600px]">
            <Loader2 className="w-10 h-10 animate-spin text-rose-500" />
