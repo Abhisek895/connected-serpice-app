@@ -1,17 +1,19 @@
 "use client";
 
-import { Sparkles, CheckCircle2, RotateCcw } from "lucide-react";
+import { Sparkles, CheckCircle2, RotateCcw, X } from "lucide-react";
 
 interface OnboardingProgressBarProps {
   currentStep: number; // 1, 2, 3, 4
   totalSteps: number; // 4
   onReplayTour: () => void;
+  onCloseTour?: () => void;
 }
 
 export default function OnboardingProgressBar({
   currentStep,
   totalSteps,
   onReplayTour,
+  onCloseTour,
 }: OnboardingProgressBarProps) {
   const percentage = Math.min(100, Math.round(((currentStep - 1) / totalSteps) * 100));
   const isComplete = currentStep > totalSteps;
@@ -50,12 +52,23 @@ export default function OnboardingProgressBar({
           </div>
         </div>
 
-        <button
-          onClick={onReplayTour}
-          className="text-xs px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-rose-200 font-semibold transition flex items-center gap-1.5 self-end sm:self-auto"
-        >
-          <RotateCcw className="w-3.5 h-3.5" /> Replay Tour
-        </button>
+        <div className="flex items-center gap-2 self-end sm:self-auto">
+          <button
+            onClick={onReplayTour}
+            className="text-xs px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-rose-200 font-semibold transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <RotateCcw className="w-3.5 h-3.5" /> Replay
+          </button>
+          {onCloseTour && (
+            <button
+              onClick={onCloseTour}
+              className="text-xs px-3 py-1.5 rounded-xl bg-rose-600/80 hover:bg-rose-600 text-white font-bold transition flex items-center gap-1 cursor-pointer shadow-sm"
+              title="Close guidance tour"
+            >
+              <X className="w-3.5 h-3.5" /> Close
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Progress Bar Track */}

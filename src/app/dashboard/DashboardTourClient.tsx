@@ -14,6 +14,8 @@ export default function DashboardTourClient({ children }: { children: React.Reac
     setMounted(true);
     const hasSeenTour = localStorage.getItem("ourstory_onboarding_completed");
     if (!hasSeenTour) {
+      // Record completed flag IMMEDIATELY so it will NEVER auto-launch again in the user's lifetime!
+      localStorage.setItem("ourstory_onboarding_completed", "true");
       setIsTourActive(true);
       setCurrentStep(1);
     }
@@ -40,7 +42,7 @@ export default function DashboardTourClient({ children }: { children: React.Reac
   };
 
   const handleStartTour = () => {
-    localStorage.removeItem("ourstory_onboarding_completed");
+    localStorage.setItem("ourstory_onboarding_completed", "true");
     setIsTourActive(true);
     setCurrentStep(1);
   };
@@ -71,6 +73,7 @@ export default function DashboardTourClient({ children }: { children: React.Reac
             currentStep={currentStep}
             totalSteps={6}
             onReplayTour={handleStartTour}
+            onCloseTour={handleSkipTour}
           />
 
           <OnboardingTourEngine

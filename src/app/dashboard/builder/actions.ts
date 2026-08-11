@@ -185,6 +185,13 @@ export async function createInstantEventFromTemplate(themeName: string, title?: 
   // Import class defaults from templateConfig to ensure object === class when not customized
   // We inline the defaults here to keep this as a server-only file
   const CLASS_DEFAULTS: Record<string, any> = {
+    "she-cant-say-no": {
+      title: "Do you love me? 🤗",
+      question: "Do you love me? 🤗",
+      acceptBtn: "Yes",
+      rejectBtn: "No",
+      recipientName: "mvn",
+    },
     "surprise": {
       title: "A Surprise For You... 😊",
       question: "Will you be mine? 💖",

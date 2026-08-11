@@ -1,8 +1,15 @@
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
   const templates = [
+    {
+      name: "she-cant-say-no",
+      isPremium: true,
+      price: 2500, // ₹25
+      durationDays: 7,
+      isActive: true,
+    },
     {
       name: "surprise",
       isPremium: true,

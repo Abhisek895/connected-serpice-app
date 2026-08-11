@@ -4,6 +4,7 @@ import RomanticLoveTemplate from "./templates/RomanticLoveTemplate";
 import NasamajhLakriTemplate from "./templates/NasamajhLakriTemplate";
 import DatePlannerTemplate from "./templates/DatePlannerTemplate";
 import BirthdayTemplate from "./templates/BirthdayTemplate";
+import SheCantSayNoTemplate from "./templates/SheCantSayNoTemplate";
 
 type MediaItem = {
   id: string;
@@ -31,6 +32,10 @@ export default function ProposalClient(props: ProposalClientProps) {
   const { demoId } = props;
 
   // Render the correct template component based on demoId (Class Identifier)
+  if (demoId === "she-cant-say-no") {
+    return <SheCantSayNoTemplate {...props} />;
+  }
+
   if (demoId === "nasamajh-lakri") {
     return <NasamajhLakriTemplate {...props} />;
   }

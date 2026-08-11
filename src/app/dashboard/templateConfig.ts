@@ -35,6 +35,59 @@ export type TemplateClass = {
 
 export const TEMPLATE_CLASSES: TemplateClass[] = [
   {
+    id: "she-cant-say-no",
+    title: "She Can't Say No Proposal 💖",
+    hasInstantUse: true,
+    defaultData: {
+      demoId: "she-cant-say-no",
+      title: "Do you love me? 🤗",
+      question: "Do you love me? 🤗",
+      acceptBtn: "Yes",
+      rejectBtn: "No",
+      recipientName: "mvn",
+    },
+    steps: [
+      {
+        title: "Proposal Page Customization",
+        description: "Customize title, proposal question, and button labels.",
+        fields: [
+          {
+            key: "title",
+            label: "Opening Question Title",
+            type: "text",
+            placeholder: "Do you love me? 🤗",
+          },
+          {
+            key: "recipientName",
+            label: "Recipient Name / Note",
+            type: "text",
+            placeholder: "mvn",
+            hint: "Renders as '[Name] is all yours'",
+          },
+          {
+            key: "acceptBtn",
+            label: "Yes Button Text",
+            type: "text",
+            placeholder: "Yes",
+          },
+          {
+            key: "rejectBtn",
+            label: "No Button Text",
+            type: "text",
+            placeholder: "No",
+          },
+          {
+            key: "dodgeMessages",
+            label: "Dodging Messages (One per line)",
+            type: "textarea",
+            placeholder: "Ek aur baar Soch lo! 🥺\nPlease think again! 😳\nbeautiful pls Man jao na! Kitna code likh waogi 😭",
+            hint: "Messages displayed sequentially as the recipient clicks/hovers No.",
+          },
+        ],
+      },
+    ],
+  },
+  {
     id: "surprise",
     title: "Romantic Love Surprise 💖",
     hasInstantUse: false,

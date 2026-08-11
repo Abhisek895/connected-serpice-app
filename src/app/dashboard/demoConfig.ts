@@ -44,6 +44,21 @@ export const demos: DemoItem[] = [
     hasInstantUse: false
   },
   {
+    id: "she-cant-say-no",
+    title: "She Can't Say No Proposal 💖",
+    badge: "Instant Available",
+    badgeColor: "bg-rose-500 text-white",
+    description: "Viral 'Ask Her Out' interactive proposal page with cute cat stickers & a dodging 'No' button that runs away from the cursor!",
+    previewUrl: "/demos/she-cant-say-no/index.html",
+    builderTheme: "Romantic",
+    image: "https://media1.tenor.com/m/al4yRBO26akAAAAC/cat-goma.gif",
+    icon: Heart,
+    borderColor: "border-rose-300",
+    hasInstantUse: true,
+    price: 2500,
+    durationDays: 7
+  },
+  {
     id: "nasamajh-lakri",
     title: "Nasamajh Lakri Proposal ❤️",
     badge: "Instant Available",

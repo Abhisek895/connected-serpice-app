@@ -23,7 +23,19 @@ type AnalyticsClientProps = {
 
 export default function AnalyticsClient({ event, customData }: AnalyticsClientProps) {
   const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
-  const [isTourActive, setIsTourActive] = useState<boolean>(true);
+  const [isTourActive, setIsTourActive] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return !localStorage.getItem("ourstory_analytics_tour_completed");
+    }
+    return false;
+  });
+
+  const handleTourComplete = () => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("ourstory_analytics_tour_completed", "true");
+    }
+    setIsTourActive(false);
+  };
 
   const responses: ResponseItem[] = event.responses || [];
 
@@ -76,7 +88,7 @@ export default function AnalyticsClient({ event, customData }: AnalyticsClientPr
   return (
     <div className="max-w-5xl mx-auto pb-12">
       {isTourActive && (
-        <AnalyticsTourEngine onCompleteTour={() => setIsTourActive(false)} />
+        <AnalyticsTourEngine onCompleteTour={handleTourComplete} />
       )}
 
       <div className="mb-6">
