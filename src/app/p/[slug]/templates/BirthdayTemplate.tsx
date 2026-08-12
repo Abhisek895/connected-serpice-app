@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { recordResponseAction } from "../actions"
 import type { ProposalClientProps } from "./RomanticLoveTemplate"
+import OurStoryWatermark from "./OurStoryWatermark"
 
 // ─── Canvas Confetti ──────────────────────────────────────────────────────────
 type Piece = { x: number; y: number; vy: number; size: number; color: string };
@@ -425,6 +426,9 @@ export default function BirthdayTemplate({
           )}
         </AnimatePresence>
       </div>
+
+      {/* OurStory viral watermark badge */}
+      <OurStoryWatermark variant="dark" templateId="birthday-wish" />
     </>
   );
 }

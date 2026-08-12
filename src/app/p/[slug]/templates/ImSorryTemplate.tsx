@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { recordResponseAction } from "../actions";
 import { Heart, Sparkles, X, MailOpen, Volume2, VolumeX, Gift, Award, Coffee } from "lucide-react";
+import OurStoryWatermark from "./OurStoryWatermark";
 
 export type ProposalClientProps = {
   slug: string;
@@ -445,6 +446,9 @@ export default function ImSorryTemplate({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* OurStory viral watermark badge */}
+      <OurStoryWatermark variant="dark" templateId="im-sorry" />
 
     </div>
   );

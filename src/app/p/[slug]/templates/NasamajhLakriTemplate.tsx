@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { recordResponseAction } from "../actions"
 import type { ProposalClientProps } from "./RomanticLoveTemplate"
+import OurStoryWatermark from "./OurStoryWatermark"
 
 const secondChanceMessages = [
   "piliiiiiizzzzzzzzzzzzzzzzzzzzz? 💔",
@@ -275,6 +276,9 @@ export default function NasamajhLakriTemplate({
           </motion.div>
         )}
       </div>
+
+      {/* OurStory viral watermark badge */}
+      <OurStoryWatermark variant="dark" templateId="nasamajh-lakri" />
 
     </div>
   )

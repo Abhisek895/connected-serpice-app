@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { recordResponseAction } from "../actions";
 import { Sparkles, Heart, Volume2, VolumeX, RefreshCw, Wand2, Star, Flame } from "lucide-react";
+import OurStoryWatermark from "./OurStoryWatermark";
+
 
 export type ProposalClientProps = {
   slug: string;
@@ -535,6 +537,9 @@ export default function GlowingHeartTemplate({
           </div>
         </motion.div>
       )}
+
+      {/* OurStory viral watermark badge */}
+      <OurStoryWatermark variant="dark" templateId="3d-glowing-heart" />
 
     </div>
   );

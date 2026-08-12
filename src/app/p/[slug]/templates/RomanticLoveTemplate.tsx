@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { recordResponseAction } from "../actions"
+import OurStoryWatermark from "./OurStoryWatermark"
 
 // ─── Shared props type ────────────────────────────────────────────────────────
 export type ProposalClientProps = {
@@ -664,6 +665,9 @@ export default function RomanticLoveTemplate({
           )}
         </AnimatePresence>
       </div>
+
+      {/* OurStory viral watermark badge */}
+      <OurStoryWatermark variant="dark" templateId="surprise" />
     </>
   );
 }

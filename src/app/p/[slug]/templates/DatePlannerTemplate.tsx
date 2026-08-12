@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { recordResponseAction } from "../actions";
 import type { ProposalClientProps } from "./RomanticLoveTemplate";
+import OurStoryWatermark from "./OurStoryWatermark";
 
 const kolkataPlaces = [
   { name: "Victoria Memorial", img: "https://images.unsplash.com/photo-1558431382-27e303142255?q=80&w=800&auto=format&fit=crop" },
@@ -552,6 +553,10 @@ export default function DatePlannerTemplate({
           </div>
         </section>
       )}
+
+      {/* OurStory viral watermark badge */}
+      <OurStoryWatermark variant="light" templateId="date-planner" />
+
     </div>
   );
 }

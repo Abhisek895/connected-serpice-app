@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { recordResponseAction } from "../actions";
+import OurStoryWatermark from "./OurStoryWatermark";
 
 export type ProposalClientProps = {
   slug: string;
@@ -147,6 +148,7 @@ export default function SheCantSayNoTemplate({
   };
 
   return (
+    <>
     <div className="min-h-screen w-full flex items-center justify-center p-4 overflow-hidden relative font-sans bg-[#DF98A2] selection:bg-rose-200">
 
       {/* Falling Emoji Confetti */}
@@ -277,5 +279,10 @@ export default function SheCantSayNoTemplate({
 
       </div>
     </div>
+
+      {/* OurStory viral watermark badge */}
+      <OurStoryWatermark variant="dark" templateId="she-cant-say-no" />
+    </>
   );
 }
+
