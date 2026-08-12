@@ -14,6 +14,7 @@ interface OnboardingTourEngineProps {
 export default function OnboardingTourEngine({
   currentStep,
   onNextStep,
+  onSkipTour,
 }: OnboardingTourEngineProps) {
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
 
@@ -111,19 +112,31 @@ export default function OnboardingTourEngine({
           </motion.div>
         )}
 
-        {/* Floating Label Badge */}
+        {/* Floating Label Badge with Interactive Skip Button */}
         {targetRect && badgeTexts[currentStep] && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="fixed z-[60] pointer-events-none bg-rose-600 text-white text-xs font-black uppercase px-4 py-2 rounded-full shadow-2xl tracking-wider flex items-center gap-2 border border-rose-300 ring-4 ring-rose-500/30"
+            className="fixed z-[60] pointer-events-auto bg-slate-950/95 backdrop-blur-md text-white text-xs font-bold px-4 py-2.5 rounded-2xl shadow-2xl flex items-center gap-3 border border-rose-500/40 ring-4 ring-rose-500/20"
             style={{
-              top: targetRect.top + targetRect.height + 12,
-              left: Math.max(16, targetRect.left + targetRect.width / 2 - 110),
+              top: Math.min(window.innerHeight - 60, targetRect.top + targetRect.height + 12),
+              left: Math.max(16, targetRect.left + targetRect.width / 2 - 130),
             }}
           >
-            <Sparkles className="w-4 h-4 fill-white" />
-            {badgeTexts[currentStep]}
+            <span className="flex items-center gap-1.5 text-rose-300 font-black tracking-wide">
+              <Sparkles className="w-4 h-4 fill-rose-400" />
+              {badgeTexts[currentStep]}
+            </span>
+
+            <div className="h-4 w-px bg-slate-700/80" />
+
+            <button
+              onClick={onSkipTour}
+              className="text-[11px] font-bold text-slate-300 hover:text-rose-400 hover:bg-rose-500/15 px-2 py-1 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+              title="Skip onboarding tour"
+            >
+              Skip Tour ✕
+            </button>
           </motion.div>
         )}
       </div>

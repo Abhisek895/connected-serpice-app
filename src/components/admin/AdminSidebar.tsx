@@ -15,7 +15,8 @@ import {
   ChevronRight,
   CreditCard,
   Tag,
-  Ticket
+  Ticket,
+  Sparkles,
 } from "lucide-react";
 import { useAdminAuth } from "./AdminAuthProvider";
 
@@ -100,12 +101,23 @@ export default function AdminSidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-slate-800">
+      <div className="p-4 border-t border-slate-800 space-y-2">
+        <Link
+          href="/dashboard"
+          className="flex items-center justify-between px-3.5 py-2.5 w-full rounded-xl bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-700 text-white font-extrabold text-xs tracking-wide shadow-md shadow-rose-900/40 border border-rose-400/40 transition group cursor-pointer"
+        >
+          <div className="flex items-center gap-2.5">
+            <Sparkles className="w-4 h-4 text-white fill-white group-hover:rotate-12 transition-transform" />
+            <span>User Portal</span>
+          </div>
+          <span className="text-sm">💖</span>
+        </Link>
+
         <button
           onClick={logout}
-          className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 transition font-medium text-sm"
+          className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 transition font-medium text-sm cursor-pointer"
         >
-          <LogOut className="w-5 h-5 text-slate-500 group-hover:text-rose-400" />
+          <LogOut className="w-5 h-5 text-slate-500" />
           Sign out
         </button>
       </div>

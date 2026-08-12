@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -20,6 +20,26 @@ export default function RegisterPage() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  // Capture refCode from URL on mount
+  const [refCode, setRefCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const emailParam = params.get("email");
+      if (emailParam) setEmail(emailParam);
+
+      const ref = params.get("ref");
+      if (ref) {
+        setRefCode(ref);
+        localStorage.setItem("ourstory_ref_code", ref);
+      } else {
+        const storedRef = localStorage.getItem("ourstory_ref_code");
+        if (storedRef) setRefCode(storedRef);
+      }
+    }
+  }, []);
 
   // Step 1: Request Registration OTP
   const handleRequestOtp = async (e: React.FormEvent) => {
@@ -66,10 +86,11 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
+      const activeRef = refCode || (typeof window !== "undefined" ? localStorage.getItem("ourstory_ref_code") : null);
       const res = await fetch("/api/auth/register/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, otp }),
+        body: JSON.stringify({ name, email, password, otp, refCode: activeRef }),
       });
 
       const data = await res.json();

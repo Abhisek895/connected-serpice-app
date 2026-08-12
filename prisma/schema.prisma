@@ -6,7 +6,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
 // User model for NextAuth Credentials & OAuth
@@ -21,13 +21,22 @@ model User {
   plan          String    @default("FREE") // "FREE", "PREMIUM", "LIFETIME"
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
+
+  // ─── Referral / Wallet ────────────────────────────────────────
+  referralCode  String?   @unique         // e.g. "ABC123" — their shareable code
+  referredById  String?                   // Which user referred them
+  referredBy    User?     @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals     User[]    @relation("Referrals")
+  walletBalance Int       @default(0)     // in paise (₹500 = 50000)
+
   events        Event[]
   payments      Payment[]
   accounts      Account[]
   sessions      Session[]
+  walletTxns    WalletTransaction[]
 
   @@index([email])
+  @@index([referralCode])
 }
 
 // Storing the created memory pages (events)
@@ -180,3 +189,30 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+// ─── Referral Wallet Transactions ────────────────────────────────────────────
+model WalletTransaction {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type        String   // "REFERRAL_EARNED" | "SPENT_ON_TEMPLATE" | "WITHDRAWAL_PENDING" | "WITHDRAWAL_PAID"
+  amount      Int      // in paise — positive = credit, negative = debit
+  description String
+  referenceId String?  // paymentId / eventId that triggered this
+  status      String   @default("COMPLETED") // "COMPLETED" | "PENDING" | "FAILED"
+
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// ─── Platform System Settings ────────────────────────────────────────────────
+model SystemSetting {
+  key         String   @id
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+

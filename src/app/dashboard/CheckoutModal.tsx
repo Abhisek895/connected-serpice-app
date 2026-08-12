@@ -29,6 +29,8 @@ export default function CheckoutModal({
   const userObj = session?.user as any;
   const isPremiumAccount = Boolean(isPremiumUser) || userObj?.plan === "PREMIUM" || userObj?.role === "super_admin";
 
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [useWallet, setUseWallet] = useState<boolean>(true);
   const [couponCode, setCouponCode] = useState(isPremiumAccount ? "PREMIUM_FREE" : "");
   const [couponStatus, setCouponStatus] = useState<"idle" | "validating" | "valid" | "invalid">(isPremiumAccount ? "valid" : "idle");
   const [couponMessage, setCouponMessage] = useState(isPremiumAccount ? "👑 Premium Member: 100% FREE Access Granted!" : "");
@@ -37,9 +39,33 @@ export default function CheckoutModal({
   const [error, setError] = useState("");
   const [isFree1Eligible, setIsFree1Eligible] = useState<boolean | null>(null);
 
+  // Fetch available wallet balance on mount
+  useEffect(() => {
+    if (isPremiumAccount) return;
+    fetch("/api/referral/stats")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.walletBalance !== undefined) {
+          setWalletBalance(data.walletBalance);
+        }
+      })
+      .catch(() => {});
+  }, [isPremiumAccount]);
+
   const originalPriceINR = originalPrice / 100;
-  const finalPriceINR = isPremiumAccount ? 0 : finalPrice / 100;
-  const discountINR = originalPriceINR - finalPriceINR;
+  const priceAfterCouponPaise = isPremiumAccount ? 0 : finalPrice;
+  const discountINR = (originalPrice - priceAfterCouponPaise) / 100;
+
+  // Wallet deduction calculation (in paise)
+  const isWalletActive = useWallet && walletBalance > 0 && !isPremiumAccount && priceAfterCouponPaise > 0;
+  const walletDeductionPaise = isWalletActive ? Math.min(walletBalance, priceAfterCouponPaise) : 0;
+  const walletDeductionINR = walletDeductionPaise / 100;
+
+  const totalToPayPaise = Math.max(0, priceAfterCouponPaise - walletDeductionPaise);
+  const totalToPayINR = totalToPayPaise / 100;
+
+  const remainingWalletBalancePaise = Math.max(0, walletBalance - walletDeductionPaise);
+  const remainingWalletBalanceINR = remainingWalletBalancePaise / 100;
 
   // On mount: Check FREE100% eligibility automatically for regular users
   useEffect(() => {
@@ -136,6 +162,7 @@ export default function CheckoutModal({
         body: JSON.stringify({
           demoId,
           couponCode: activeCoupon,
+          useWallet: Boolean(useWallet && walletBalance > 0),
         }),
       });
 
@@ -308,7 +335,6 @@ export default function CheckoutModal({
 
                 {/* Conditional Coupon Chips */}
                 <div className="flex flex-wrap gap-1.5 pt-1">
-                  {/* Show FREE100% ONLY if the user has 1 pass count remaining */}
                   {isFree1Eligible && (
                     <button
                       type="button"
@@ -324,7 +350,6 @@ export default function CheckoutModal({
                     </button>
                   )}
 
-                  {/* Standard coupons with crisp black text */}
                   {["LOVE2026", "SPECIAL50", "OURSTORY"].map((code) => (
                     <button
                       key={code}
@@ -341,7 +366,6 @@ export default function CheckoutModal({
                   ))}
                 </div>
 
-                {/* Status Message */}
                 {couponMessage && (
                   <p className={`text-xs font-bold mt-1.5 ${couponStatus === "valid" ? "text-emerald-600" : "text-rose-500"}`}>
                     {couponStatus === "valid" ? `✓ ${couponMessage}` : couponMessage}
@@ -350,11 +374,44 @@ export default function CheckoutModal({
               </div>
             )}
 
+            {/* 💰 Wallet Balance Card */}
+            {walletBalance > 0 && !isPremiumAccount && (
+              <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200/80 rounded-2xl p-4 space-y-2.5 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 font-black text-xs text-emerald-900 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={useWallet}
+                      onChange={(e) => setUseWallet(e.target.checked)}
+                      className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer"
+                    />
+                    <span>💰 Apply Wallet Balance</span>
+                  </label>
+                  <span className="text-xs font-extrabold text-emerald-800 bg-emerald-100/90 border border-emerald-300/60 px-2.5 py-0.5 rounded-full">
+                    Available: ₹{(walletBalance / 100).toFixed(0)}
+                  </span>
+                </div>
+
+                {useWallet && walletDeductionPaise > 0 && (
+                  <div className="pt-2 border-t border-emerald-200/80 space-y-1 text-xs font-bold text-emerald-800">
+                    <div className="flex justify-between items-center">
+                      <span>Wallet Deduction:</span>
+                      <span className="text-emerald-700 font-extrabold">- ₹{walletDeductionINR.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px] text-slate-500 font-medium">
+                      <span>Remaining Wallet Balance:</span>
+                      <span className="font-extrabold text-slate-700">₹{remainingWalletBalanceINR.toFixed(0)}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Discount Summary */}
             <div className="border-t border-slate-100 pt-4 space-y-3">
               {discountINR > 0 && !couponMessage.includes("Premium Member") && (
                 <div className="flex justify-between items-center text-emerald-700 font-extrabold text-xs bg-emerald-50 p-3 rounded-2xl border border-emerald-200">
-                  <span>Discount Applied 🎉 ({couponCode})</span>
+                  <span>Coupon Discount 🎉 ({couponCode})</span>
                   <span>- ₹{discountINR.toFixed(2)}</span>
                 </div>
               )}
@@ -362,10 +419,14 @@ export default function CheckoutModal({
               <div className="flex justify-between items-center">
                 <span className="text-slate-900 font-bold">Total to Pay</span>
                 <div className="text-right">
-                  <span className="text-2xl font-black text-rose-600">₹{finalPriceINR.toFixed(2)}</span>
-                  {finalPriceINR === 0 && (
+                  <span className="text-2xl font-black text-rose-600">₹{totalToPayINR.toFixed(2)}</span>
+                  {totalToPayINR === 0 && (
                     <span className="block text-[10px] text-amber-600 font-extrabold uppercase tracking-wide">
-                      {couponMessage.includes("Premium Member") ? "👑 PREMIUM MEMBER ∞" : "100% FREE PASS"}
+                      {couponMessage.includes("Premium Member")
+                        ? "👑 PREMIUM MEMBER ∞"
+                        : walletDeductionPaise > 0
+                        ? "💰 100% COVERED BY WALLET"
+                        : "100% FREE PASS"}
                     </span>
                   )}
                 </div>
@@ -391,23 +452,25 @@ export default function CheckoutModal({
             <button
               onClick={handlePayment}
               disabled={isProcessing}
-              className="w-full py-4 px-4 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-rose-200 transition flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-4 px-4 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-rose-200 transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
             >
               {isProcessing ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
                   {couponMessage.includes("Premium Member")
                     ? "Activating Premium Link..."
-                    : finalPriceINR === 0
-                    ? "Activating 1-Day Pass..."
+                    : totalToPayINR === 0
+                    ? "Activating Link via Wallet..."
                     : "Processing Payment..."}
                 </>
               ) : couponMessage.includes("Premium Member") ? (
                 "🚀 Activate Link (Free for Premium Member ∞)"
-              ) : finalPriceINR === 0 ? (
-                "🚀 Activate 1-Day Free Pass (₹0)"
+              ) : totalToPayINR === 0 ? (
+                walletDeductionPaise > 0
+                  ? "🚀 Activate Link (Covered by Wallet ₹0)"
+                  : "🚀 Activate 1-Day Free Pass (₹0)"
               ) : (
-                `Pay ₹${finalPriceINR.toFixed(2)} & Activate Link`
+                `Pay ₹${totalToPayINR.toFixed(2)} & Activate Link`
               )}
             </button>
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Search, Loader2, Ban, CheckCircle2, Trash2, AlertCircle, AlertTriangle, X, ExternalLink } from "lucide-react";
+import { Search, Loader2, Ban, CheckCircle2, Trash2, AlertCircle, AlertTriangle, X, ExternalLink, Users as UsersIcon, Gift } from "lucide-react";
 import { getAdminUsers, deleteAdminUser, toggleSuspendAdminUser, toggleUserPlanAdminAction } from "@/app/admin/actions";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -162,46 +162,50 @@ export default function AdminUsersPage() {
           <div className="p-8 text-center text-slate-500 text-sm">No users found.</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-300">
-              <thead className="bg-[#1e293b]/50 border-b border-slate-800 text-xs uppercase text-slate-400">
+            <table className="w-full text-left text-xs text-slate-300">
+              <thead className="bg-[#1e293b]/50 border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400">
                 <tr>
-                  <th className="px-6 py-4 font-semibold">User</th>
-                  <th className="px-6 py-4 font-semibold">Role / Status</th>
-                  <th className="px-6 py-4 font-semibold">Plan</th>
-                  <th className="px-6 py-4 font-semibold">Joined</th>
-                  <th className="px-6 py-4 font-semibold text-right">Actions</th>
+                  <th className="px-4 py-3 font-semibold">User</th>
+                  <th className="px-4 py-3 font-semibold">Role / Status</th>
+                  <th className="px-4 py-3 font-semibold">Plan</th>
+                  <th className="px-4 py-3 font-semibold">Referred By</th>
+                  <th className="px-4 py-3 font-semibold">Referrals Made</th>
+                  <th className="px-4 py-3 font-semibold">Joined</th>
+                  <th className="px-4 py-3 font-semibold">Total Spending</th>
+                  <th className="px-4 py-3 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
                 {users.map((u) => {
                   const isActionBusy = actionLoadingId === u.id;
                   const isSuspended = u.role === "SUSPENDED";
+                  const totalSpentPaise = u.payments?.reduce((sum: number, p: any) => sum + p.amount, 0) ?? 0;
 
                   return (
                     <tr key={u.id} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <Link
                           href={`/admin/users/${u.id}`}
                           className="group block"
                           title="Click to view full user profile & manage promotion"
                         >
-                          <div className="font-bold text-slate-200 group-hover:text-indigo-400 transition flex items-center gap-1.5">
+                          <div className="font-bold text-slate-200 group-hover:text-indigo-400 transition flex items-center gap-1.5 text-xs">
                             {u.name || "Unnamed User"}
-                            <ExternalLink className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-indigo-400 transition" />
+                            <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 text-indigo-400 transition" />
                           </div>
-                          <div className="text-xs text-slate-500 group-hover:text-slate-400 transition">{u.email}</div>
+                          <div className="text-[11px] text-slate-500 group-hover:text-slate-400 transition">{u.email}</div>
                         </Link>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${roleColors[u.role] || roleColors.USER}`}>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${roleColors[u.role] || roleColors.USER}`}>
                           {isSuspended ? "🚫 SUSPENDED" : u.role}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <button
                           onClick={() => handleTogglePlan(u.id, u.plan)}
                           disabled={isActionBusy}
-                          className={`px-3 py-1 rounded-full text-xs font-bold transition border flex items-center gap-1 ${
+                          className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition border flex items-center gap-1 ${
                             u.plan === "PREMIUM"
                               ? "bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30"
                               : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
@@ -211,8 +215,46 @@ export default function AdminUsersPage() {
                           {u.plan === "PREMIUM" ? "👑 PREMIUM" : "FREE"}
                         </button>
                       </td>
-                      <td className="px-6 py-4 text-slate-400 text-xs">{new Date(u.createdAt).toLocaleDateString()}</td>
-                      <td className="px-6 py-4 text-right">
+
+                      {/* Referred By */}
+                      <td className="px-4 py-3 text-xs">
+                        {u.referredBy ? (
+                          <div>
+                            <div className="font-bold text-slate-200 text-xs">{u.referredBy.name || "User"}</div>
+                            <div className="text-[11px] text-slate-400">{u.referredBy.email}</div>
+                          </div>
+                        ) : (
+                          <span className="text-slate-500 italic text-[11px]">Direct / Organic</span>
+                        )}
+                      </td>
+
+                      {/* Referrals Made */}
+                      <td className="px-4 py-3 text-xs">
+                        <div className="flex items-center gap-1">
+                          <span className="font-bold text-indigo-400 text-xs">{u._count?.referrals ?? 0}</span>
+                          <span className="text-slate-400 text-[11px]">users</span>
+                        </div>
+                        {(u.walletBalance ?? 0) > 0 && (
+                          <div className="text-[10px] text-emerald-400 font-semibold mt-0.5">
+                            Earned: ₹{(u.walletBalance / 100).toFixed(0)}
+                          </div>
+                        )}
+                      </td>
+
+                      <td className="px-4 py-3 text-slate-400 text-[11px]">{new Date(u.createdAt).toLocaleDateString()}</td>
+
+                      {/* Total Spending */}
+                      <td className="px-4 py-3 text-xs">
+                        <div className={`font-bold text-xs ${totalSpentPaise > 0 ? "text-emerald-400" : "text-slate-400"}`}>
+                          ₹{(totalSpentPaise / 100).toFixed(0)}
+                        </div>
+                        {totalSpentPaise > 0 && (
+                          <div className="text-[10px] text-slate-500 font-medium leading-tight mt-0.5">
+                            {u.payments?.length ?? 0} {u.payments?.length === 1 ? "purchase" : "purchases"}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
                           {/* Suspend / Disable Button */}
                           <button

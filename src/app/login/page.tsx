@@ -67,9 +67,22 @@ function LoginForm() {
 
         {/* Error Alert */}
         {error && (
-          <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-center gap-3 text-rose-700 text-xs font-medium">
-            <AlertCircle className="w-5 h-5 text-rose-500 flex-shrink-0" />
-            <span>{error}</span>
+          <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-2xl space-y-3">
+            <div className="flex items-center gap-3 text-rose-700 text-xs font-medium">
+              <AlertCircle className="w-5 h-5 text-rose-500 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+            {(error.toLowerCase().includes("no account found") || error.toLowerCase().includes("no user found")) && (
+              <div className="pt-2.5 border-t border-rose-200/80 flex items-center justify-between">
+                <span className="text-xs text-rose-800 font-bold">New to OurStory?</span>
+                <Link
+                  href={`/register${email ? `?email=${encodeURIComponent(email)}` : ""}`}
+                  className="px-3.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm"
+                >
+                  Create Account <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            )}
           </div>
         )}
 

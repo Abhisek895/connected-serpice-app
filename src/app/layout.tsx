@@ -3,6 +3,7 @@ import { Inter, Pacifico } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
+import { ReferralTracker } from "@/components/ReferralTracker";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const pacifico = Pacifico({ weight: "400", subsets: ["latin"], variable: "--font-pacifico" });
@@ -69,6 +70,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} ${pacifico.variable} font-sans antialiased`} suppressHydrationWarning>
         <Providers>
+          <ReferralTracker />
           {children}
         </Providers>
       </body>

@@ -21,6 +21,28 @@ export async function getAdminUserById(id: string) {
     select: {
       id: true, name: true, email: true, role: true, plan: true,
       createdAt: true, updatedAt: true, image: true,
+      referralCode: true, walletBalance: true,
+      referredBy: {
+        select: { id: true, name: true, email: true }
+      },
+      referrals: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          createdAt: true,
+          payments: {
+            where: { status: "SUCCESS" },
+            select: { id: true, amount: true, createdAt: true },
+            take: 1,
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      },
+      walletTxns: {
+        select: { id: true, type: true, amount: true, description: true, status: true, createdAt: true },
+        orderBy: { createdAt: "desc" },
+      },
       events: { select: { id: true, slug: true, status: true, themeId: true, createdAt: true } },
       payments: { select: { id: true, amount: true, plan: true, status: true, createdAt: true } },
     },
@@ -165,7 +187,31 @@ export async function getAdminUsers(search = "", role = "") {
     },
     orderBy: { createdAt: "desc" },
     take: 100,
-    select: { id: true, name: true, email: true, role: true, plan: true, createdAt: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      plan: true,
+      createdAt: true,
+      referralCode: true,
+      walletBalance: true,
+      referredBy: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+      _count: {
+        select: {
+          referrals: true,
+        },
+      },
+      payments: {
+        where: { status: "SUCCESS" },
+        select: { amount: true },
+      },
+    },
   });
   return { users, total: users.length };
 }
@@ -380,3 +426,63 @@ export async function deleteCoupon(id: string) {
     }
   }
 }
+
+// ─── Referral Settings Management ────────────────────────────────────────────
+export async function getAdminReferralSettings() {
+  await checkAuth();
+  try {
+    const rewardSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_reward_amount" } });
+    const minWithdrawalSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_min_withdrawal" } });
+    const enabledSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_enabled" } });
+
+    return {
+      success: true,
+      settings: {
+        rewardAmount: rewardSetting?.value ? parseInt(rewardSetting.value, 10) : 500, // ₹500 default
+        minWithdrawal: minWithdrawalSetting?.value ? parseInt(minWithdrawalSetting.value, 10) : 500, // ₹500 default
+        enabled: enabledSetting?.value !== "false", // default true
+      },
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message,
+      settings: { rewardAmount: 500, minWithdrawal: 500, enabled: true },
+    };
+  }
+}
+
+export async function updateAdminReferralSettings({
+  rewardAmount,
+  minWithdrawal,
+  enabled,
+}: {
+  rewardAmount: number;
+  minWithdrawal: number;
+  enabled: boolean;
+}) {
+  await checkAuth();
+  try {
+    await prisma.$transaction([
+      prisma.systemSetting.upsert({
+        where: { key: "referral_reward_amount" },
+        update: { value: rewardAmount.toString(), description: "Reward amount in INR per paid referral" },
+        create: { key: "referral_reward_amount", value: rewardAmount.toString(), description: "Reward amount in INR per paid referral" },
+      }),
+      prisma.systemSetting.upsert({
+        where: { key: "referral_min_withdrawal" },
+        update: { value: minWithdrawal.toString(), description: "Minimum withdrawal limit in INR" },
+        create: { key: "referral_min_withdrawal", value: minWithdrawal.toString(), description: "Minimum withdrawal limit in INR" },
+      }),
+      prisma.systemSetting.upsert({
+        where: { key: "referral_enabled" },
+        update: { value: enabled ? "true" : "false", description: "Referral system status toggle" },
+        create: { key: "referral_enabled", value: enabled ? "true" : "false", description: "Referral system status toggle" },
+      }),
+    ]);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to update referral settings" };
+  }
+}
+

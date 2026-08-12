@@ -24,7 +24,7 @@ export const authOptions: AuthOptions = {
         });
 
         if (!user || !user.password) {
-          throw new Error("No user found with this email address. Try signing in with Google.");
+          throw new Error("No account found with this email address.");
         }
 
         if (user.role === "SUSPENDED") {

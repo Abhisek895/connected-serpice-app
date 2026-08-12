@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, User, ShieldAlert, Mail, Ban, ShieldCheck, Loader2, FileHeart, CreditCard } from "lucide-react";
+import { ArrowLeft, User, ShieldAlert, Mail, Ban, ShieldCheck, Loader2, FileHeart, CreditCard, Gift, Users as UsersIcon } from "lucide-react";
 import { getAdminUserById, updateAdminUserRole, toggleUserPlanAdminAction } from "@/app/admin/actions";
 import { useAdminAuth } from "@/components/admin/AdminAuthProvider";
 
@@ -99,6 +99,14 @@ export default function UserDetailPage() {
                 <div className="mt-1 font-medium text-slate-300">{user.payments?.length ?? 0}</div>
               </div>
               <div className="bg-[#0a0f1e] p-3 rounded-lg border border-slate-800">
+                <div className="text-xs text-slate-500 uppercase tracking-wider">Referrals</div>
+                <div className="mt-1 font-medium text-amber-400">{user.referrals?.length ?? 0} Referred</div>
+              </div>
+              <div className="bg-[#0a0f1e] p-3 rounded-lg border border-slate-800">
+                <div className="text-xs text-slate-500 uppercase tracking-wider">Wallet Balance</div>
+                <div className="mt-1 font-medium text-emerald-400 font-bold">₹{((user.walletBalance ?? 0) / 100).toFixed(0)}</div>
+              </div>
+              <div className="bg-[#0a0f1e] p-3 rounded-lg border border-slate-800">
                 <div className="text-xs text-slate-500 uppercase tracking-wider">Joined</div>
                 <div className="mt-1 font-medium text-slate-300">{new Date(user.createdAt).toLocaleDateString()}</div>
               </div>
@@ -139,11 +147,11 @@ export default function UserDetailPage() {
           )}
         </div>
 
-        {/* Actions */}
+        {/* Actions Sidebar */}
         <div className="space-y-4">
           {/* Plan Promotion / Demotion Card */}
           <div className="bg-[#111827] border border-amber-500/30 rounded-xl p-6 shadow-sm">
-            <h3 className="text-lg font-bold text-amber-400 mb-2 flex items-center gap-2">👑 Plan & Promotion</h3>
+            <h3 className="text-lg font-bold text-amber-400 mb-2 flex items-center gap-2">👑 Plan &amp; Promotion</h3>
             <p className="text-xs text-slate-400 mb-4">Current Database Plan: <span className="font-black text-amber-300 uppercase">{user.plan}</span></p>
             <button
               onClick={handlePlanToggle}
@@ -161,7 +169,7 @@ export default function UserDetailPage() {
           {currentUser?.role === "super_admin" && user.role !== "super_admin" && (
             <div className="bg-[#111827] border border-indigo-500/30 rounded-xl p-6 shadow-sm">
               <h3 className="text-lg font-bold text-indigo-400 mb-3">Role Management</h3>
-              <p className="text-xs text-slate-400 mb-3">Change this user's access role.</p>
+              <p className="text-xs text-slate-400 mb-3">Change this user&apos;s access role.</p>
               <select
                 disabled={isActionLoading}
                 value={user.role}
@@ -175,6 +183,7 @@ export default function UserDetailPage() {
             </div>
           )}
 
+          {/* Quick Actions */}
           <div className="bg-[#111827] border border-slate-800 rounded-xl p-6 shadow-sm">
             <h3 className="text-lg font-bold text-white mb-4">Quick Actions</h3>
             <div className="space-y-3">
@@ -188,6 +197,49 @@ export default function UserDetailPage() {
                 <Ban className="w-4 h-4" /> Ban User
               </button>
             </div>
+          </div>
+
+          {/* Referrals & Referral Earnings Table (Under Quick Actions) */}
+          <div className="bg-[#111827] border border-amber-500/30 rounded-xl p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-bold flex items-center gap-2 text-sm sm:text-base">
+                <Gift className="w-4 h-4 text-amber-400 shrink-0" /> Referrals &amp; Earnings ({user.referrals?.length ?? 0})
+              </h3>
+              <span className="text-xs font-extrabold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full shrink-0">
+                ₹{((user.walletBalance ?? 0) / 100).toFixed(0)}
+              </span>
+            </div>
+
+            {user.referrals?.length > 0 ? (
+              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                {user.referrals.map((refUser: any) => {
+                  const hasPaid = refUser.payments?.length > 0;
+                  const matchingTxn = user.walletTxns?.find(
+                    (t: any) => t.type === "REFERRAL_EARNED" && (t.description?.includes(refUser.email?.split("@")[0]) || t.referenceId === refUser.payments?.[0]?.id)
+                  );
+                  const earnedPaise = matchingTxn ? matchingTxn.amount : (hasPaid ? 50000 : 0);
+
+                  return (
+                    <div key={refUser.id} className="flex items-center justify-between text-xs bg-[#0a0f1e] px-3.5 py-2.5 rounded-lg border border-slate-800">
+                      <div className="min-w-0 flex-1 mr-2">
+                        <div className="font-bold text-slate-200 truncate">{refUser.name || "User"}</div>
+                        <div className="text-[11px] text-slate-400 truncate">{refUser.email}</div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className={`text-[11px] font-bold px-2 py-0.5 rounded ${hasPaid ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20" : "text-amber-400 bg-amber-500/10 border border-amber-500/20"}`}>
+                          {hasPaid ? `+₹${(earnedPaise / 100).toFixed(0)}` : "Pending"}
+                        </span>
+                        <div className="text-[10px] text-slate-500 mt-0.5">{new Date(refUser.createdAt).toLocaleDateString()}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="p-4 text-center text-slate-500 text-xs italic bg-[#0a0f1e] rounded-lg border border-slate-800">
+                No referrals recorded yet.
+              </div>
+            )}
           </div>
         </div>
       </div>

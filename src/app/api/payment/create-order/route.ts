@@ -11,7 +11,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    const { demoId, couponCode } = await req.json();
+    const { demoId, couponCode, useWallet } = await req.json();
 
     if (!demoId) {
       return NextResponse.json({ success: false, message: "Missing demoId" }, { status: 400 });
@@ -55,6 +55,30 @@ export async function POST(req: Request) {
       finalAmount = 0;
     }
 
+    // ─── WALLET BALANCE DEDUCTION ENGINE ──────────────────────────────────────
+    let walletDeductedPaise = 0;
+    if (useWallet && !isPremiumUser && finalAmount > 0 && existingUser.walletBalance > 0) {
+      walletDeductedPaise = Math.min(existingUser.walletBalance, finalAmount);
+      finalAmount = Math.max(0, finalAmount - walletDeductedPaise);
+
+      // Perform wallet deduction and log transaction
+      await prisma.$transaction([
+        prisma.user.update({
+          where: { id: userId },
+          data: { walletBalance: { decrement: walletDeductedPaise } },
+        }),
+        prisma.walletTransaction.create({
+          data: {
+            userId,
+            type: "TEMPLATE_PURCHASE",
+            amount: -walletDeductedPaise,
+            description: `Used wallet balance for ${theme.name || demoId}`,
+            status: "COMPLETED",
+          },
+        }),
+      ]);
+    }
+
     // Ensure coupon exists in DB if couponId was resolved
     if (couponId) {
       const existingCoupon = await prisma.coupon.findUnique({ where: { id: couponId } });
@@ -64,7 +88,13 @@ export async function POST(req: Request) {
     }
 
     if (finalAmount === 0) {
-      // Free template or fully discounted coupon order
+      // Free template, 100% coupon, or fully covered by Wallet Balance!
+      const planName = walletDeductedPaise > 0
+        ? "WALLET_TEMPLATE_PURCHASE"
+        : ["FREE100%", "FREE100", "FREE1"].includes(cleanCode)
+        ? "1_DAY_FREE_PASS"
+        : "DISCOUNTED_TEMPLATE_PURCHASE";
+
       await prisma.payment.create({
         data: {
           userId,
@@ -73,7 +103,7 @@ export async function POST(req: Request) {
           finalAmount: 0,
           currency: "INR",
           status: "SUCCESS",
-          plan: ["FREE100%", "FREE100", "FREE1"].includes(cleanCode) ? "1_DAY_FREE_PASS" : "DISCOUNTED_TEMPLATE_PURCHASE",
+          plan: planName,
           demoId,
           couponId,
         }
@@ -86,7 +116,12 @@ export async function POST(req: Request) {
         });
       }
 
-      return NextResponse.json({ success: true, amount: 0, orderId: "FREE" });
+      return NextResponse.json({
+        success: true,
+        amount: 0,
+        orderId: "FREE",
+        walletDeducted: walletDeductedPaise,
+      });
     }
 
     // Check if keys are properly configured

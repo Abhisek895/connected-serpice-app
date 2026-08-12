@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { email, password, name } = body;
+    const { email, password, name, refCode } = body;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -35,16 +35,29 @@ export async function POST(req: Request) {
       );
     }
 
+    // Look up referrer if refCode is provided
+    let referredById: string | undefined = undefined;
+    if (refCode && typeof refCode === "string") {
+      const referrer = await prisma.user.findUnique({
+        where: { referralCode: refCode.trim() },
+        select: { id: true }
+      });
+      if (referrer) {
+        referredById = referrer.id;
+      }
+    }
+
     // Hash password with bcrypt
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user in MySQL / Prisma
+    // Create user in Database / Prisma
     const newUser = await prisma.user.create({
       data: {
         email: cleanEmail,
         password: hashedPassword,
         name: name?.trim() || cleanEmail.split("@")[0],
-        plan: "FREE"
+        plan: "FREE",
+        ...(referredById ? { referredById } : {})
       }
     });
 
