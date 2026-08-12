@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Gift, Copy, CheckCircle2, Share2, Wallet, Users, TrendingUp,
-  ArrowDownToLine, ExternalLink, Loader2, QrCode, X, Sparkles
+  Banknote, ExternalLink, Loader2, QrCode, X, Sparkles
 } from "lucide-react";
 
 type ReferralStats = {
@@ -168,7 +168,7 @@ export default function ReferralPage() {
             disabled={walletRupees < (stats?.minWithdrawal ?? 50)}
             className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold text-sm transition-all shadow-md shadow-emerald-300/40 shrink-0 cursor-pointer"
           >
-            <ArrowDownToLine className="w-4 h-4" />
+            <Banknote className="w-4 h-4" />
             Withdraw ₹{walletRupees.toFixed(0)}
           </button>
         </div>
@@ -303,7 +303,7 @@ export default function ReferralPage() {
             >
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-black text-slate-900 text-lg flex items-center gap-2">
-                  <ArrowDownToLine className="w-5 h-5 text-emerald-500" /> Withdraw Funds
+                  <Banknote className="w-5 h-5 text-emerald-500" /> Withdraw Funds
                 </h3>
                 <button onClick={() => setShowWithdrawModal(false)} className="p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 transition">
                   <X className="w-4 h-4 text-slate-500" />
@@ -350,7 +350,7 @@ export default function ReferralPage() {
                 disabled={withdrawing || !upiId || !withdrawAmount}
                 className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold rounded-2xl transition-all flex items-center justify-center gap-2 shadow-sm"
               >
-                {withdrawing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowDownToLine className="w-4 h-4" />}
+                {withdrawing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Banknote className="w-4 h-4" />}
                 {withdrawing ? "Processing…" : "Request Withdrawal"}
               </button>
               <p className="text-center text-xs text-slate-400 mt-3">Processed within 24-48 hours via UPI</p>
