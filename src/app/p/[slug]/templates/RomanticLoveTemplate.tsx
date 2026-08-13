@@ -15,6 +15,9 @@ export type ProposalClientProps = {
   rejectBtn: string;
   loveMessage?: string;
   photoUrl?: string;
+  audioUrl?: string;
+  _photo?: string;
+  _audio?: string;
   demoId?: string;
   recipientName?: string;
   dodgeMessages?: string;
@@ -249,6 +252,10 @@ export default function RomanticLoveTemplate({
   loveMessage,
   recipientName,
   patternText,
+  photoUrl,
+  audioUrl,
+  _photo,
+  _audio,
   media,
 }: ProposalClientProps) {
   // 0 = landing, 1 = fade-to-black, 2 = portrait, 3 = proposal, 4 = accepted, 5 = rejected
@@ -263,16 +270,19 @@ export default function RomanticLoveTemplate({
     }
   }, [slug]);
 
-  // Media
+  // Media resolution (prioritizes user uploaded photo & audio data URLs or DB media)
   const imageMedia = media.filter((m) => m.type === "IMAGE");
   const audioMedia = media.find((m) => m.type === "AUDIO");
+
   const displayPhoto =
-    imageMedia.length > 0
-      ? imageMedia[0].url
-      : "/demos/surprise/cute_woman.png";
-  const audioSrc = audioMedia
-    ? audioMedia.url
-    : "/demos/surprise/loveSong.mp3";
+    photoUrl ||
+    _photo ||
+    (imageMedia.length > 0 ? imageMedia[0].url : "/demos/surprise/cute_woman.png");
+
+  const audioSrc =
+    audioUrl ||
+    _audio ||
+    (audioMedia ? audioMedia.url : "/demos/surprise/loveSong.mp3");
 
   const displayTitle = title || "I have a surprise for you...";
   const displayLetter =
@@ -383,35 +393,38 @@ export default function RomanticLoveTemplate({
 
         .portrait-buttons-container {
           position: absolute;
-          bottom: 30px;
+          bottom: 20px;
           left: 50%;
           transform: translateX(-50%);
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 10px;
+          justify-content: center;
+          gap: 8px;
           z-index: 20;
-          width: 100%;
-          max-width: 320px;
+          width: calc(100% - 32px);
+          max-width: 220px;
         }
 
         .love-letter-popup {
           position: absolute;
-          inset: 10px;
-          margin: auto;
-          width: calc(100% - 20px);
-          max-height: calc(100% - 20px);
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          border-radius: 18px;
-          padding: 20px;
+          top: 50%;
+          left: 50%;
+          width: calc(100% - 32px);
+          max-width: 440px;
+          height: auto;
+          max-height: 75vh;
+          background: rgba(255, 255, 255, 0.96);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border-radius: 22px;
+          padding: 24px 20px;
           font-family: 'Dancing Script', cursive;
-          font-size: 1.15rem;
+          font-size: 1.25rem;
           color: #111;
           line-height: 1.6;
           text-align: center;
-          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.5);
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.6);
           z-index: 30;
           cursor: pointer;
           display: flex;
@@ -423,18 +436,21 @@ export default function RomanticLoveTemplate({
 
         /* Love letter button (compact) */
         .love-letter-btn {
-          background: rgba(255,255,255,0.92);
+          background: rgba(255,255,255,0.95);
           color: #d6336c;
-          border: 1px solid rgba(255,255,255,0.5);
+          border: 1px solid rgba(255,255,255,0.6);
           border-radius: 30px;
-          padding: 7px 20px;
+          padding: 8px 20px;
           font-family: 'Dancing Script', cursive;
           font-size: 1.05rem;
           font-weight: bold;
           cursor: pointer;
           box-shadow: 0 4px 15px rgba(214,51,108,0.3);
           transition: all 0.25s ease;
+          white-space: nowrap;
           z-index: 10;
+          width: 100%;
+          text-align: center;
         }
         .love-letter-btn:hover { transform: scale(1.05); background: #ffffff; }
         .love-letter-box {
@@ -457,17 +473,35 @@ export default function RomanticLoveTemplate({
           background: #ff4d6d;
           color: white;
           border: none;
-          border-radius: 40px;
-          padding: 14px 36px;
-          font-size: 1.1rem;
+          border-radius: 30px;
+          padding: 8px 20px;
+          font-size: 0.95rem;
           font-weight: bold;
           cursor: pointer;
           font-family: sans-serif;
-          box-shadow: 0 4px 20px rgba(255,77,109,0.5);
+          box-shadow: 0 4px 15px rgba(255,77,109,0.5);
           transition: all 0.3s ease;
+          white-space: nowrap;
           z-index: 10;
+          width: 100%;
+          text-align: center;
         }
         .continue-btn:hover { transform: scale(1.05); background: #e8003d; }
+
+        @media (min-width: 640px) {
+          .portrait-buttons-container {
+            flex-direction: row;
+            max-width: 480px;
+            gap: 16px;
+            bottom: 28px;
+          }
+          .love-letter-btn,
+          .continue-btn {
+            width: auto;
+            padding: 10px 24px;
+            font-size: 1.05rem;
+          }
+        }
 
         @media (max-width: 600px) {
           .romantic-h1 { font-size: 2.2rem; }
@@ -522,9 +556,9 @@ export default function RomanticLoveTemplate({
                   {showLetter && (
                     <motion.div
                       className="love-letter-popup"
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
+                      initial={{ opacity: 0, scale: 0.8, x: "-50%", y: "-50%" }}
+                      animate={{ opacity: 1, scale: 1, x: "-50%", y: "-50%" }}
+                      exit={{ opacity: 0, scale: 0.8, x: "-50%", y: "-50%" }}
                       onClick={() => setShowLetter(false)}
                       title="Tap to close"
                     >

@@ -151,37 +151,17 @@ function BuilderWizard() {
     setIsLoading(true);
     setError(null);
     try {
-      let currentId = eventId;
-      if (!currentId) {
-        const res = await createDraftEvent(theme);
-        if (res.success) {
-          currentId = res.eventId;
-          setEventId(res.eventId);
-        } else {
-          setError("Please retry draft initialization.");
-          setIsLoading(false);
-          return;
-        }
-      }
-      const formData = new FormData();
-      formData.append("file", e.target.files[0]);
-      formData.append("type", type);
-      const res = await uploadMedia(currentId, formData);
-      if (res.success && res.url) {
-        setPhotoUrl(res.url);
-        await updateEventCustomData(currentId, {
-          title: title || "Proposal for Priya",
-          question,
-          acceptBtn,
-          rejectBtn,
-          loveMessage,
-          photoUrl: res.url,
-          demoId
-        });
-      }
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("Failed to read audio/photo file."));
+        reader.readAsDataURL(file);
+      });
+      setPhotoUrl(dataUrl);
     } catch (err: any) {
        console.error(err);
-       setError("Failed to upload media.");
+       setError("Failed to process media file.");
     }
     setIsLoading(false);
   }

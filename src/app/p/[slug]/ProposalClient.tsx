@@ -23,6 +23,9 @@ type ProposalClientProps = {
   rejectBtn: string;
   loveMessage?: string;
   photoUrl?: string;
+  audioUrl?: string;
+  _photo?: string;
+  _audio?: string;
   demoId?: string;
   recipientName?: string;
   dodgeMessages?: string;

@@ -21,11 +21,18 @@ export default async function AnalyticsPage({ params }: { params: Promise<{ id: 
     notFound();
   }
 
+  let customData = {};
+  try {
+    customData = event.customData ? JSON.parse(event.customData) : {};
+  } catch (err) {
+    console.error("Error parsing customData for analytics event:", id, err);
+  }
+
   return (
     <div className="animate-in fade-in duration-500">
       <AnalyticsClient 
         event={event as any} 
-        customData={event.customData ? JSON.parse(event.customData) : {}}
+        customData={customData}
       />
     </div>
   );

@@ -42,8 +42,7 @@ function initFormValues(tmpl: TemplateClass, prefill: Record<string, any>): Reco
   const out: Record<string, string> = {};
   for (const step of tmpl.steps) {
     for (const field of step.fields) {
-      if (field.key.startsWith("_")) continue; // file fields — not text
-      out[field.key] = prefill[field.key] ?? tmpl.defaultData[field.key] ?? "";
+      out[field.key] = prefill[field.key] ?? prefill[field.key === "_photo" ? "photoUrl" : field.key === "_audio" ? "audioUrl" : field.key] ?? tmpl.defaultData[field.key] ?? "";
     }
   }
   return out;
@@ -248,50 +247,38 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, onClose 
     setFormValues((prev) => ({ ...prev, [key]: value }));
   };
 
-  // File upload: creates a draft event first if needed, then uploads
-  const handleFileUpload = async (file: File, fieldKey: string) => {
+  const handleFileChange = async (file: File, fieldKey: string) => {
     setFileStatuses((prev) => ({ ...prev, [fieldKey]: "uploading" }));
     setError(null);
 
-    // Instant local preview for Live Phone View
-    if (file.type.startsWith("image/")) {
-      const localUrl = URL.createObjectURL(file);
-      setFormValues((prev) => ({ ...prev, [fieldKey]: localUrl }));
-    }
-
     try {
-      let currentId = activeEventId;
+      // 1. Try uploading to /api/upload endpoint first (saves clean file to /uploads/ directory)
+      const uploadFormData = new FormData();
+      uploadFormData.append("file", file);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: uploadFormData,
+      });
+      const data = await res.json();
 
-      // If no event yet (new flow), create a draft first so we have an ID to attach media to
-      if (!currentId) {
-        const res = await createInstantEventFromTemplate(
-          "Romantic",
-          formValues["title"] || tmpl.defaultData.title,
-          formValues["recipientName"] || "Someone Special ✨",
-          demoId,
-          {}
-        );
-        if (res.success && res.eventId) {
-          setActiveEventId(res.eventId);
-          setActiveEventSlug(res.slug || null);
-          currentId = res.eventId;
-        } else {
-          throw new Error("Failed to create draft for file upload.");
-        }
+      if (data.success && data.url) {
+        setFormValues((prev) => ({ ...prev, [fieldKey]: data.url }));
+        setFileStatuses((prev) => ({ ...prev, [fieldKey]: "done" }));
+        return;
       }
 
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("type", fieldKey === "_audio" ? "audio" : "image");
-      const uploadRes = await uploadMedia(currentId!, formData);
-      if (!uploadRes?.success) throw new Error(uploadRes?.error || "Upload failed.");
+      // 2. Fallback to client-side Data URL if API upload fails
+      const reader = new FileReader();
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("Failed to read audio/image file."));
+        reader.readAsDataURL(file);
+      });
 
-      if (uploadRes.url) {
-        setFormValues((prev) => ({ ...prev, [fieldKey]: uploadRes.url }));
-      }
-
+      setFormValues((prev) => ({ ...prev, [fieldKey]: dataUrl }));
       setFileStatuses((prev) => ({ ...prev, [fieldKey]: "done" }));
     } catch (err: any) {
+      console.error("Upload error:", err);
       setError(err.message || "File upload failed.");
       setFileStatuses((prev) => ({ ...prev, [fieldKey]: "idle" }));
     }
@@ -302,14 +289,15 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, onClose 
     setError(null);
 
     try {
-      // Build the overrides — merge class defaults with user's form values
+      // Build the overrides — merge class defaults with user's form values (including custom photo & audio)
       const overrides: Record<string, any> = {};
       for (const step of tmpl.steps) {
         for (const field of step.fields) {
-          if (field.key.startsWith("_")) continue;
           const val = formValues[field.key];
           if (val !== undefined && val !== "") {
             overrides[field.key] = val;
+            if (field.key === "_photo" || field.key === "_photo1") overrides["photoUrl"] = val;
+            if (field.key === "_audio") overrides["audioUrl"] = val;
           }
         }
       }
@@ -518,7 +506,7 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, onClose 
                           field={field}
                           value={formValues[field.key]}
                           onChange={(val) => handleFieldChange(field.key, val)}
-                          onFileChange={handleFileUpload}
+                          onFileChange={handleFileChange}
                           fileStatus={fileStatuses[field.key] as any}
                           isLoading={isLoading || isSubmitting}
                         />

@@ -155,7 +155,10 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       acceptBtn={(customData as any).acceptBtn || ""}
       rejectBtn={(customData as any).rejectBtn || ""}
       loveMessage={(customData as any).loveMessage || ""}
-      photoUrl={(customData as any).photoUrl || ""}
+      photoUrl={(customData as any).photoUrl || (customData as any)._photo || (customData as any)._photo1 || ""}
+      audioUrl={(customData as any).audioUrl || (customData as any)._audio || ""}
+      _photo={(customData as any)._photo || (customData as any)._photo1 || ""}
+      _audio={(customData as any)._audio || ""}
       demoId={(customData as any).demoId || ""}
       recipientName={(customData as any).recipientName || ""}
       dodgeMessages={(customData as any).dodgeMessages || ""}
