@@ -357,7 +357,7 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, onClose 
   // ── Published state with Animated Auto-Click Simulation ──
   if (publishedUrl) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/70 backdrop-blur-md overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto w-screen h-screen">
         <div className="bg-white rounded-3xl p-4 sm:p-5 max-w-2xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-rose-100 relative">
           <button
             onClick={onClose}
@@ -401,7 +401,7 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, onClose 
 
   // ── Main modal ──
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto w-screen h-screen">
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
