@@ -48,6 +48,8 @@ const TEMPLATE_META: Record<string, { emoji: string; ogTitle: (name?: string) =>
   },
 };
 
+import { headers } from "next/headers";
+
 // ─── generateMetadata (Server-side OG/WhatsApp tags) ────────────────────────
 export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> }
@@ -71,30 +73,28 @@ export async function generateMetadata(
     customData = event.customData ? JSON.parse(event.customData) : {};
   } catch {}
 
+  const envUrl = process.env.NEXT_PUBLIC_APP_URL;
+  const headersList = await headers();
+  const host = headersList.get("host") || "localhost:3000";
+  const protocol = host.includes("localhost") ? "http" : "https";
+  const baseUrl = envUrl && !envUrl.includes("localhost") ? envUrl : `${protocol}://${host}`;
+
   const demoId = customData.demoId || "";
-  const recipientName = customData.recipientName || "";
+  const recipientName = customData.recipientName || "Someone Special ✨";
   const templateMeta = TEMPLATE_META[demoId];
 
-  const title = templateMeta
-    ? templateMeta.ogTitle(recipientName)
-    : customData.title || "Someone sent you a surprise 💖";
+  const title = customData.title || (templateMeta ? templateMeta.ogTitle(recipientName) : `🎁 Something Special For You...`);
+  const description = "A special romantic surprise page was created just for you. Tap to open your card! 💝";
 
-  const description = templateMeta
-    ? templateMeta.ogDesc
-    : "A beautiful digital memory page was created just for you. Tap to open it! 💝";
-
-  // Use uploaded photo if present, else fallback OG image
-  const photoMedia = event.media?.find((m) => m.type === "IMAGE");
-  const ogImage = photoMedia?.url || "https://ourstory.love/og-default.png";
-
-  const pageUrl = `https://ourstory.love/p/${slug}`;
+  const ogImage = `${baseUrl}/something-special-card.png`;
+  const pageUrl = `${baseUrl}/p/${slug}`;
 
   return {
-    title,
+    title: `🎁 Something Special For You — ${title}`,
     description,
     openGraph: {
-      title,
-      description,
+      title: `🎁 Something Special For You...`,
+      description: `Tap to open your interactive surprise page 💌`,
       url: pageUrl,
       siteName: "OurStory 💖",
       type: "website",
@@ -103,21 +103,22 @@ export async function generateMetadata(
           url: ogImage,
           width: 1200,
           height: 630,
-          alt: title,
+          alt: "Something Special For You 💖",
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title,
-      description,
+      title: `🎁 Something Special For You...`,
+      description: `Tap to open your interactive surprise page 💌`,
       images: [ogImage],
     },
-    // WhatsApp and other messengers read standard OG tags above.
-    // Additional open-graph helpers:
     other: {
       "og:locale": "en_IN",
       "theme-color": "#f43f5e",
+      "og:image:alt": "Something Special For You 💖",
+      "og:image:type": "image/png",
+      "og:image:secure_url": ogImage,
     },
   };
 }

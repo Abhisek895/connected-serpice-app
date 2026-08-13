@@ -102,6 +102,32 @@ export async function uploadMedia(eventId: string, formData: FormData) {
   return { success: true, url };
 }
 
+async function generateUserSlug(userId: string): Promise<string> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const rawPrefix = user?.name || user?.email?.split("@")[0] || "user";
+  const userPrefix = rawPrefix.toLowerCase().replace(/[^a-z0-9]/g, "").substring(0, 14) || "user";
+
+  let uniqueSlug = "";
+  let isUnique = false;
+  let attempts = 0;
+
+  while (!isUnique && attempts < 15) {
+    attempts++;
+    const randomHash = Math.random().toString(36).substring(2, 8);
+    uniqueSlug = `${userPrefix}-${randomHash}`;
+    const check = await prisma.event.findUnique({ where: { slug: uniqueSlug } });
+    if (!check) {
+      isUnique = true;
+    }
+  }
+
+  if (!isUnique) {
+    uniqueSlug = `${userPrefix}-${Date.now()}`;
+  }
+
+  return uniqueSlug;
+}
+
 export async function publishEvent(eventId: string) {
   const { userId } = await getCurrentUser();
 
@@ -114,23 +140,7 @@ export async function publishEvent(eventId: string) {
     return { success: false, error: "Unauthorized or Event not found" };
   }
 
-  // Slug Generation with Retry Loop to prevent P2002 Unique Constraint Violation
-  let uniqueSlug = "";
-  let isUnique = false;
-  let attempts = 0;
-
-  while (!isUnique && attempts < 10) {
-    attempts++;
-    uniqueSlug = Math.random().toString(36).substring(2, 10);
-    const check = await prisma.event.findUnique({ where: { slug: uniqueSlug } });
-    if (!check) {
-      isUnique = true;
-    }
-  }
-
-  if (!isUnique) {
-    uniqueSlug = `event-${Date.now()}`;
-  }
+  const uniqueSlug = await generateUserSlug(userId);
 
   const event = await prisma.event.update({
     where: { id: eventId },
@@ -163,23 +173,7 @@ export async function createInstantEventFromTemplate(themeName: string, title?: 
     });
   }
 
-  let uniqueSlug = "";
-  let isUnique = false;
-  let attempts = 0;
-
-  while (!isUnique && attempts < 10) {
-    attempts++;
-    uniqueSlug = Math.random().toString(36).substring(2, 10);
-    const check = await prisma.event.findUnique({ where: { slug: uniqueSlug } });
-    if (!check) {
-      isUnique = true;
-    }
-  }
-
-  if (!isUnique) {
-    uniqueSlug = `event-${Date.now()}`;
-  }
-
+  const uniqueSlug = await generateUserSlug(userId);
   let defaultUrl = `/p/${uniqueSlug}`;
 
   // Import class defaults from templateConfig to ensure object === class when not customized

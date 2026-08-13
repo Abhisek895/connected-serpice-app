@@ -376,8 +376,8 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, onClose 
               setShowCheckoutModal(true);
             }}
             onShareFreeLink={() => {
-              const whatsappText = `Hey ❤️! I made a special surprise link for you... Tap here to open 💌\n${publishedUrl}`;
-              window.open(`https://wa.me/?text=${encodeURIComponent(whatsappText)}`, "_blank");
+              const text = `Hey! I made a special surprise link for you... Tap here to open 💖\n${publishedUrl}`;
+              window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
             }}
           />
 
