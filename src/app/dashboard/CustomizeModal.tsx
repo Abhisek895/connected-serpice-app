@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Sparkles, ChevronRight, ChevronLeft, Loader2, Send,
   CheckCircle2, Copy, ExternalLink, Image as ImageIcon, Music,
-  AlertCircle, MessageCircle, Smartphone,
+  AlertCircle, MessageCircle, Smartphone, Edit3,
 } from "lucide-react";
 import { getTemplateClass, TemplateClass, TemplateField } from "./templateConfig";
 import {
@@ -17,6 +17,8 @@ import {
 import { useRouter } from "next/navigation";
 import CanvasConfetti from "@/components/ui/CanvasConfetti";
 import LivePhonePreview from "@/components/ui/LivePhonePreview";
+import AutoClickSimulatedPreview from "@/components/ui/AutoClickSimulatedPreview";
+import CheckoutModal from "./CheckoutModal";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -86,9 +88,6 @@ function FieldInput({
         {field.hint && <p className="text-[11px] text-slate-400 mt-1">{field.hint}</p>}
         {field.presetSuggestions && field.presetSuggestions.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1.5 items-center">
-            <span className="text-[10px] font-bold text-rose-500 flex items-center gap-1">
-              <Sparkles className="w-3 h-3" /> Quick Ideas:
-            </span>
             {field.presetSuggestions.map((preset, idx) => (
               <button
                 key={idx}
@@ -122,9 +121,6 @@ function FieldInput({
         {field.hint && <p className="text-[11px] text-slate-400 mt-1">{field.hint}</p>}
         {field.presetSuggestions && field.presetSuggestions.length > 0 && (
           <div className="mt-2 space-y-1">
-            <span className="text-[10px] font-bold text-rose-500 flex items-center gap-1">
-              <Sparkles className="w-3 h-3" /> Tap to fill love note inspiration:
-            </span>
             {field.presetSuggestions.map((preset, idx) => (
               <button
                 key={idx}
@@ -148,18 +144,18 @@ function FieldInput({
       fileStatus === "uploading"
         ? "Uploading…"
         : fileStatus === "done"
-        ? "✓ Uploaded!"
-        : isImage
-        ? "Choose Photo"
-        : "Choose Audio";
+          ? "✓ Uploaded!"
+          : isImage
+            ? "Choose Photo"
+            : "Choose Audio";
     const statusColor =
       fileStatus === "done"
         ? "text-emerald-600 font-bold"
         : fileStatus === "uploading"
-        ? "text-amber-600"
-        : isImage
-        ? "text-rose-600"
-        : "text-slate-600";
+          ? "text-amber-600"
+          : isImage
+            ? "text-rose-600"
+            : "text-slate-600";
 
     return (
       <div>
@@ -167,13 +163,12 @@ function FieldInput({
           {field.label}
         </label>
         <label
-          className={`relative flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed cursor-pointer transition ${
-            fileStatus === "done"
-              ? "border-emerald-300 bg-emerald-50"
-              : isImage
+          className={`relative flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed cursor-pointer transition ${fileStatus === "done"
+            ? "border-emerald-300 bg-emerald-50"
+            : isImage
               ? "border-rose-200 bg-rose-50/50 hover:border-rose-400 hover:bg-rose-50"
               : "border-slate-200 bg-slate-50 hover:border-slate-300"
-          } ${isLoading ? "opacity-50 pointer-events-none" : ""}`}
+            } ${isLoading ? "opacity-50 pointer-events-none" : ""}`}
         >
           {fileStatus === "uploading" ? (
             <Loader2 className="w-5 h-5 animate-spin text-amber-500 flex-shrink-0" />
@@ -219,6 +214,9 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, onClose 
   // For editing: we need the eventId to upload files and update data
   const [activeEventId, setActiveEventId] = useState<string | null>(editEventId || null);
   const [activeEventSlug, setActiveEventSlug] = useState<string | null>(editSlug || null);
+  const [mobileTab, setMobileTab] = useState<"edit" | "preview">("edit");
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [isEventPaid, setIsEventPaid] = useState(false);
 
   // Pre-fill form when editing an existing event
   useEffect(() => {
@@ -255,6 +253,12 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, onClose 
     setFileStatuses((prev) => ({ ...prev, [fieldKey]: "uploading" }));
     setError(null);
 
+    // Instant local preview for Live Phone View
+    if (file.type.startsWith("image/")) {
+      const localUrl = URL.createObjectURL(file);
+      setFormValues((prev) => ({ ...prev, [fieldKey]: localUrl }));
+    }
+
     try {
       let currentId = activeEventId;
 
@@ -281,6 +285,10 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, onClose 
       formData.append("type", fieldKey === "_audio" ? "audio" : "image");
       const uploadRes = await uploadMedia(currentId!, formData);
       if (!uploadRes?.success) throw new Error(uploadRes?.error || "Upload failed.");
+
+      if (uploadRes.url) {
+        setFormValues((prev) => ({ ...prev, [fieldKey]: uploadRes.url }));
+      }
 
       setFileStatuses((prev) => ({ ...prev, [fieldKey]: "done" }));
     } catch (err: any) {
@@ -358,62 +366,47 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, onClose 
     }
   };
 
-  // ── Published state ──
+  // ── Published state with Animated Auto-Click Simulation ──
   if (publishedUrl) {
-    const whatsappText = `Hey ❤️! I made a special surprise link for you... Tap here to open 💌\n${publishedUrl}`;
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappText)}`;
-
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-        <CanvasConfetti />
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-emerald-100 text-center relative z-10"
-        >
-          <div className="flex justify-center mb-4">
-            <div className="bg-emerald-100 p-4 rounded-full">
-              <CheckCircle2 className="w-10 h-10 text-emerald-600 animate-bounce" />
-            </div>
-          </div>
-          <h3 className="text-2xl font-bold text-slate-900 mb-1">Event Link Saved! 💖</h3>
-          <p className="text-slate-500 text-xs sm:text-sm mb-5">Your personalized memory page is live and ready to send.</p>
-          <div className="bg-slate-50 rounded-2xl p-3.5 mb-5 font-mono text-xs text-slate-700 break-all border border-slate-200">
-            {publishedUrl}
-          </div>
-
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full py-3.5 mb-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2"
-          >
-            <MessageCircle className="w-5 h-5 fill-white" /> Share on WhatsApp 💚
-          </a>
-
-          <div className="flex gap-2">
-            <button
-              onClick={copyUrl}
-              className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5"
-            >
-              <Copy className="w-4 h-4" /> {copied ? "Copied!" : "Copy Link"}
-            </button>
-            <a
-              href={publishedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5"
-            >
-              Open Link <ExternalLink className="w-4 h-4" />
-            </a>
-          </div>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/70 backdrop-blur-md overflow-y-auto">
+        <div className="bg-white rounded-3xl p-4 sm:p-5 max-w-2xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-rose-100 relative">
           <button
             onClick={onClose}
-            className="mt-4 w-full py-2.5 border border-slate-200 text-slate-600 font-medium text-sm rounded-xl hover:bg-slate-50 transition"
+            className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition z-30"
           >
-            Close
+            <X className="w-5 h-5" />
           </button>
-        </motion.div>
+
+          <AutoClickSimulatedPreview
+            demoId={demoId}
+            formValues={formValues}
+            defaultData={tmpl.defaultData}
+            publishedUrl={publishedUrl}
+            isPaid={isEventPaid}
+            onActivateOffer={(pricing) => {
+              setShowCheckoutModal(true);
+            }}
+            onShareFreeLink={() => {
+              const whatsappText = `Hey ❤️! I made a special surprise link for you... Tap here to open 💌\n${publishedUrl}`;
+              window.open(`https://wa.me/?text=${encodeURIComponent(whatsappText)}`, "_blank");
+            }}
+          />
+
+          {showCheckoutModal && (
+            <CheckoutModal
+              demoId={demoId}
+              templateName={tmpl.title || "Custom Proposal"}
+              originalPrice={19900}
+              durationDays={3650}
+              onClose={() => setShowCheckoutModal(false)}
+              onSuccess={() => {
+                setShowCheckoutModal(false);
+                setIsEventPaid(true);
+              }}
+            />
+          )}
+        </div>
       </div>
     );
   }
@@ -428,7 +421,7 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, onClose 
         className="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-rose-100 relative"
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white z-10 rounded-t-3xl border-b border-slate-100 px-6 pt-5 pb-4 flex items-center justify-between">
+        <div className="sticky top-0 z-40 bg-white rounded-t-3xl border-b border-slate-100 px-6 pt-5 pb-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-rose-100 rounded-2xl text-rose-600 flex-shrink-0">
               <Sparkles className="w-5 h-5 fill-rose-500" />
@@ -449,102 +442,129 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, onClose 
           </button>
         </div>
 
-        {/* Grid Body: Left Inputs, Right Phone Mockup Preview */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 p-6">
-          <div className="md:col-span-7 space-y-4">
-            {/* Step Progress */}
-            {totalSteps > 1 && (
-              <div className="flex items-center gap-2 mb-2">
-                {tmpl.steps.map((s, i) => (
-                  <div key={i} className="flex items-center gap-2 flex-1">
-                    <div
-                      className={`flex-1 h-1.5 rounded-full transition-all ${
-                        i <= currentStep ? "bg-rose-500" : "bg-slate-200"
-                      }`}
-                    />
-                  </div>
-                ))}
-                <span className="text-xs font-bold text-slate-400 whitespace-nowrap">
-                  {currentStep + 1} / {totalSteps}
-                </span>
-              </div>
-            )}
-
-            {/* Form Steps Body */}
-            <div>
-              {isLoading && (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 animate-spin text-rose-400" />
-                </div>
-              )}
-
-              {!isLoading && (
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={currentStep}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.2 }}
-                    className="space-y-4"
-                  >
-                    {/* Step header */}
-                    <div className="mb-2">
-                      <h4 className="font-bold text-slate-900">{step.title}</h4>
-                      <p className="text-xs text-slate-500 mt-0.5">{step.description}</p>
-                    </div>
-
-                    {/* Fields */}
-                    {step.fields.map((field) => (
-                      <FieldInput
-                        key={field.key}
-                        field={field}
-                        value={formValues[field.key]}
-                        onChange={(val) => handleFieldChange(field.key, val)}
-                        onFileChange={handleFileUpload}
-                        fileStatus={fileStatuses[field.key] as any}
-                        isLoading={isLoading || isSubmitting}
-                      />
-                    ))}
-                  </motion.div>
-                </AnimatePresence>
-              )}
-
-              {/* Error */}
-              {error && (
-                <div className="mt-4 flex items-start gap-2.5 bg-red-50 border border-red-200 rounded-2xl p-3.5 text-sm text-red-700">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              {/* Permanent save note */}
-              <div className="mt-5 bg-rose-50/60 p-3.5 rounded-2xl border border-rose-100 flex items-start gap-2.5 text-xs text-rose-800">
-                <Sparkles className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
-                <p>
-                  This will save permanently under{" "}
-                  <strong>"My Saved Links &amp; Events 💌"</strong> — it won't disappear after
-                  refreshing!
-                </p>
-              </div>
-            </div>
+        <div className="p-4 sm:p-6">
+          {/* Mobile Segmented Tab Control */}
+          <div className="flex md:hidden p-1 bg-slate-100 rounded-2xl mb-4 text-xs font-bold border border-slate-200/60">
+            <button
+              type="button"
+              onClick={() => setMobileTab("edit")}
+              className={`flex-1 py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 ${mobileTab === "edit"
+                ? "bg-white text-slate-900 shadow-sm border border-slate-100"
+                : "text-slate-500 hover:text-slate-700"
+                }`}
+            >
+              <Edit3 className="w-3.5 h-3.5 text-rose-500" /> Edit Details
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileTab("preview")}
+              className={`flex-1 py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 ${mobileTab === "preview"
+                ? "bg-white text-rose-600 shadow-sm border border-slate-100"
+                : "text-slate-500 hover:text-slate-700"
+                }`}
+            >
+              <Smartphone className="w-3.5 h-3.5 text-rose-500" /> Live Preview ✨
+            </button>
           </div>
 
-          {/* Right Column: Interactive Live Phone Preview */}
-          <div className="hidden md:flex md:col-span-5 flex-col items-center justify-center bg-slate-50 rounded-2xl p-4 border border-slate-100">
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <Smartphone className="w-4 h-4 text-rose-500" /> Live Recipient View
-            </p>
-            <LivePhonePreview
-              demoId={demoId}
-              formValues={formValues}
-              defaultData={tmpl.defaultData}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+            {/* Left Column: Form Inputs */}
+            <div className={`${mobileTab === "edit" ? "block" : "hidden"} md:block md:col-span-7 space-y-4`}>
+              {/* Step Progress */}
+              {totalSteps > 1 && (
+                <div className="flex items-center gap-2 mb-2">
+                  {tmpl.steps.map((s, i) => (
+                    <div key={i} className="flex items-center gap-2 flex-1">
+                      <div
+                        className={`flex-1 h-1.5 rounded-full transition-all ${i <= currentStep ? "bg-rose-500" : "bg-slate-200"
+                          }`}
+                      />
+                    </div>
+                  ))}
+                  <span className="text-xs font-bold text-slate-400 whitespace-nowrap">
+                    {currentStep + 1} / {totalSteps}
+                  </span>
+                </div>
+              )}
+
+              {/* Form Steps Body */}
+              <div>
+                {isLoading && (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-rose-400" />
+                  </div>
+                )}
+
+                {!isLoading && (
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={currentStep}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.2 }}
+                      className="space-y-4"
+                    >
+                      {/* Step header */}
+                      <div className="mb-2">
+                        <h4 className="font-bold text-slate-900">{step.title}</h4>
+                        <p className="text-xs text-slate-500 mt-0.5">{step.description}</p>
+                      </div>
+
+                      {/* Fields */}
+                      {step.fields.map((field) => (
+                        <FieldInput
+                          key={field.key}
+                          field={field}
+                          value={formValues[field.key]}
+                          onChange={(val) => handleFieldChange(field.key, val)}
+                          onFileChange={handleFileUpload}
+                          fileStatus={fileStatuses[field.key] as any}
+                          isLoading={isLoading || isSubmitting}
+                        />
+                      ))}
+                    </motion.div>
+                  </AnimatePresence>
+                )}
+
+                {/* Error */}
+                {error && (
+                  <div className="mt-4 flex items-start gap-2.5 bg-red-50 border border-red-200 rounded-2xl p-3.5 text-sm text-red-700">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+
+              </div>
+            </div>
+
+            {/* Right Column: Interactive Live Phone Preview */}
+            <div className={`${mobileTab === "preview" ? "flex" : "hidden"} md:flex md:col-span-5 flex-col items-center justify-center bg-slate-50 rounded-2xl p-3 py-4 border border-slate-100 self-center w-full`}>
+              <div className="w-full flex items-center justify-between mb-3 px-1">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                  <Smartphone className="w-4 h-4 text-rose-500" /> Live Recipient View
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setMobileTab("edit")}
+                  className="md:hidden text-[11px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 px-3 py-1 rounded-xl border border-rose-200 transition"
+                >
+                  ✍️ Back to Form
+                </button>
+              </div>
+              <LivePhonePreview
+                demoId={demoId}
+                formValues={formValues}
+                defaultData={tmpl.defaultData}
+                currentStep={currentStep}
+              />
+            </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-white border-t border-slate-100 px-6 py-4 flex items-center gap-3 rounded-b-3xl">
+        <div className="sticky bottom-0 z-40 bg-white border-t border-slate-100 px-6 py-4 flex items-center gap-3 rounded-b-3xl">
           {/* Back */}
           {currentStep > 0 ? (
             <button

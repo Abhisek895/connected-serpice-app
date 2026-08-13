@@ -217,14 +217,6 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
             placeholder: "Someone Special ✨",
           },
           {
-            key: "patternText",
-            label: "Portrait Background Text",
-            type: "text",
-            placeholder: "love you",
-            hint: "The repeating text that makes up the hidden portrait.",
-            presetSuggestions: ["love you", "forever yours", "my cutie"],
-          },
-          {
             key: "loveMessage",
             label: "Secret Love Letter (Back Text)",
             type: "textarea",
@@ -248,6 +240,14 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
             type: "file-image",
             accept: "image/*",
             hint: "Displayed as the main surprise photo on the cover page.",
+          },
+          {
+            key: "patternText",
+            label: "Portrait Background Text",
+            type: "text",
+            placeholder: "love you",
+            hint: "The repeating text that makes up the hidden portrait.",
+            presetSuggestions: ["love you", "forever yours", "my cutie"],
           },
           {
             key: "_audio",

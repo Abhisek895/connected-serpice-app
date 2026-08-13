@@ -486,3 +486,69 @@ export async function updateAdminReferralSettings({
   }
 }
 
+// ─── Dynamic Pricing & Cashback Settings Management ────────────────────────
+export async function getAdminPricingSettings() {
+  await checkAuth();
+  try {
+    const originalPrice = await prisma.systemSetting.findUnique({ where: { key: "offer_original_price" } });
+    const specialPrice = await prisma.systemSetting.findUnique({ where: { key: "offer_special_price" } });
+    const cashbackAmount = await prisma.systemSetting.findUnique({ where: { key: "offer_cashback_amount" } });
+
+    const orig = originalPrice?.value ? parseInt(originalPrice.value, 10) : 499;
+    const spec = specialPrice?.value ? parseInt(specialPrice.value, 10) : 199;
+    const cb = cashbackAmount?.value ? parseInt(cashbackAmount.value, 10) : 50;
+    const discountPercent = orig > 0 ? Math.round(((orig - spec) / orig) * 100) : 60;
+
+    return {
+      success: true,
+      settings: {
+        originalPrice: orig,
+        specialPrice: spec,
+        cashbackAmount: cb,
+        discountPercent,
+      },
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message,
+      settings: { originalPrice: 499, specialPrice: 199, cashbackAmount: 50, discountPercent: 60 },
+    };
+  }
+}
+
+export async function updateAdminPricingSettings({
+  originalPrice,
+  specialPrice,
+  cashbackAmount,
+}: {
+  originalPrice: number;
+  specialPrice: number;
+  cashbackAmount: number;
+}) {
+  await checkAuth();
+  try {
+    await prisma.$transaction([
+      prisma.systemSetting.upsert({
+        where: { key: "offer_original_price" },
+        update: { value: originalPrice.toString(), description: "Original strike-through offer price in INR" },
+        create: { key: "offer_original_price", value: originalPrice.toString(), description: "Original strike-through offer price in INR" },
+      }),
+      prisma.systemSetting.upsert({
+        where: { key: "offer_special_price" },
+        update: { value: specialPrice.toString(), description: "Special offer purchase price in INR" },
+        create: { key: "offer_special_price", value: specialPrice.toString(), description: "Special offer purchase price in INR" },
+      }),
+      prisma.systemSetting.upsert({
+        where: { key: "offer_cashback_amount" },
+        update: { value: cashbackAmount.toString(), description: "Promotional cashback amount in INR" },
+        create: { key: "offer_cashback_amount", value: cashbackAmount.toString(), description: "Promotional cashback amount in INR" },
+      }),
+    ]);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to update pricing settings" };
+  }
+}
+
+

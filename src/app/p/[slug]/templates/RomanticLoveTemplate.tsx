@@ -360,24 +360,6 @@ export default function RomanticLoveTemplate({
           animation: rSlideUp 1s ease-out 1s forwards;
           pointer-events: none;
         }
-        .tiny-text-el {
-          color: #d6336c;
-          font-family: 'Dancing Script', cursive;
-          font-size: 1.2rem;
-          margin-top: 12px;
-          opacity: 0;
-          animation: rSlideUp 1s ease-out 1.2s forwards;
-          pointer-events: none;
-        }
-        .scroll-hint-el {
-          color: #d6336c;
-          font-family: 'Dancing Script', cursive;
-          font-size: 1.5rem;
-          font-weight: bold;
-          opacity: 0;
-          animation: rSlideUp 1s ease-out 1.5s forwards;
-          pointer-events: none;
-        }
 
         /* Portrait */
         .portrait-page {
@@ -388,26 +370,73 @@ export default function RomanticLoveTemplate({
           align-items: center;
           position: relative;
           z-index: 10;
-          flex-direction: column;
-          gap: 24px;
+          overflow: hidden;
         }
 
-        /* Love letter */
-        .love-letter-btn {
-          background: rgba(255,255,255,0.9);
-          color: #d6336c;
-          border: none;
-          border-radius: 40px;
-          padding: 12px 28px;
-          font-family: 'Dancing Script', cursive;
-          font-size: 1.4rem;
-          font-weight: bold;
-          cursor: pointer;
-          box-shadow: 0 4px 20px rgba(214,51,108,0.3);
-          transition: all 0.3s ease;
+        .portrait-container-wrapper {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           z-index: 10;
         }
-        .love-letter-btn:hover { transform: scale(1.05); }
+
+        .portrait-buttons-container {
+          position: absolute;
+          bottom: 30px;
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 10px;
+          z-index: 20;
+          width: 100%;
+          max-width: 320px;
+        }
+
+        .love-letter-popup {
+          position: absolute;
+          inset: 10px;
+          margin: auto;
+          width: calc(100% - 20px);
+          max-height: calc(100% - 20px);
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border-radius: 18px;
+          padding: 20px;
+          font-family: 'Dancing Script', cursive;
+          font-size: 1.15rem;
+          color: #111;
+          line-height: 1.6;
+          text-align: center;
+          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.5);
+          z-index: 30;
+          cursor: pointer;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          overflow-y: auto;
+        }
+
+        /* Love letter button (compact) */
+        .love-letter-btn {
+          background: rgba(255,255,255,0.92);
+          color: #d6336c;
+          border: 1px solid rgba(255,255,255,0.5);
+          border-radius: 30px;
+          padding: 7px 20px;
+          font-family: 'Dancing Script', cursive;
+          font-size: 1.05rem;
+          font-weight: bold;
+          cursor: pointer;
+          box-shadow: 0 4px 15px rgba(214,51,108,0.3);
+          transition: all 0.25s ease;
+          z-index: 10;
+        }
+        .love-letter-btn:hover { transform: scale(1.05); background: #ffffff; }
         .love-letter-box {
           max-width: 500px;
           width: 90%;
@@ -466,8 +495,6 @@ export default function RomanticLoveTemplate({
               <h1 className="romantic-h1">{displayTitle}</h1>
               <HeartButton onClick={handleReveal} />
               <div className="click-text-el">Tap the Heart</div>
-              <div className="tiny-text-el">I made this tiny</div>
-              <div className="scroll-hint-el">scroll down ↓</div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -486,30 +513,48 @@ export default function RomanticLoveTemplate({
               exit={{ opacity: 0 }}
               transition={{ duration: 1 }}
             >
-              <TextArtPortrait src={displayPhoto} phrase={patternText || "love you"} />
+              {/* Photo & Overlay Popup Container (Dead Centered at y=50vh) */}
+              <div className="portrait-container-wrapper">
+                <TextArtPortrait src={displayPhoto} phrase={patternText || "love you"} />
 
-              {/* Love letter */}
-              {!showLetter ? (
-                <button
-                  className="love-letter-btn"
-                  onClick={() => setShowLetter(true)}
-                >
-                  💌 Read My Message
+                {/* Love Letter Popup Overlay directly on top of photo */}
+                <AnimatePresence>
+                  {showLetter && (
+                    <motion.div
+                      className="love-letter-popup"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      onClick={() => setShowLetter(false)}
+                      title="Tap to close"
+                    >
+                      <div style={{ fontSize: "0.8rem", fontWeight: "bold", color: "#d6336c", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "1px" }}>
+                        💌 Message For You
+                      </div>
+                      "{displayLetter}"
+                      <div style={{ fontSize: "0.75rem", color: "#888", marginTop: "10px", fontWeight: "bold" }}>
+                        (Tap note to close)
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Action Buttons (Positioned at bottom so photo remains dead centered) */}
+              <div className="portrait-buttons-container">
+                {!showLetter && (
+                  <button
+                    className="love-letter-btn"
+                    onClick={() => setShowLetter(true)}
+                  >
+                    💌 Read My Message
+                  </button>
+                )}
+
+                <button className="continue-btn" onClick={() => setStage(3)}>
+                  ✨ Continue
                 </button>
-              ) : (
-                <motion.div
-                  className="love-letter-box"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  "{displayLetter}"
-                </motion.div>
-              )}
-
-              {/* Continue to proposal */}
-              <button className="continue-btn" onClick={() => setStage(3)}>
-                ✨ Continue
-              </button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -537,49 +582,61 @@ export default function RomanticLoveTemplate({
               <h1
                 style={{
                   fontFamily: "'Pacifico', cursive",
-                  fontSize: "clamp(2rem,6vw,4rem)",
+                  fontSize: "clamp(1.8rem,5vw,3rem)",
                   color: "#ff4d6d",
                   textShadow: "2px 2px 8px rgba(0,0,0,0.3)",
-                  marginBottom: 48,
+                  marginBottom: 36,
                   lineHeight: 1.3,
                 }}
               >
                 {question || "Will you be mine? 💖"}
               </h1>
-              <div style={{ display: "flex", gap: 24, flexWrap: "wrap", justifyContent: "center" }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 16,
+                  flexWrap: "nowrap",
+                  width: "100%",
+                }}
+              >
                 <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={handleAccept}
                   style={{
-                    padding: "18px 48px",
+                    padding: "12px 28px",
                     background: "#ff4d6d",
                     color: "white",
                     border: "none",
-                    borderRadius: 40,
-                    fontSize: "1.4rem",
+                    borderRadius: 30,
+                    fontSize: "1.1rem",
                     fontWeight: "bold",
                     cursor: "pointer",
-                    boxShadow: "0 6px 30px rgba(255,77,109,0.5)",
+                    boxShadow: "0 4px 20px rgba(255,77,109,0.4)",
                     fontFamily: "sans-serif",
+                    whiteSpace: "nowrap",
                   }}
                 >
                   {acceptBtn || "Yes! 😍"}
                 </motion.button>
                 <motion.button
-                  whileHover={{ scale: 0.9 }}
-                  whileTap={{ scale: 0.8 }}
+                  whileHover={{ scale: 0.95 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={handleReject}
                   style={{
-                    padding: "18px 48px",
+                    padding: "12px 28px",
                     background: "#1e293b",
                     color: "white",
                     border: "none",
-                    borderRadius: 40,
-                    fontSize: "1.4rem",
+                    borderRadius: 30,
+                    fontSize: "1.1rem",
                     fontWeight: "bold",
                     cursor: "pointer",
                     fontFamily: "sans-serif",
+                    whiteSpace: "nowrap",
                   }}
                 >
                   {rejectBtn || "No 🙈"}

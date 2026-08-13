@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Activity, CheckCircle, Loader2, ShieldAlert, Gift, Save, CheckCircle2, AlertCircle } from "lucide-react";
-import { getAdminSystemHealth, getAdminReferralSettings, updateAdminReferralSettings } from "@/app/admin/actions";
+import { Activity, CheckCircle, Loader2, ShieldAlert, Gift, Save, CheckCircle2, AlertCircle, Tag, Sparkles } from "lucide-react";
+import { getAdminSystemHealth, getAdminReferralSettings, updateAdminReferralSettings, getAdminPricingSettings, updateAdminPricingSettings } from "@/app/admin/actions";
 
 export default function SystemHealthPage() {
   const [health, setHealth] = useState<any>(null);
@@ -16,22 +16,63 @@ export default function SystemHealthPage() {
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  // Pricing & Cashback Settings State
+  const [originalPrice, setOriginalPrice] = useState<number>(499);
+  const [specialPrice, setSpecialPrice] = useState<number>(199);
+  const [cashbackAmount, setCashbackAmount] = useState<number>(50);
+  const [isSavingPricing, setIsSavingPricing] = useState(false);
+  const [pricingSaveMessage, setPricingSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
   useEffect(() => {
     Promise.all([
       getAdminSystemHealth(),
       getAdminReferralSettings(),
+      getAdminPricingSettings(),
     ])
-      .then(([healthData, settingsData]) => {
+      .then(([healthData, settingsData, pricingData]) => {
         setHealth(healthData);
         if (settingsData.success && settingsData.settings) {
           setRewardAmount(settingsData.settings.rewardAmount);
           setMinWithdrawal(settingsData.settings.minWithdrawal);
           setReferralEnabled(settingsData.settings.enabled);
         }
+        if (pricingData.success && pricingData.settings) {
+          setOriginalPrice(pricingData.settings.originalPrice);
+          setSpecialPrice(pricingData.settings.specialPrice);
+          setCashbackAmount(pricingData.settings.cashbackAmount);
+        }
       })
       .catch((e) => setError(e.message))
       .finally(() => setIsLoading(false));
   }, []);
+
+  const handleSavePricingSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingPricing(true);
+    setPricingSaveMessage(null);
+
+    try {
+      const res = await updateAdminPricingSettings({
+        originalPrice: Number(originalPrice),
+        specialPrice: Number(specialPrice),
+        cashbackAmount: Number(cashbackAmount),
+      });
+
+      if (res.success) {
+        const discount = originalPrice > 0 ? Math.round(((originalPrice - specialPrice) / originalPrice) * 100) : 60;
+        setPricingSaveMessage({
+          type: "success",
+          text: `Pricing updated live! Strike Price: ₹${originalPrice}, Special Price: ₹${specialPrice} (${discount}% OFF), Cashback: ₹${cashbackAmount}.`,
+        });
+      } else {
+        setPricingSaveMessage({ type: "error", text: res.error || "Failed to save pricing settings." });
+      }
+    } catch (err: any) {
+      setPricingSaveMessage({ type: "error", text: err.message || "An error occurred." });
+    } finally {
+      setIsSavingPricing(false);
+    }
+  };
 
   const handleSaveReferralSettings = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,7 +218,109 @@ export default function SystemHealthPage() {
             className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2 disabled:opacity-50 text-sm"
           >
             {isSavingSettings ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {isSavingSettings ? "Saving Settings…" : "Save Referral Settings"}
+            <span>Save Referral Settings</span>
+          </button>
+        </form>
+      </div>
+
+      {/* Promotional Pricing, Offers & Cashback Controls Card */}
+      <div className="bg-[#111827] border border-slate-800 rounded-2xl p-6 shadow-xl">
+        <div className="flex items-center gap-3 mb-4 pb-4 border-b border-slate-800">
+          <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+            <Tag className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-white">Promotional Pricing &amp; Cashback Controls 🏷️</h3>
+            <p className="text-xs text-slate-400">Manage live strike-through pricing, special purchase offer price, and cashback amount across the app.</p>
+          </div>
+        </div>
+
+        {pricingSaveMessage && (
+          <div className={`mb-6 p-4 rounded-xl border flex items-center gap-3 text-sm font-semibold ${
+            pricingSaveMessage.type === "success" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border-rose-500/20 text-rose-400"
+          }`}>
+            {pricingSaveMessage.type === "success" ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <AlertCircle className="w-5 h-5 shrink-0" />}
+            <span>{pricingSaveMessage.text}</span>
+          </div>
+        )}
+
+        {/* Live Admin Preview Badge */}
+        <div className="mb-6 bg-gradient-to-r from-rose-950/60 via-purple-950/60 to-slate-900 border border-rose-500/30 rounded-xl p-4 text-white">
+          <p className="text-xs font-bold text-rose-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 fill-rose-400" /> Live Customer Banner Preview
+          </p>
+          <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
+            <span className="font-bold text-amber-300 bg-amber-500/20 border border-amber-500/30 px-2.5 py-1 rounded-lg">
+              🎁 Get ₹{cashbackAmount} cashback after payment
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400 line-through">₹{originalPrice}</span>
+              <span className="text-lg font-black text-rose-400">₹{specialPrice}</span>
+              <span className="bg-rose-500 text-white font-black text-[10px] px-2 py-0.5 rounded-md uppercase">
+                {originalPrice > 0 ? Math.round(((originalPrice - specialPrice) / originalPrice) * 100) : 60}% OFF
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <form onSubmit={handleSavePricingSettings} className="space-y-5 max-w-xl">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                Original Price (₹)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="10"
+                value={originalPrice}
+                onChange={(e) => setOriginalPrice(Number(e.target.value))}
+                placeholder="499"
+                className="w-full px-4 py-2.5 bg-[#0a0f1e] border border-slate-700 rounded-xl text-white font-bold text-sm focus:outline-none focus:border-rose-400 transition"
+              />
+              <p className="text-[11px] text-slate-400 mt-1">Strike-through original price</p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                Special Price (₹)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="10"
+                value={specialPrice}
+                onChange={(e) => setSpecialPrice(Number(e.target.value))}
+                placeholder="199"
+                className="w-full px-4 py-2.5 bg-[#0a0f1e] border border-slate-700 rounded-xl text-white font-bold text-sm focus:outline-none focus:border-rose-400 transition"
+              />
+              <p className="text-[11px] text-slate-400 mt-1">Actual customer purchase price</p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                Cashback Amount (₹)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="5"
+                value={cashbackAmount}
+                onChange={(e) => setCashbackAmount(Number(e.target.value))}
+                placeholder="50"
+                className="w-full px-4 py-2.5 bg-[#0a0f1e] border border-slate-700 rounded-xl text-white font-bold text-sm focus:outline-none focus:border-rose-400 transition"
+              />
+              <p className="text-[11px] text-slate-400 mt-1">Post-payment cashback reward</p>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSavingPricing}
+            className="px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl shadow-lg shadow-rose-500/20 transition flex items-center justify-center gap-2 disabled:opacity-50 text-sm"
+          >
+            {isSavingPricing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            <span>Save Pricing &amp; Offers</span>
           </button>
         </form>
       </div>
