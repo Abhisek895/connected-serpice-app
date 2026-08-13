@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
-import Razorpay from "razorpay";
+import { razorpay, hasValidRazorpayKeys } from "@/lib/razorpay";
 
 export async function POST(req: Request) {
   try {
@@ -11,15 +11,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    const { demoId, couponCode, useWallet } = await req.json();
+    const { demoId, themeId, couponCode, useWallet } = await req.json();
+    const targetDemoId = demoId || themeId;
 
-    if (!demoId) {
+    if (!targetDemoId) {
       return NextResponse.json({ success: false, message: "Missing demoId" }, { status: 400 });
     }
 
-    const theme = await prisma.theme.findUnique({
-      where: { name: demoId },
+    let theme = await prisma.theme.findUnique({
+      where: { name: targetDemoId },
     });
+
+    if (!theme) {
+      theme = await prisma.theme.findUnique({
+        where: { id: targetDemoId },
+      });
+    }
 
     if (!theme) {
       return NextResponse.json({ success: false, message: "Template not found" }, { status: 404 });
@@ -44,7 +51,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // Ensure user exists in DB to prevent foreign key violation
+    // Ensure user exists in DB
     const existingUser = await prisma.user.findUnique({ where: { id: userId } });
     if (!existingUser) {
       return NextResponse.json({ success: false, message: "User account not found. Please sign in again." }, { status: 401 });
@@ -61,7 +68,6 @@ export async function POST(req: Request) {
       walletDeductedPaise = Math.min(existingUser.walletBalance, finalAmount);
       finalAmount = Math.max(0, finalAmount - walletDeductedPaise);
 
-      // Perform wallet deduction and log transaction
       await prisma.$transaction([
         prisma.user.update({
           where: { id: userId },
@@ -72,14 +78,13 @@ export async function POST(req: Request) {
             userId,
             type: "TEMPLATE_PURCHASE",
             amount: -walletDeductedPaise,
-            description: `Used wallet balance for ${theme.name || demoId}`,
+            description: `Used wallet balance for ${theme.name || targetDemoId}`,
             status: "COMPLETED",
           },
         }),
       ]);
     }
 
-    // Ensure coupon exists in DB if couponId was resolved
     if (couponId) {
       const existingCoupon = await prisma.coupon.findUnique({ where: { id: couponId } });
       if (!existingCoupon) {
@@ -88,23 +93,24 @@ export async function POST(req: Request) {
     }
 
     if (finalAmount === 0) {
-      // Free template, 100% coupon, or fully covered by Wallet Balance!
       const planName = walletDeductedPaise > 0
         ? "WALLET_TEMPLATE_PURCHASE"
         : ["FREE100%", "FREE100", "FREE1"].includes(cleanCode)
         ? "1_DAY_FREE_PASS"
         : "DISCOUNTED_TEMPLATE_PURCHASE";
 
+      const orderId = `free_order_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+
       await prisma.payment.create({
         data: {
           userId,
-          razorpayOrderId: `free_order_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          razorpayOrderId: orderId,
           amount: theme.price,
           finalAmount: 0,
           currency: "INR",
           status: "SUCCESS",
           plan: planName,
-          demoId,
+          demoId: theme.name,
           couponId,
         }
       });
@@ -124,42 +130,46 @@ export async function POST(req: Request) {
       });
     }
 
-    // Check if keys are properly configured
-    const hasValidKeys = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET && !process.env.RAZORPAY_KEY_SECRET.includes(" ");
+    // Check if keys are properly configured (not placeholders)
+    const validKeys = hasValidRazorpayKeys();
 
-    let orderId = `mock_order_${Date.now()}`;
+    let orderId = `mock_order_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     let isMock = false;
 
-    if (hasValidKeys) {
-      const razorpay = new Razorpay({
-        key_id: process.env.RAZORPAY_KEY_ID as string,
-        key_secret: process.env.RAZORPAY_KEY_SECRET as string,
-      });
+    if (validKeys) {
+      try {
+        const orderOptions = {
+          amount: finalAmount, // in paise
+          currency: "INR",
+          receipt: `rcpt_${userId}_${Date.now()}`,
+        };
 
-      const orderOptions = {
-        amount: finalAmount, // in paise
-        currency: "INR",
-        receipt: `rcpt_${userId}_${Date.now()}`,
-      };
-
-      const order = await razorpay.orders.create(orderOptions);
-      orderId = order.id;
+        const order = await razorpay.orders.create(orderOptions);
+        if (order && order.id) {
+          orderId = order.id;
+        } else {
+          isMock = true;
+        }
+      } catch (rzpErr: any) {
+        console.warn("[Razorpay API Fallback to Mock]", rzpErr.message || rzpErr);
+        isMock = true;
+      }
     } else {
       isMock = true;
-      console.log("No valid Razorpay keys found. Falling back to MOCK payment mode.");
+      console.log("[DEV MODE] No valid Razorpay keys found. Falling back to MOCK payment mode.");
     }
 
-    // Pre-create the payment record
+    // Pre-create payment record
     await prisma.payment.create({
       data: {
         userId,
         razorpayOrderId: orderId,
-        amount: theme.price, // original amount
+        amount: theme.price,
         finalAmount: finalAmount,
         currency: "INR",
         status: "PENDING",
         plan: "TEMPLATE_PURCHASE",
-        demoId,
+        demoId: theme.name,
         couponId,
       }
     });
@@ -169,7 +179,7 @@ export async function POST(req: Request) {
       orderId,
       amount: finalAmount,
       currency: "INR",
-      keyId: process.env.RAZORPAY_KEY_ID || "mock_key",
+      keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || "rzp_test_mockkey",
       isMock
     });
 

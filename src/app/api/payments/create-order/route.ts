@@ -100,11 +100,11 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ 
-      orderId, 
-      amount: amountInPaise, 
+    return NextResponse.json({
+      orderId,
+      amount: amountInPaise,
       currency: "INR",
-      isMock 
+      isMock
     });
   } catch (error: any) {
     console.error("Order creation error:", error);

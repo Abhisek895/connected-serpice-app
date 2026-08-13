@@ -44,7 +44,7 @@ export default function CheckoutButton({
       // If no valid keys on server, it will return isMock=true
       if (data.isMock) {
         console.log("Mock Payment Mode Active: Simulating successful payment...");
-        
+
         // Simulate a small delay for realism
         setTimeout(async () => {
           const verifyRes = await fetch("/api/payments/verify", {
@@ -65,7 +65,7 @@ export default function CheckoutButton({
           }
           setLoading(false);
         }, 1500);
-        
+
         return; // Exit early, do not open Razorpay
       }
 
@@ -108,7 +108,7 @@ export default function CheckoutButton({
       };
 
       const rzp = new (window as any).Razorpay(options);
-      
+
       rzp.on("payment.failed", function (response: any) {
         console.error("Payment Failed:", response.error);
         alert("Payment failed: " + response.error.description);

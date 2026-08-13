@@ -49,7 +49,7 @@ export default function CheckoutModal({
           setWalletBalance(data.walletBalance);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [isPremiumAccount]);
 
   const originalPriceINR = originalPrice / 100;
@@ -339,11 +339,10 @@ export default function CheckoutModal({
                     <button
                       type="button"
                       onClick={() => setCouponCode("FREE100%")}
-                      className={`text-[11px] px-3 py-1.5 rounded-xl border font-black transition flex items-center gap-1.5 ${
-                        ["FREE100%", "FREE1"].includes(couponCode)
+                      className={`text-[11px] px-3 py-1.5 rounded-xl border font-black transition flex items-center gap-1.5 ${["FREE100%", "FREE1"].includes(couponCode)
                           ? "bg-rose-500 text-white border-rose-600 shadow-md shadow-rose-200 ring-2 ring-rose-300"
                           : "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
-                      }`}
+                        }`}
                     >
                       <Sparkles className="w-3 h-3 fill-white" />
                       🎁 FREE100% (100% OFF 1-Day Pass)
@@ -355,11 +354,10 @@ export default function CheckoutModal({
                       key={code}
                       type="button"
                       onClick={() => setCouponCode(code)}
-                      className={`text-[11px] px-3 py-1.5 rounded-xl border font-black transition flex items-center gap-1 ${
-                        couponCode === code
+                      className={`text-[11px] px-3 py-1.5 rounded-xl border font-black transition flex items-center gap-1 ${couponCode === code
                           ? "bg-amber-400 text-slate-950 border-amber-500 shadow-md ring-2 ring-amber-300"
                           : "bg-slate-100 text-slate-950 border-slate-300 hover:bg-slate-200"
-                      }`}
+                        }`}
                     >
                       🏷️ <span className="text-slate-950 font-black">{code}</span>
                     </button>
@@ -425,8 +423,8 @@ export default function CheckoutModal({
                       {couponMessage.includes("Premium Member")
                         ? "👑 PREMIUM MEMBER ∞"
                         : walletDeductionPaise > 0
-                        ? "💰 100% COVERED BY WALLET"
-                        : "100% FREE PASS"}
+                          ? "💰 100% COVERED BY WALLET"
+                          : "100% FREE PASS"}
                     </span>
                   )}
                 </div>
@@ -460,8 +458,8 @@ export default function CheckoutModal({
                   {couponMessage.includes("Premium Member")
                     ? "Activating Premium Link..."
                     : totalToPayINR === 0
-                    ? "Activating Link via Wallet..."
-                    : "Processing Payment..."}
+                      ? "Activating Link via Wallet..."
+                      : "Processing Payment..."}
                 </>
               ) : couponMessage.includes("Premium Member") ? (
                 "🚀 Activate Link (Free for Premium Member ∞)"

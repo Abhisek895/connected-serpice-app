@@ -1,7 +1,6 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
 
-// Initialize razorpay instance safely
 const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || "rzp_test_dummykey";
 const keySecret = process.env.RAZORPAY_KEY_SECRET || "dummysecret";
 
@@ -11,11 +10,19 @@ export const razorpay = new Razorpay({
 });
 
 /**
- * Verifies the Razorpay webhook or payment signature using HMAC SHA256.
- * @param body The raw body/order payload
- * @param signature The razorpay_signature sent by client or webhook
- * @param secret The webhook secret or key secret (defaults to RAZORPAY_KEY_SECRET)
- * @returns boolean indicating if the signature is valid
+ * Checks if production/test Razorpay keys are configured and not placeholders.
+ */
+export function hasValidRazorpayKeys(): boolean {
+  const secret = process.env.RAZORPAY_KEY_SECRET;
+  const key = process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+  if (!secret || !key) return false;
+  if (secret.includes("YOUR_SECRET_HERE") || key.includes("YOUR_KEY_HERE") || secret.includes("YOUR_") || key.includes("YOUR_")) return false;
+  if (secret.includes(" ") || key.includes(" ")) return false;
+  return true;
+}
+
+/**
+ * Verifies the Razorpay payment signature using HMAC SHA256.
  */
 export function verifyRazorpaySignature(
   orderId: string,
@@ -23,6 +30,7 @@ export function verifyRazorpaySignature(
   signature: string,
   secret: string = process.env.RAZORPAY_KEY_SECRET || ""
 ): boolean {
+  if (!secret) return false;
   const generatedSignature = crypto
     .createHmac("sha256", secret)
     .update(orderId + "|" + paymentId)
