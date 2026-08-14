@@ -31,6 +31,7 @@ export type CustomizeModalProps = {
   editEventId?: string;
   /** The slug of the event being edited (for showing the share URL) */
   editSlug?: string;
+  isPremiumUser?: boolean;
   onClose: () => void;
 };
 
@@ -198,7 +199,7 @@ function FieldInput({
 // CustomizeModal — main component
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function CustomizeModal({ demoId, editEventId, editSlug, onClose }: CustomizeModalProps) {
+export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiumUser, onClose }: CustomizeModalProps) {
   const router = useRouter();
   const tmpl = getTemplateClass(demoId);
 
@@ -372,6 +373,7 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, onClose 
             defaultData={tmpl.defaultData}
             publishedUrl={publishedUrl}
             isPaid={isEventPaid}
+            isPremiumUser={isPremiumUser}
             onActivateOffer={(pricing) => {
               setShowCheckoutModal(true);
             }}
@@ -387,6 +389,7 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, onClose 
               templateName={tmpl.title || "Custom Proposal"}
               originalPrice={19900}
               durationDays={3650}
+              isPremiumUser={isPremiumUser}
               onClose={() => setShowCheckoutModal(false)}
               onSuccess={() => {
                 setShowCheckoutModal(false);

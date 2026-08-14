@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, MousePointer2, ShieldCheck, Zap, Share2, Check, Lock } from "lucide-react";
+import { Heart, MousePointer2, ShieldCheck, Zap, Share2, Check, Lock, Sparkles } from "lucide-react";
 import CanvasConfetti from "./CanvasConfetti";
+import { useSession } from "next-auth/react";
 
 interface AutoClickSimulatedPreviewProps {
   demoId: string;
@@ -13,6 +14,7 @@ interface AutoClickSimulatedPreviewProps {
   onShareFreeLink?: () => void;
   publishedUrl?: string | null;
   isPaid?: boolean;
+  isPremiumUser?: boolean;
 }
 
 export default function AutoClickSimulatedPreview({
@@ -23,7 +25,13 @@ export default function AutoClickSimulatedPreview({
   onShareFreeLink,
   publishedUrl,
   isPaid = false,
+  isPremiumUser,
 }: AutoClickSimulatedPreviewProps) {
+  const { data: session } = useSession();
+  const userObj = session?.user as any;
+  const [isFetchedPremium, setIsFetchedPremium] = useState<boolean>(false);
+  const isPremiumAccount = Boolean(isPremiumUser) || isFetchedPremium || userObj?.plan === "PREMIUM" || userObj?.role === "super_admin";
+
   const displayTitle = formValues["title"] || defaultData["title"] || "A Surprise For You... 😊";
   const displayRecipient = formValues["recipientName"] || defaultData["recipientName"] || "Someone Special ✨";
   const displayQuestion = formValues["question"] || defaultData["question"] || "Will you be mine? 💖";
@@ -59,11 +67,14 @@ export default function AutoClickSimulatedPreview({
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
+          if (data.isPremium) {
+            setIsFetchedPremium(true);
+          }
           setPricing({
             originalPrice: data.originalPrice,
-            specialPrice: data.specialPrice,
+            specialPrice: data.isPremium ? 0 : data.specialPrice,
             cashbackAmount: data.cashbackAmount,
-            discountPercent: data.discountPercent,
+            discountPercent: data.isPremium ? 100 : data.discountPercent,
           });
         }
       })
@@ -382,20 +393,24 @@ export default function AutoClickSimulatedPreview({
             <div className="flex items-center justify-between px-1">
               <div>
                 <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 flex items-center gap-1">
-                  Special Price 🎨
+                  {isPremiumAccount ? "Premium Member Price 👑" : "Special Price 🎨"}
                 </span>
                 <div className="flex items-baseline gap-2 mt-0.5">
                   <span className="text-xs font-semibold text-slate-400 line-through">
                     ₹{pricing.originalPrice}
                   </span>
                   <span className="text-xl sm:text-2xl font-black text-rose-400 tracking-tight">
-                    ₹{pricing.specialPrice}
+                    ₹{isPremiumAccount ? 0 : pricing.specialPrice}
                   </span>
                 </div>
               </div>
 
-              <span className="bg-gradient-to-r from-rose-500 to-pink-500 text-white font-black text-[10px] sm:text-xs px-2.5 py-1 rounded-xl uppercase tracking-wider shadow-md shadow-rose-900/50">
-                {pricing.discountPercent}% OFF
+              <span className={`text-white font-black text-[10px] sm:text-xs px-2.5 py-1 rounded-xl uppercase tracking-wider shadow-md ${
+                isPremiumAccount 
+                  ? "bg-gradient-to-r from-amber-400 to-amber-600 shadow-amber-900/50 text-slate-950" 
+                  : "bg-gradient-to-r from-rose-500 to-pink-500 shadow-rose-900/50"
+              }`}>
+                {isPremiumAccount ? "100% OFF" : `${pricing.discountPercent}% OFF`}
               </span>
             </div>
 
@@ -404,13 +419,22 @@ export default function AutoClickSimulatedPreview({
               {!isPaid ? (
                 <>
                   <button
-                    onClick={() => onActivateOffer && onActivateOffer(pricing)}
+                    onClick={() => onActivateOffer && onActivateOffer({ ...pricing, specialPrice: isPremiumAccount ? 0 : pricing.specialPrice })}
                     className="w-full py-3 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white font-black text-xs sm:text-sm rounded-xl shadow-lg shadow-rose-500/30 transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
                   >
-                    <Zap className="w-4 h-4 fill-white animate-pulse" /> Pay &amp; Activate Link at ₹{pricing.specialPrice}
+                    <Zap className="w-4 h-4 fill-white animate-pulse" /> {isPremiumAccount ? "Pay & Activate Link at ₹0" : `Pay & Activate Link at ₹${pricing.specialPrice}`}
                   </button>
                   <p className="text-[10px] text-slate-400 text-center font-medium flex items-center justify-center gap-1">
-                    <Lock className="w-3 h-3 text-rose-400" /> Payment required to unlock &amp; share link
+                    {isPremiumAccount ? (
+                      <>
+                        <Sparkles className="w-3 h-3 text-amber-400 fill-amber-400" />
+                        <span className="text-amber-300 font-bold">👑 100% Free for Premium Members</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-3 h-3 text-rose-400" /> Payment required to unlock &amp; share link
+                      </>
+                    )}
                   </p>
                 </>
               ) : (
@@ -445,7 +469,7 @@ export default function AutoClickSimulatedPreview({
             {/* Trust row */}
             <div className="pt-1 border-t border-white/10 flex items-center justify-between text-[9px] sm:text-[9.5px] text-slate-400 font-medium">
               <span className="flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" /> Secure via Razorpay
+                <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" /> {isPremiumAccount ? "Instant Premium Activation" : "Secure via Razorpay"}
               </span>
               <span className="text-slate-300 font-semibold">
                 ⚡ Instant delivery

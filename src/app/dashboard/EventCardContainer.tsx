@@ -25,7 +25,7 @@ type EventItem = {
   }>;
 };
 
-export default function EventCardContainer({ events }: { events: EventItem[] }) {
+export default function EventCardContainer({ events, isPremiumUser }: { events: EventItem[]; isPremiumUser?: boolean }) {
   const [editModal, setEditModal] = useState<{
     eventId: string;
     demoId: string;
@@ -200,6 +200,7 @@ export default function EventCardContainer({ events }: { events: EventItem[] }) 
             demoId={editModal.demoId}
             editEventId={editModal.eventId}
             editSlug={editModal.slug}
+            isPremiumUser={isPremiumUser}
             onClose={() => setEditModal(null)}
           />
         )}

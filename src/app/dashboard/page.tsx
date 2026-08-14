@@ -83,7 +83,7 @@ export default async function DashboardPage() {
               </div>
               <DeleteAllButton />
             </div>
-            <EventCardContainer events={events} />
+            <EventCardContainer events={events} isPremiumUser={isPremiumUser} />
           </div>
         ) : (
           <DashboardEmptyState />

@@ -79,19 +79,20 @@ export const authOptions: AuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.sub = user.id;
-        
-        // Always fetch latest role and plan from database
+      }
+
+      if (token.sub) {
         try {
           const dbUser = await prisma.user.findUnique({
-            where: { email: user.email as string }
+            where: { id: token.sub as string }
           });
-          token.role = dbUser?.role || "USER";
-          token.plan = dbUser?.plan || "FREE";
-        } catch (e) {
-          token.role = (user as any).role || "USER";
-          token.plan = (user as any).plan || "FREE";
-        }
+          if (dbUser) {
+            token.role = dbUser.role || "USER";
+            token.plan = dbUser.plan || "FREE";
+          }
+        } catch (e) {}
       }
+
       return token;
     },
     async session({ session, token }) {
