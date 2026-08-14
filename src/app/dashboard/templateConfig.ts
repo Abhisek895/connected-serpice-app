@@ -268,6 +268,8 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
       demoId: "birthday-wish",
       title: "Happy Birthday! 🎂",
       question: "Wishing you the happiest birthday! 🎂",
+      acceptBtn: "Love ❤️",
+      rejectBtn: "Hate 💔",
       loveMessage: "May all your dreams come true. You deserve all the happiness in the world! 🎉",
       recipientName: "Someone Special ✨",
       hasDefaultMusic: true,
@@ -275,7 +277,7 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
     steps: [
       {
         title: "Cover Page — Birthday Greeting",
-        description: "Customize the birthday title and special message.",
+        description: "Customize the birthday title, wish heading, button texts, and special message.",
         fields: [
           {
             key: "title",
@@ -294,6 +296,20 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
             label: "Birthday Wish Heading",
             type: "text",
             placeholder: "Wishing you the happiest birthday! 🎂",
+          },
+          {
+            key: "acceptBtn",
+            label: "Positive Choice Button Text",
+            type: "text",
+            placeholder: "Love ❤️",
+            hint: "Text shown on the main interactive pink button.",
+          },
+          {
+            key: "rejectBtn",
+            label: "Funny Reaction Button Text",
+            type: "text",
+            placeholder: "Hate 💔",
+            hint: "Text shown on the second button.",
           },
           {
             key: "loveMessage",

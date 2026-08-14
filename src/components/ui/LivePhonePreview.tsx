@@ -13,19 +13,19 @@ interface LivePhonePreviewProps {
 export default function LivePhonePreview({ demoId, formValues, defaultData, currentStep = 0 }: LivePhonePreviewProps) {
   const [showLetterPreview, setShowLetterPreview] = useState(false);
 
+  const isBirthday = demoId === "birthday-wish";
+  const isPlanner = demoId.includes("planner");
+  const isSurprise = demoId === "surprise";
+
   const displayTitle = formValues["title"] || defaultData["title"] || "A Surprise For You... 😊";
   const displayRecipient = formValues["recipientName"] || defaultData["recipientName"] || "Someone Special ✨";
   const displayQuestion = formValues["question"] || defaultData["question"] || "Will you be mine? 💖";
   const displayMessage = formValues["loveMessage"] || defaultData["loveMessage"] || "A little surprise from someone who truly cares…";
   const patternText = formValues["patternText"] || defaultData["patternText"] || "love you";
-  const acceptBtn = formValues["acceptBtn"] || defaultData["acceptBtn"] || "Yes! 😍";
-  const rejectBtn = formValues["rejectBtn"] || defaultData["rejectBtn"] || "No 🙈";
+  const acceptBtn = formValues["acceptBtn"] || defaultData["acceptBtn"] || (isBirthday ? "Love ❤️" : "Yes! 😍");
+  const rejectBtn = formValues["rejectBtn"] || defaultData["rejectBtn"] || (isBirthday ? "Hate 💔" : "No 🙈");
 
   const photoUrl = formValues["_photo"] || formValues["_photo1"] || defaultData["_photo"] || defaultData["photo"];
-
-  const isBirthday = demoId === "birthday-wish";
-  const isPlanner = demoId.includes("planner");
-  const isSurprise = demoId === "surprise";
 
   const isStep2 = currentStep === 1;
 
@@ -41,14 +41,15 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
 
         {/* Screen */}
         <div className={`w-full h-[480px] rounded-[30px] overflow-hidden relative flex flex-col justify-between p-4 pt-10 text-white text-center shadow-inner transition-all duration-300 ${
-          isStep2 && isSurprise ? "bg-black" : "bg-gradient-to-br from-slate-950 via-rose-950 to-purple-950"
+          isStep2 && isSurprise ? "bg-black" : "bg-gradient-to-br from-purple-950 via-rose-900 to-slate-950"
         }`}>
 
           {/* Ambient Glow */}
-          {!isStep2 && (
+          {(!isStep2 || isBirthday) && (
             <>
-              <div className="absolute -top-12 -left-12 w-32 h-32 bg-rose-500/20 rounded-full blur-2xl pointer-events-none" />
-              <div className="absolute -bottom-12 -right-12 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl pointer-events-none" />
+              <div className="absolute -top-12 -left-12 w-36 h-36 bg-pink-500/35 rounded-full blur-2xl pointer-events-none" />
+              <div className="absolute top-1/2 -right-12 w-36 h-36 bg-amber-400/25 rounded-full blur-2xl pointer-events-none" />
+              <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 w-40 h-40 bg-purple-500/35 rounded-full blur-2xl pointer-events-none" />
             </>
           )}
 
@@ -111,30 +112,73 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
               </div>
             </div>
           ) : isStep2 && isBirthday ? (
-            <div className="relative z-10 my-auto space-y-3 px-1">
-              {/* Birthday Slideshow Mockup */}
-              <div className="relative mx-auto w-36 h-44 rounded-2xl bg-black/60 border border-amber-400/40 p-2 flex flex-col items-center justify-center overflow-hidden shadow-xl">
-                <div className="w-12 h-12 rounded-full bg-amber-500/20 border border-amber-400/60 flex items-center justify-center mb-2">
-                  <span className="text-xl">🎂</span>
+            <div className="relative z-10 h-full w-full flex flex-col justify-center items-center py-2 px-1">
+              {/* Glass Card Container (Matches Real Birthday Card) */}
+              <div className="w-full bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-2 sm:p-2.5 shadow-2xl flex flex-col items-center text-center space-y-2">
+                {/* 1. Photo Container — CLEAN with NO text overlay */}
+                <div className="relative w-full h-[130px] sm:h-[140px] rounded-xl overflow-hidden shadow-md bg-slate-950">
+                  <img
+                    src={photoUrl || "/demos/birthday-wish/s0.jpeg"}
+                    alt="Birthday Photo"
+                    className="w-full h-full object-cover object-[center_35%]"
+                  />
                 </div>
-                <span className="text-[10px] font-bold text-amber-200">Photo Slideshow</span>
-                <span className="text-[8px] text-amber-400/80 mt-1 line-clamp-2 px-1">
-                  "{displayMessage}"
-                </span>
+
+                {/* 2. Heading BELOW photo box */}
+                <h4 className="text-xs font-bold text-white font-serif tracking-tight leading-snug px-1">
+                  Happy Birthday, <span className="text-pink-400 font-extrabold">{displayRecipient} 🦋 💖</span>
+                </h4>
+
+                {/* 3. Subtitle BELOW heading */}
+                <p className="text-[9px] text-rose-200/80 font-medium italic">
+                  A little surprise from someone who truly cares…
+                </p>
+
+                {/* 4. Read My Message Button or Letter Reveal */}
+                {showLetterPreview ? (
+                  <div
+                    onClick={() => setShowLetterPreview(false)}
+                    className="w-full bg-white/95 backdrop-blur-md text-slate-900 rounded-xl p-2 text-center shadow-xl border border-white/60 cursor-pointer animate-in zoom-in-95 duration-200"
+                  >
+                    <span className="text-[8.5px] font-extrabold text-rose-500 uppercase tracking-wider block mb-0.5">💌 Message for you</span>
+                    <p className="text-[9.5px] font-medium italic leading-snug line-clamp-4">"{displayMessage}"</p>
+                    <span className="text-[7.5px] text-slate-400 mt-1 font-bold block">(Tap to close)</span>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowLetterPreview(true)}
+                    className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-pink-400 via-rose-500 to-pink-500 text-white font-bold text-[9.5px] shadow-lg shadow-pink-500/30 hover:scale-105 transition active:scale-95 cursor-pointer mt-0.5"
+                  >
+                    Read My Message 💌
+                  </button>
+                )}
               </div>
-              <div className="pt-1">
-                <span className="inline-flex items-center gap-1 px-3 py-1 text-[10px] bg-amber-500 text-slate-950 rounded-full font-bold shadow-sm">
-                  🎉 Birthday Wishes
+            </div>
+          ) : isBirthday ? (
+            /* Birthday Step 1 / Entry Screen (Matches Real BirthdayTemplate Stage 0) */
+            <div className="relative z-10 my-auto space-y-4 px-2 text-center">
+              <h4 className="text-xl font-bold text-white font-serif tracking-tight drop-shadow-md">
+                {displayTitle} ❤️
+              </h4>
+
+              <p className="text-xs text-rose-100/90 font-medium leading-relaxed px-1">
+                {displayQuestion}
+              </p>
+
+              <div className="flex gap-2 justify-center pt-2">
+                <span className="px-4 py-2 text-xs rounded-xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-rose-500/40 tracking-wide">
+                  {acceptBtn}
+                </span>
+                <span className="px-4 py-2 text-xs rounded-xl font-semibold bg-white/10 text-white border border-white/20 backdrop-blur-sm">
+                  {rejectBtn}
                 </span>
               </div>
             </div>
           ) : (
-            /* Step 1 / Cover View */
+            /* Step 1 / Cover View for other templates */
             <div className="relative z-10 my-auto space-y-3 px-1">
               <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-400/40 text-rose-400 flex items-center justify-center mx-auto shadow-lg shadow-rose-950/50">
-                {isBirthday ? (
-                  <span className="text-xl">🎂</span>
-                ) : isPlanner ? (
+                {isPlanner ? (
                   <span className="text-xl">🌸</span>
                 ) : (
                   <Heart className="w-6 h-6 fill-rose-500 animate-pulse" />
@@ -152,10 +196,6 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
               {isPlanner ? (
                 <div className="bg-white/10 backdrop-blur-md border border-white/15 p-2.5 rounded-xl text-[11px] text-rose-100 leading-snug">
                   {displayQuestion}
-                </div>
-              ) : isBirthday ? (
-                <div className="bg-white/10 backdrop-blur-md border border-white/15 p-2.5 rounded-xl text-[11px] text-pink-100 leading-snug line-clamp-3">
-                  "{displayMessage}"
                 </div>
               ) : (
                 <div className="space-y-2">

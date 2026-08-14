@@ -320,13 +320,53 @@ export default function AutoClickSimulatedPreview({
                       </motion.div>
                     ) : null}
                   </AnimatePresence>
+                ) : isBirthday ? (
+                  /* Birthday Cover / Landing simulation (Matches BirthdayTemplate Stage 0) */
+                  <div className="space-y-2 px-1 text-center">
+                    <h4 className="text-xs sm:text-sm font-bold text-white font-serif tracking-tight drop-shadow-md">
+                      {displayTitle} ❤️
+                    </h4>
+
+                    <p className="text-[9px] sm:text-[10px] text-rose-100/90 font-medium leading-relaxed px-1">
+                      {displayQuestion}
+                    </p>
+
+                    {simStage === "accepted" ? (
+                      <motion.div
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="bg-gradient-to-r from-rose-500/30 to-pink-500/30 backdrop-blur-md border border-rose-400/40 p-1.5 rounded-lg text-center space-y-0.5"
+                      >
+                        <div className="text-[10px] font-black text-rose-200 flex items-center justify-center gap-1">
+                          🎉 Birthday Celebration! 🎉
+                        </div>
+                        <p className="text-[9px] text-pink-100 font-semibold line-clamp-2 leading-tight">
+                          "{displayMessage}"
+                        </p>
+                      </motion.div>
+                    ) : (
+                      <div className="flex gap-1.5 justify-center pt-1">
+                        <motion.span
+                          animate={simStage === "accept_clicked" ? { scale: 0.92 } : { scale: 1 }}
+                          className={`px-2.5 py-1 text-[8px] sm:text-[9px] rounded-lg font-bold shadow-sm transition-all ${
+                            simStage === "accept_clicked"
+                              ? "bg-emerald-500 text-white ring-2 ring-emerald-300"
+                              : "bg-gradient-to-r from-pink-500 to-rose-500 text-white"
+                          }`}
+                        >
+                          {acceptBtn && acceptBtn !== "Yes! 😍" ? acceptBtn : "Love ❤️"}
+                        </motion.span>
+                        <span className="px-2.5 py-1 text-[8px] sm:text-[9px] bg-white/10 text-white rounded-lg font-semibold border border-white/20">
+                          {rejectBtn && rejectBtn !== "No 🙈" ? rejectBtn : "Hate 💔"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 ) : (
-                  /* Standard Cover / Landing simulation */
+                  /* Standard Cover / Landing simulation for other templates */
                   <div className="space-y-1 px-1">
                     <div className="w-8 h-8 rounded-lg bg-rose-500/20 border border-rose-400/40 text-rose-400 flex items-center justify-center mx-auto shadow-md">
-                      {isBirthday ? (
-                        <span className="text-base">🎂</span>
-                      ) : isPlanner ? (
+                      {isPlanner ? (
                         <span className="text-base">🌸</span>
                       ) : (
                         <Heart className="w-4 h-4 fill-rose-500 animate-pulse" />

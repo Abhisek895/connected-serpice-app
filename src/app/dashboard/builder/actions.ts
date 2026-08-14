@@ -210,6 +210,8 @@ export async function createInstantEventFromTemplate(themeName: string, title?: 
     "birthday-wish": {
       title: "Happy Birthday! 🎂",
       question: "Wishing you the happiest birthday! 🎂",
+      acceptBtn: "Love ❤️",
+      rejectBtn: "Hate 💔",
       loveMessage: "May all your dreams come true. You deserve all the happiness in the world! 🎉",
       hasDefaultMusic: true,
     },

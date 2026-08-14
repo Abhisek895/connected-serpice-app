@@ -88,6 +88,8 @@ export default function BirthdayTemplate({
   slug,
   title,
   question,
+  acceptBtn,
+  rejectBtn,
   loveMessage,
   recipientName,
   media,
@@ -136,6 +138,8 @@ export default function BirthdayTemplate({
   const displayRecipient = recipientName || "My Love";
   const displayTitle = title || "Happy Birthday";
   const displayQuestion = question || "Wishing you the happiest birthday! 🎂";
+  const displayAcceptBtn = acceptBtn || "Love ❤️";
+  const displayRejectBtn = rejectBtn || "Hate 💔";
 
   const handleLove = () => {
     setStage(1);
@@ -159,31 +163,34 @@ export default function BirthdayTemplate({
           min-height: 100vh;
           padding: 20px 0;
           font-family: 'Poppins', sans-serif;
-          background: radial-gradient(circle at 30% 30%, rgba(255,105,180,0.2), transparent 40%),
-                      radial-gradient(circle at 70% 70%, rgba(255,192,203,0.15), transparent 40%),
-                      linear-gradient(120deg, #1a0f1f, #10091a);
-          animation: bdayBgShift 12s ease-in-out infinite alternate;
+          background: 
+            radial-gradient(circle at 20% 20%, rgba(255, 77, 143, 0.45), transparent 55%),
+            radial-gradient(circle at 80% 25%, rgba(255, 180, 80, 0.35), transparent 55%),
+            radial-gradient(circle at 50% 80%, rgba(180, 70, 255, 0.4), transparent 60%),
+            linear-gradient(135deg, #33082b 0%, #520f3c 35%, #350a54 70%, #1a062d 100%);
+          animation: bdayBgShift 10s ease-in-out infinite alternate;
           color: #fff6fa;
           overflow-x: hidden;
           overflow-y: auto;
           position: relative;
         }
         @keyframes bdayBgShift {
-          0% { filter: hue-rotate(0deg); }
-          100% { filter: hue-rotate(25deg); }
+          0% { filter: hue-rotate(0deg) brightness(1); }
+          50% { filter: hue-rotate(15deg) brightness(1.15); }
+          100% { filter: hue-rotate(30deg) brightness(1.05); }
         }
 
         .bday-entry {
           position: fixed;
           inset: 0;
-          background: rgba(0,0,0,0.6);
+          background: rgba(15, 4, 18, 0.65);
           display: flex;
           flex-direction: column;
           justify-content: center;
           align-items: center;
           z-index: 20;
           text-align: center;
-          backdrop-filter: blur(10px);
+          backdrop-filter: blur(14px);
           animation: bdayFadeIn 1s ease forwards;
         }
         @keyframes bdayFadeIn {
@@ -231,14 +238,14 @@ export default function BirthdayTemplate({
         .bday-card {
           width: 100%;
           max-width: 720px;
-          background: rgba(255,255,255,0.06);
-          backdrop-filter: blur(14px) saturate(140%);
-          border-radius: 22px;
-          box-shadow: 0 0 40px rgba(255,107,154,0.2), 0 0 80px rgba(255,107,154,0.1);
-          padding: 24px;
+          background: rgba(255, 255, 255, 0.09);
+          backdrop-filter: blur(20px) saturate(160%);
+          border-radius: 24px;
+          box-shadow: 0 15px 50px rgba(255, 77, 143, 0.35), 0 0 90px rgba(255, 105, 180, 0.2);
+          padding: 26px;
           position: relative;
           z-index: 2;
-          border: 1px solid rgba(255,255,255,0.1);
+          border: 1px solid rgba(255, 255, 255, 0.2);
           overflow: hidden;
           text-align: center;
           animation: bdayFadeIn 1.5s ease forwards;
@@ -341,10 +348,10 @@ export default function BirthdayTemplate({
               </p>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
                 <button className="bday-btn bday-btn-primary" onClick={handleLove}>
-                  Very Good ❤️
+                  {displayAcceptBtn}
                 </button>
                 <button className="bday-btn bday-btn-ghost" onClick={handleHate}>
-                  Bad 💔
+                  {displayRejectBtn}
                 </button>
               </div>
             </motion.div>
