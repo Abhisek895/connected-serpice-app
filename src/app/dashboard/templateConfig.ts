@@ -94,39 +94,6 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
     ],
   },
   {
-    id: "3d-glowing-heart",
-    title: "3D Glowing Text Heart Proposal 💖",
-    hasInstantUse: true,
-    defaultData: {
-      demoId: "3d-glowing-heart",
-      patternText: "i love you",
-      loveMessage: "Every single moment with you feels like magic. You bring warmth, laughter, and endless brightness into my life. I made this 3D glowing heart just for you to remind you how deeply loved you are! Forever & Always ❤️",
-    },
-    steps: [
-      {
-        title: "3D Heart Customization",
-        description: "Customize the rotating text ribbon and your secret love letter.",
-        fields: [
-          {
-            key: "patternText",
-            label: "3D Heart Repeating Text Ribbon",
-            type: "text",
-            placeholder: "i love you",
-            hint: "The glowing text that traces out the 3D rotating heart in real-time.",
-            presetSuggestions: ["i love you", "forever yours", "you are my world", "sweetheart"],
-          },
-          {
-            key: "loveMessage",
-            label: "Secret Love Letter",
-            type: "textarea",
-            placeholder: "Write your special surprise letter here...",
-            hint: "Revealed when your recipient taps 'Tap to Reveal Love Letter 💌'.",
-          },
-        ],
-      },
-    ],
-  },
-  {
     id: "she-cant-say-no",
     title: "She Can't Say No Proposal 💖",
     hasInstantUse: true,

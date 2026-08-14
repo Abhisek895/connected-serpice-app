@@ -61,7 +61,7 @@ export default function DashboardDemos({
       image: dbPricing?.thumbnailUrl || demo.image,
     };
   }).filter(d => d.isActive).filter(d => {
-    if (selectedCategory === "romantic") return d.id === "surprise" || d.id === "nasamajh-lakri" || d.id === "she-cant-say-no" || d.id === "3d-glowing-heart" || d.id === "im-sorry";
+    if (selectedCategory === "romantic") return d.id === "surprise" || d.id === "nasamajh-lakri" || d.id === "she-cant-say-no" || d.id === "im-sorry";
     if (selectedCategory === "birthday") return d.id === "birthday-wish";
     if (selectedCategory === "planner") return d.id.includes("planner");
     return true;

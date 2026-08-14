@@ -44,21 +44,6 @@ export const demos: DemoItem[] = [
     hasInstantUse: false
   },
   {
-    id: "3d-glowing-heart",
-    title: "3D Glowing Text Heart Proposal 💖",
-    badge: "Instant Available",
-    badgeColor: "bg-purple-600 text-white",
-    description: "Viral 3D animated heart made of glowing repeating 'i love you' text with romantic music & secret love letter reveal!",
-    previewUrl: "/demos/3d-glowing-heart/index.html",
-    builderTheme: "Romantic",
-    image: "/demos/surprise/images.jpeg",
-    icon: Sparkles,
-    borderColor: "border-purple-300",
-    hasInstantUse: true,
-    price: 2900,
-    durationDays: 7
-  },
-  {
     id: "im-sorry",
     title: "Apology Storybook & Love Battery 💌🔋",
     badge: "Instant Available",

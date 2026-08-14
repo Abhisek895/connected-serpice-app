@@ -11,11 +11,6 @@ const TEMPLATE_META: Record<string, { emoji: string; ogTitle: (name?: string) =>
     ogTitle: (name) => `${name ? name + " sent" : "Someone sent"} you an apology 🥺`,
     ogDesc: "They're really sorry and made you a cute interactive apology page. Open it to forgive them! 💖",
   },
-  "3d-glowing-heart": {
-    emoji: "💖",
-    ogTitle: (name) => `${name ? name + " made" : "Someone made"} you a 3D Glowing Heart 💖`,
-    ogDesc: "A beautiful 3D heart full of love is waiting for you. Tap to open it! ✨",
-  },
   "she-cant-say-no": {
     emoji: "💕",
     ogTitle: (name) => `${name ? name + " has" : "Someone has"} a big question for you 💕`,
