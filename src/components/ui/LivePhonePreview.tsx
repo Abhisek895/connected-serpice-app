@@ -16,6 +16,7 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
   const isBirthday = demoId === "birthday-wish";
   const isPlanner = demoId.includes("planner");
   const isSurprise = demoId === "surprise";
+  const isApology = demoId === "im-sorry" || demoId === "apology";
 
   const displayTitle = formValues["title"] || defaultData["title"] || "A Surprise For You... 😊";
   const displayRecipient = formValues["recipientName"] || defaultData["recipientName"] || "Someone Special ✨";
@@ -171,6 +172,30 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
                 </span>
                 <span className="px-4 py-2 text-xs rounded-xl font-semibold bg-white/10 text-white border border-white/20 backdrop-blur-sm">
                   {rejectBtn}
+                </span>
+              </div>
+            </div>
+          ) : isApology ? (
+            /* Apology Template Preview (Matches ImSorryTemplate UI) */
+            <div className="relative z-10 my-auto space-y-2 px-1 text-center">
+              <div className="relative w-28 h-28 mx-auto rounded-2xl overflow-hidden border border-rose-400/40 shadow-lg bg-slate-950">
+                <img
+                  src={photoUrl || "/demos/im-sorry/cat-sorry1.png"}
+                  alt="Apology Photo"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              <h4 className="text-sm font-bold text-white tracking-tight drop-shadow">
+                {displayTitle}
+              </h4>
+
+              <div className="flex gap-1.5 justify-center pt-1">
+                <span className="px-3 py-1 text-[9px] rounded-full font-bold bg-emerald-500 text-white shadow-md">
+                  {acceptBtn && acceptBtn !== "Yes! 😍" ? acceptBtn : "Yes, I Forgive You 🥰"}
+                </span>
+                <span className="px-3 py-1 text-[9px] rounded-full font-medium bg-slate-900/90 text-rose-300 border border-rose-500/40">
+                  {rejectBtn && rejectBtn !== "No 🙈" ? rejectBtn : "No 😤"}
                 </span>
               </div>
             </div>

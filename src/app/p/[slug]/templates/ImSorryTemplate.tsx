@@ -30,6 +30,8 @@ export default function ImSorryTemplate({
   rejectBtn,
   loveMessage,
   recipientName,
+  photoUrl: propPhotoUrl,
+  media = [],
 }: ProposalClientProps) {
   const [mounted, setMounted] = useState(false);
   const [isOpened, setIsOpened] = useState(false);
@@ -56,7 +58,7 @@ export default function ImSorryTemplate({
   const partnerName = recipientName || "Someone Special ✨";
   const defaultApologyNote =
     loveMessage ||
-    `I am so deeply sorry for making you upset, ${partnerName}. You mean the entire world to me, and seeing you hurt breaks my heart into a million pieces.\n\nI brought you your favorite boba tea 🧋 and 1000 hugs! I promise to listen better, cherish you more, and make you smile every single day! Please forgive me? I love you endlessly ❤️`;
+    `I am so deeply sorry for making you upset. You mean the entire world to me, and seeing you hurt breaks my heart into a million pieces.\n\nI promise to listen better, cherish you more, and make it up to you every single day. Please give me another chance to make you smile! I love you endlessly ❤️`;
 
   const dodgeTextArray = [
     "I brought boba tea! 🧋",
@@ -67,8 +69,17 @@ export default function ImSorryTemplate({
   ];
   const currentDodgeMsg = dodgeTextArray[dodgeCount % dodgeTextArray.length];
 
-  const sadCatGif = "https://media.tenor.com/2s_1yP690yMAAAAC/cat-sorry.gif";
-  const happyCatGif = "https://media.tenor.com/al4yRBO26akAAAAC/cat-goma.gif";
+  const sadCatGifs = [
+    "/demos/im-sorry/cat-sorry1.png",
+    "/demos/im-sorry/cat-sorry2.png",
+    "/demos/im-sorry/cat-sorry3.png",
+    "/demos/im-sorry/cat-sorry4.png",
+  ];
+
+  const uploadedImage = media?.find((m: any) => m.type === "IMAGE")?.url;
+  const currentSadCatGif = sadCatGifs[dodgeCount % sadCatGifs.length];
+  const displayPhoto = propPhotoUrl || uploadedImage || currentSadCatGif;
+  const happyCatGif = "/demos/im-sorry/cat-happy.png";
 
   useEffect(() => {
     setMounted(true);
@@ -103,6 +114,7 @@ export default function ImSorryTemplate({
 
   const handleOpenGift = () => {
     setIsOpened(true);
+    setShowLetterModal(true);
     if (audioRef.current) {
       audioRef.current.play().then(() => setIsPlayingMusic(true)).catch(() => {});
     }
@@ -215,33 +227,16 @@ export default function ImSorryTemplate({
       </div>
 
       {/* Top Header Bar */}
-      <div className={`w-full max-w-xl flex items-center z-20 pt-2 ${isForgiven ? "justify-between" : "justify-end"}`}>
-        {isForgiven && (
+      {isForgiven && (
+        <div className="w-full max-w-xl flex items-center justify-start z-20 pt-2">
           <div className="flex items-center gap-2 bg-white/10 px-3.5 py-1.5 rounded-full border border-white/15 backdrop-blur-md shadow-md">
             <Heart className="w-4 h-4 text-rose-400 fill-rose-400 animate-pulse" />
             <span className="text-xs font-black uppercase tracking-widest text-rose-200">
               Forgiven & Loved ✨
             </span>
           </div>
-        )}
-
-        <button
-          onClick={toggleMusic}
-          className="p-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/15 rounded-full text-white transition flex items-center gap-2 text-xs font-bold cursor-pointer shadow-md"
-        >
-          {isPlayingMusic ? (
-            <>
-              <Volume2 className="w-4 h-4 text-rose-400 animate-pulse" />
-              <span>🔊 Music Playing</span>
-            </>
-          ) : (
-            <>
-              <VolumeX className="w-4 h-4 text-slate-400" />
-              <span>Play Music</span>
-            </>
-          )}
-        </button>
-      </div>
+        </div>
+      )}
 
       {/* Main Interactive Stage Container */}
       <AnimatePresence mode="wait">
@@ -296,10 +291,13 @@ export default function ImSorryTemplate({
                   <div className="relative mb-6">
                     <div className="absolute inset-0 bg-rose-500/40 rounded-full blur-2xl animate-pulse" />
                     <img
-                      src={sadCatGif}
+                      src={displayPhoto}
                       alt="Sad Begging Cat"
                       referrerPolicy="no-referrer"
-                      className="relative w-44 h-44 sm:w-52 sm:h-52 object-contain rounded-3xl border-2 border-rose-300/40 shadow-[0_0_40px_rgba(244,63,94,0.7)]"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "/demos/im-sorry/cat-sorry1.png";
+                      }}
+                      className="relative w-44 h-44 sm:w-52 sm:h-52 object-cover rounded-3xl border-2 border-rose-300/40 shadow-[0_0_40px_rgba(244,63,94,0.7)] bg-slate-950"
                     />
                   </div>
 
@@ -326,6 +324,8 @@ export default function ImSorryTemplate({
 
                     {/* RUNAWAY NO BUTTON */}
                     <motion.button
+                      onPointerDown={handleDodgeNo}
+                      onTouchStart={handleDodgeNo}
                       onMouseEnter={handleDodgeNo}
                       onClick={handleDodgeNo}
                       animate={{ x: noPos.x, y: noPos.y }}
@@ -335,15 +335,6 @@ export default function ImSorryTemplate({
                       {dodgeCount > 0 ? currentDodgeMsg : stillMadBtnLabel}
                     </motion.button>
                   </div>
-
-                  {/* Read Apology Letter Button */}
-                  <button
-                    onClick={() => setShowLetterModal(true)}
-                    className="px-5 py-2.5 bg-white/10 hover:bg-white/20 border border-rose-300/30 rounded-full text-rose-200 font-extrabold text-xs transition backdrop-blur-md flex items-center gap-2 cursor-pointer shadow-md"
-                  >
-                    <MailOpen className="w-3.5 h-3.5 text-rose-400" />
-                    <span>Read My Apology Letter 💌</span>
-                  </button>
                 </motion.div>
               ) : (
                 /* CELEBRATION FORGIVEN STAGE */
@@ -378,17 +369,9 @@ export default function ImSorryTemplate({
                   <h3 className="text-2xl sm:text-3xl font-black text-emerald-400 mb-2">
                     Yay! You Forgave Me! 🥰🎉
                   </h3>
-                  <p className="text-xs sm:text-sm text-slate-200 font-medium leading-relaxed max-w-sm mx-auto mb-6">
+                  <p className="text-xs sm:text-sm text-slate-200 font-medium leading-relaxed max-w-sm mx-auto mb-2">
                     You made my heart so happy! Here's your boba tea 🧋 and 1000 bear hugs! I love you endlessly! ❤️✨
                   </p>
-
-                  <button
-                    onClick={() => setShowLetterModal(true)}
-                    className="px-6 py-2.5 bg-emerald-600/30 border border-emerald-400/40 rounded-full text-emerald-200 font-extrabold text-xs transition backdrop-blur-md flex items-center gap-2 mx-auto cursor-pointer"
-                  >
-                    <MailOpen className="w-3.5 h-3.5 text-emerald-300" />
-                    <span>Read Apology Letter 💌</span>
-                  </button>
                 </motion.div>
               )}
             </AnimatePresence>

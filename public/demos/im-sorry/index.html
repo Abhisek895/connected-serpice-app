@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
@@ -14,10 +14,7 @@
     <!-- Ambient Sparkles -->
     <div id="sparkleBox"></div>
 
-    <!-- Top Music Bar -->
-    <div class="top-bar flex-end">
-        <button id="musicBtn" class="music-btn">🎵 Play Music</button>
-    </div>
+
 
     <!-- STAGE 0: UNBOXING GIFT PARCEL TEASER -->
     <div id="giftStage" class="center-stage">
@@ -36,7 +33,7 @@
         <!-- STATE 1: BEGGING FORGIVENESS -->
         <div id="beggingBox" class="stage-box">
             <div class="cat-gif-wrap">
-                <img id="catImg" src="https://media.tenor.com/2s_1yP690yMAAAAC/cat-sorry.gif" alt="Sad Begging Cat" referrerpolicy="no-referrer" class="cat-img">
+                <img id="catImg" src="/demos/im-sorry/cat-sorry1.png" alt="Sad Begging Cat" class="cat-img" onerror="this.src='/demos/im-sorry/cat-sorry1.png'">
             </div>
 
             <h1 class="main-title mb-6">I'm Really Sorry... 🥺</h1>
@@ -45,10 +42,6 @@
                 <button id="yesBtn" class="yes-btn">💖 Yes, I Forgive You 🥰</button>
                 <button id="noBtn" class="no-btn">No 😤</button>
             </div>
-
-            <button id="openLetterBtn" class="letter-drawer-btn">
-                <span>Read My Apology Letter 💌</span>
-            </button>
         </div>
 
         <!-- STATE 2: CELEBRATION -->
@@ -60,10 +53,6 @@
             <div class="granted-badge">✨ Forgiveness Granted ✨</div>
             <h3 class="celeb-title">Yay! You Forgave Me! 🥰🎉</h3>
             <p class="celeb-text">You just made my entire heart complete! I promise to give you all the love, hugs, boba tea, and happiness in the world! ❤️✨</p>
-
-            <button id="celebLetterBtn" class="letter-drawer-btn font-bold">
-                <span>Read Apology Letter 💌</span>
-            </button>
         </div>
 
     </div>

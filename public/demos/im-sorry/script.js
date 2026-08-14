@@ -23,6 +23,13 @@ const dodgeMessages = [
     "I promise 1000 kisses! 💋"
 ];
 
+const sadCatGifs = [
+    "/demos/im-sorry/cat-sorry1.png",
+    "/demos/im-sorry/cat-sorry2.png",
+    "/demos/im-sorry/cat-sorry3.png",
+    "/demos/im-sorry/cat-sorry4.png"
+];
+
 // Generate Sparkles
 for (let i = 0; i < 25; i++) {
     const star = document.createElement("div");
@@ -37,10 +44,10 @@ for (let i = 0; i < 25; i++) {
     sparkleBox.appendChild(star);
 }
 
-// Open Gift Unboxing Teaser
+// Open Gift Unboxing Teaser -> Opens Letter Modal First!
 function handleOpenGift() {
     giftStage.classList.add("hidden");
-    mainStage.classList.remove("hidden");
+    letterModal.classList.remove("hidden");
     playMusic();
 }
 
@@ -66,28 +73,42 @@ function dodgeNo() {
     const randomY = (Math.random() - 0.5) * 180;
     noBtn.style.transform = `translate(${randomX}px, ${randomY}px)`;
     noBtn.textContent = dodgeMessages[dodgeCount % dodgeMessages.length];
+    
+    // Change Sad Begging Cat GIF on every dodge!
+    const catImg = document.getElementById("catImg");
+    if (catImg) {
+        catImg.src = sadCatGifs[dodgeCount % sadCatGifs.length];
+    }
+
     dodgeCount++;
 }
 
+noBtn.addEventListener("pointerdown", dodgeNo);
+noBtn.addEventListener("touchstart", dodgeNo);
 noBtn.addEventListener("mouseenter", dodgeNo);
 noBtn.addEventListener("click", dodgeNo);
 
-// Letter Drawer Toggle
-openLetterBtn.addEventListener("click", () => {
-    letterModal.classList.remove("hidden");
-});
-
-celebLetterBtn.addEventListener("click", () => {
-    letterModal.classList.remove("hidden");
-});
-
-closeLetterBtn.addEventListener("click", () => {
+// Closing Letter Modal -> Reveals Main Begging Stage!
+function handleCloseLetter() {
     letterModal.classList.add("hidden");
-});
+    mainStage.classList.remove("hidden");
+    beggingBox.classList.remove("hidden");
+}
 
-modalCloseAction.addEventListener("click", () => {
-    letterModal.classList.add("hidden");
-});
+if (openLetterBtn) {
+    openLetterBtn.addEventListener("click", () => {
+        letterModal.classList.remove("hidden");
+    });
+}
+
+if (celebLetterBtn) {
+    celebLetterBtn.addEventListener("click", () => {
+        letterModal.classList.remove("hidden");
+    });
+}
+
+closeLetterBtn.addEventListener("click", handleCloseLetter);
+modalCloseAction.addEventListener("click", handleCloseLetter);
 
 // Audio logic
 let audio = null;
