@@ -49,45 +49,32 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
     },
     steps: [
       {
-        title: "Apology Page Customization",
-        description: "Customize your title, apology question, letter, and button labels.",
+        title: "Front Page Title",
+        description: "Customize the main header title displayed on the front page.",
         fields: [
           {
             key: "title",
             label: "Header Title",
             type: "text",
             placeholder: "I'm Really Sorry... 🥺",
+            presetSuggestions: [
+              "I'm Really Sorry... 🥺",
+              "Please Hear Me Out... 💌",
+              "A Message From My Heart 💖",
+            ],
           },
-          {
-            key: "question",
-            label: "Apology Question",
-            type: "text",
-            placeholder: "Will you please forgive me? 🥺❤️",
-          },
-          {
-            key: "recipientName",
-            label: "Recipient Name",
-            type: "text",
-            placeholder: "Someone Special ✨",
-          },
+        ],
+      },
+      {
+        title: "Apology Letter Content",
+        description: "Customize your secret heart-felt apology letter.",
+        fields: [
           {
             key: "loveMessage",
             label: "Apology Letter Content",
             type: "textarea",
             placeholder: "Write your special heart-felt apology letter here...",
-            hint: "Revealed inside the 'Read My Apology Letter 💌' drawer modal.",
-          },
-          {
-            key: "acceptBtn",
-            label: "Forgive Button Label",
-            type: "text",
-            placeholder: "Yes, I Forgive You 🥰",
-          },
-          {
-            key: "rejectBtn",
-            label: "Runaway No Button Label",
-            type: "text",
-            placeholder: "No 😤",
+            hint: "Revealed inside the 'A Letter From My Heart 💌' drawer modal.",
           },
         ],
       },

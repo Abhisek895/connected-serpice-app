@@ -176,29 +176,52 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
               </div>
             </div>
           ) : isApology ? (
-            /* Apology Template Preview (Matches ImSorryTemplate UI) */
-            <div className="relative z-10 my-auto space-y-2 px-1 text-center">
-              <div className="relative w-28 h-28 mx-auto rounded-2xl overflow-hidden border border-rose-400/40 shadow-lg bg-slate-950">
-                <img
-                  src={photoUrl || "/demos/im-sorry/cat-sorry1.png"}
-                  alt="Apology Photo"
-                  className="w-full h-full object-cover"
-                />
-              </div>
+            isStep2 ? (
+              /* Apology Template Step 2 Preview: Exact 'A Letter From My Heart' Modal Card (Matching User Screenshot) */
+              <div className="relative z-10 my-auto w-full px-1">
+                <div className="bg-gradient-to-br from-slate-900 via-rose-950 to-slate-950 border border-rose-500/50 rounded-2xl p-3 text-white shadow-2xl space-y-2 text-left">
+                  {/* Header */}
+                  <div className="flex justify-between items-center border-b border-rose-500/20 pb-1.5">
+                    <h5 className="font-bold text-[11px] text-rose-200 flex items-center gap-1">
+                      <span>A Letter From My Heart 💌</span>
+                    </h5>
+                    <span className="text-[10px] text-slate-400">✕</span>
+                  </div>
 
-              <h4 className="text-sm font-bold text-white tracking-tight drop-shadow">
-                {displayTitle}
-              </h4>
+                  {/* Letter Content Box */}
+                  <div className="bg-slate-950/80 p-2.5 rounded-xl border border-rose-500/25 max-h-[160px] overflow-y-auto">
+                    <p className="text-[9px] leading-relaxed text-slate-200 font-medium whitespace-pre-wrap">
+                      {displayMessage}
+                    </p>
+                  </div>
 
-              <div className="flex gap-1.5 justify-center pt-1">
-                <span className="px-3 py-1 text-[9px] rounded-full font-bold bg-emerald-500 text-white shadow-md">
-                  {acceptBtn && acceptBtn !== "Yes! 😍" ? acceptBtn : "Yes, I Forgive You 🥰"}
-                </span>
-                <span className="px-3 py-1 text-[9px] rounded-full font-medium bg-slate-900/90 text-rose-300 border border-rose-500/40">
-                  {rejectBtn && rejectBtn !== "No 🙈" ? rejectBtn : "No 😤"}
-                </span>
+                  {/* Footer */}
+                  <div className="flex justify-between items-center pt-1 text-[8.5px]">
+                    <span className="text-rose-300 font-bold">Forever Yours 💖</span>
+                    <span className="px-2.5 py-1 bg-gradient-to-r from-rose-600 to-pink-600 text-white font-bold rounded-lg shadow-md">
+                      Close Letter & Continue ✨
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
+            ) : (
+              /* Apology Template Step 1 Preview: Front Parcel Unboxing Page */
+              <div className="relative z-10 my-auto space-y-3 px-1 text-center">
+                <div className="relative w-24 h-24 mx-auto bg-gradient-to-tr from-rose-950 via-pink-900 to-purple-950 rounded-2xl border border-rose-300/40 shadow-xl flex flex-col items-center justify-center p-2">
+                  <span className="text-2xl animate-bounce">🎁</span>
+                </div>
+
+                <h4 className="text-sm font-bold text-white tracking-tight drop-shadow">
+                  {displayTitle}
+                </h4>
+
+                <div className="flex justify-center pt-1">
+                  <span className="px-4 py-1.5 text-[9.5px] rounded-full font-bold bg-gradient-to-r from-rose-500 to-purple-600 text-white shadow-md tracking-wider uppercase">
+                    Tap Here ✨
+                  </span>
+                </div>
+              </div>
+            )
           ) : (
             /* Step 1 / Cover View for other templates */
             <div className="relative z-10 my-auto space-y-3 px-1">
