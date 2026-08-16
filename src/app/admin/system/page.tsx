@@ -10,7 +10,9 @@ export default function SystemHealthPage() {
   const [error, setError] = useState("");
 
   // Referral Settings State
-  const [rewardAmount, setRewardAmount] = useState<number>(500);
+  const [rewardType, setRewardType] = useState<"FIXED" | "PERCENTAGE">("FIXED");
+  const [rewardAmount, setRewardAmount] = useState<number>(20);
+  const [rewardPercent, setRewardPercent] = useState<number>(20);
   const [minWithdrawal, setMinWithdrawal] = useState<number>(500);
   const [referralEnabled, setReferralEnabled] = useState<boolean>(true);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
@@ -32,9 +34,11 @@ export default function SystemHealthPage() {
       .then(([healthData, settingsData, pricingData]) => {
         setHealth(healthData);
         if (settingsData.success && settingsData.settings) {
-          setRewardAmount(settingsData.settings.rewardAmount);
-          setMinWithdrawal(settingsData.settings.minWithdrawal);
-          setReferralEnabled(settingsData.settings.enabled);
+          setRewardType((settingsData.settings.rewardType as "FIXED" | "PERCENTAGE") || "FIXED");
+          setRewardAmount(settingsData.settings.rewardAmount ?? 20);
+          setRewardPercent(settingsData.settings.rewardPercent ?? 20);
+          setMinWithdrawal(settingsData.settings.minWithdrawal ?? 50);
+          setReferralEnabled(settingsData.settings.enabled ?? true);
         }
         if (pricingData.success && pricingData.settings) {
           setOriginalPrice(pricingData.settings.originalPrice);
@@ -81,15 +85,18 @@ export default function SystemHealthPage() {
 
     try {
       const res = await updateAdminReferralSettings({
+        rewardType,
         rewardAmount: Number(rewardAmount),
+        rewardPercent: Number(rewardPercent),
         minWithdrawal: Number(minWithdrawal),
         enabled: referralEnabled,
       });
 
       if (res.success) {
+        const rewardDesc = rewardType === "PERCENTAGE" ? `${rewardPercent}%` : `₹${rewardAmount}`;
         setSaveMessage({
           type: "success",
-          text: `Referral settings saved! Reward: ₹${rewardAmount}, Min Withdrawal: ₹${minWithdrawal}, Status: ${referralEnabled ? "Active" : "Disabled"}.`,
+          text: `Referral settings saved! Mode: ${rewardType === "PERCENTAGE" ? "Percentage (%)" : "Fixed Amount (₹)"}, Reward: ${rewardDesc}, Min Withdrawal: ₹${minWithdrawal}, Status: ${referralEnabled ? "Active" : "Disabled"}.`,
         });
       } else {
         setSaveMessage({ type: "error", text: res.error || "Failed to save settings." });
@@ -149,23 +156,73 @@ export default function SystemHealthPage() {
           </div>
         )}
 
-        <form onSubmit={handleSaveReferralSettings} className="space-y-5 max-w-xl">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                Referral Reward (₹)
-              </label>
-              <input
-                type="number"
-                min="0"
-                step="10"
-                value={rewardAmount}
-                onChange={(e) => setRewardAmount(Number(e.target.value))}
-                placeholder="500"
-                className="w-full px-4 py-2.5 bg-[#0a0f1e] border border-slate-700 rounded-xl text-white font-bold text-sm focus:outline-none focus:border-amber-400 transition"
-              />
-              <p className="text-[11px] text-slate-400 mt-1">Amount credited to referrer per paid user</p>
+        <form onSubmit={handleSaveReferralSettings} className="space-y-6 max-w-xl">
+          {/* Reward Calculation Mode Toggle */}
+          <div>
+            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+              Reward Calculation Mode
+            </label>
+            <div className="grid grid-cols-2 gap-3 bg-[#0a0f1e] p-1.5 rounded-xl border border-slate-800">
+              <button
+                type="button"
+                onClick={() => setRewardType("FIXED")}
+                className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 ${
+                  rewardType === "FIXED"
+                    ? "bg-amber-500 text-slate-950 shadow-md"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <span>Fixed Amount (₹)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRewardType("PERCENTAGE")}
+                className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 ${
+                  rewardType === "PERCENTAGE"
+                    ? "bg-amber-500 text-slate-950 shadow-md"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <span>Percentage (%)</span>
+              </button>
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {rewardType === "FIXED" ? (
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                  Referral Reward (₹)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={rewardAmount}
+                  onChange={(e) => setRewardAmount(Number(e.target.value))}
+                  placeholder="20"
+                  className="w-full px-4 py-2.5 bg-[#0a0f1e] border border-slate-700 rounded-xl text-white font-bold text-sm focus:outline-none focus:border-amber-400 transition"
+                />
+                <p className="text-[11px] text-slate-400 mt-1">Fixed ₹ amount credited to referrer per paid user</p>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                  Referral Reward (%)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={rewardPercent}
+                  onChange={(e) => setRewardPercent(Number(e.target.value))}
+                  placeholder="20"
+                  className="w-full px-4 py-2.5 bg-[#0a0f1e] border border-slate-700 rounded-xl text-white font-bold text-sm focus:outline-none focus:border-amber-400 transition"
+                />
+                <p className="text-[11px] text-slate-400 mt-1">% of purchase price credited to referrer per paid user</p>
+              </div>
+            )}
 
             <div>
               <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
@@ -181,6 +238,21 @@ export default function SystemHealthPage() {
                 className="w-full px-4 py-2.5 bg-[#0a0f1e] border border-slate-700 rounded-xl text-white font-bold text-sm focus:outline-none focus:border-amber-400 transition"
               />
               <p className="text-[11px] text-slate-400 mt-1">Minimum wallet balance required for UPI payout</p>
+            </div>
+          </div>
+
+          {/* Live Admin Reward Calculation Preview */}
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3.5 text-xs text-amber-300 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 font-bold">
+              <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>Live Earnings Preview:</span>
+            </div>
+            <div className="text-right font-mono">
+              {rewardType === "PERCENTAGE" ? (
+                <span>On ₹199 purchase → Referrer earns <strong className="text-amber-400 text-sm">₹{((199 * rewardPercent) / 100).toFixed(2)}</strong> ({rewardPercent}%)</span>
+              ) : (
+                <span>On any paid purchase → Referrer earns <strong className="text-amber-400 text-sm">₹{rewardAmount}</strong> (Fixed)</span>
+              )}
             </div>
           </div>
 

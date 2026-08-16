@@ -21,7 +21,9 @@ type ReferralStats = {
     id: string; type: string; amount: number; description: string;
     createdAt: string; status: string;
   }[];
+  rewardType?: "FIXED" | "PERCENTAGE";
   rewardAmount?: number;
+  rewardPercent?: number;
   minWithdrawal?: number;
   referralEnabled?: boolean;
 };
@@ -117,6 +119,9 @@ export default function ReferralPage() {
 
   const walletRupees = (stats?.walletBalance ?? 0) / 100;
   const earnedRupees = (stats?.totalEarned ?? 0) / 100;
+  const rewardLabel = stats?.rewardType === "PERCENTAGE"
+    ? `${stats.rewardPercent ?? 20}%`
+    : `₹${stats?.rewardAmount ?? 20}`;
 
   if (loading) {
     return (
@@ -138,7 +143,7 @@ export default function ReferralPage() {
           Earn & Referrals
         </h1>
         <p className="text-slate-500 mt-1.5 text-sm leading-relaxed">
-          Share OurStory with friends → They sign up &amp; make their first purchase → You earn <span className="font-bold text-emerald-600">₹{stats?.rewardAmount ?? 500}</span> per referral, credited to your wallet instantly!
+          Share OurStory with friends → They sign up &amp; make their first purchase → You earn <span className="font-bold text-emerald-600">{rewardLabel}</span> per referral, credited to your wallet instantly!
         </p>
       </div>
 
@@ -221,7 +226,7 @@ export default function ReferralPage() {
               {[
                 { step: "1", text: "Share your link" },
                 { step: "2", text: "Friend signs up & buys" },
-                { step: "3", text: `You earn ₹${stats?.rewardAmount ?? 500} instantly` },
+                { step: "3", text: `You earn ${rewardLabel} instantly` },
               ].map(s => (
                 <div key={s.step} className="text-xs text-white/70">
                   <div className="w-6 h-6 rounded-full bg-white/15 border border-white/20 flex items-center justify-center text-white font-bold text-xs mx-auto mb-1">{s.step}</div>
@@ -273,7 +278,7 @@ export default function ReferralPage() {
                     ? "bg-emerald-100 text-emerald-700"
                     : "bg-amber-100 text-amber-700"
                 }`}>
-                  {ref.rewardStatus === "EARNED" ? `✅ ₹${stats?.rewardAmount ?? 500} Earned` : "⏳ Pending"}
+                  {ref.rewardStatus === "EARNED" ? `✅ ${rewardLabel} Earned` : "⏳ Pending"}
                 </span>
               </motion.div>
             ))}
@@ -329,8 +334,8 @@ export default function ReferralPage() {
                     type="number"
                     value={withdrawAmount}
                     onChange={e => setWithdrawAmount(e.target.value)}
-                    placeholder={`${stats?.minWithdrawal ?? 500}`}
-                    min={stats?.minWithdrawal ?? 500}
+                    placeholder={`${stats?.minWithdrawal ?? 50}`}
+                    min={stats?.minWithdrawal ?? 50}
                     max={walletRupees}
                     className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-400/20"
                   />

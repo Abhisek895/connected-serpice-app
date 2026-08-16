@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     }
 
     const minWithdrawalSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_min_withdrawal" } });
-    const minWithdrawalINR = minWithdrawalSetting?.value ? parseInt(minWithdrawalSetting.value, 10) : 500;
+    const minWithdrawalINR = minWithdrawalSetting?.value ? parseInt(minWithdrawalSetting.value, 10) : 50;
     const minWithdrawalPaise = minWithdrawalINR * 100;
 
     const amountPaise = Number(amount);

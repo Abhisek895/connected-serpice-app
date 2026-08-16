@@ -13,14 +13,18 @@ export async function GET() {
     const userId = session.user.id;
 
     // 1. Fetch Referral Settings
+    const rewardTypeSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_reward_type" } });
     const rewardSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_reward_amount" } });
+    const rewardPercentSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_reward_percent" } });
     const minWithdrawalSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_min_withdrawal" } });
     const enabledSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_enabled" } });
 
-    const rewardAmount = rewardSetting?.value ? parseInt(rewardSetting.value, 10) : 500;
-    const minWithdrawal = minWithdrawalSetting?.value ? parseInt(minWithdrawalSetting.value, 10) : 500;
+    const rewardType = rewardTypeSetting?.value || "FIXED";
+    const rewardAmount = rewardSetting?.value ? parseInt(rewardSetting.value, 10) : 20;
+    const rewardPercent = rewardPercentSetting?.value ? parseInt(rewardPercentSetting.value, 10) : 20;
+    const minWithdrawal = minWithdrawalSetting?.value ? parseInt(minWithdrawalSetting.value, 10) : 50;
     const referralEnabled = enabledSetting?.value !== "false";
-    const rewardPaise = rewardAmount * 100;
+    const rewardPaise = rewardType === "PERCENTAGE" ? 0 : rewardAmount * 100;
 
     // 2. Fetch User with Referrals and Wallet Transactions
     const user = await prisma.user.findUnique({
@@ -70,13 +74,19 @@ export async function GET() {
           );
 
           if (!hasRewardRecord) {
+            let creditPaise = rewardPaise;
+            if (rewardType === "PERCENTAGE") {
+              const paymentAmountPaise = ref.payments[0]?.amount || 19900;
+              creditPaise = Math.round(paymentAmountPaise * (rewardPercent / 100));
+            }
+
             // Auto-credit missing referral reward to referrer's wallet
             const [newTxn] = await prisma.$transaction([
               prisma.walletTransaction.create({
                 data: {
                   userId,
                   type: "REFERRAL_EARNED",
-                  amount: rewardPaise,
+                  amount: creditPaise,
                   description: `Referral reward for ${ref.name || ref.email}`,
                   referenceId: ref.id,
                   status: "COMPLETED",
@@ -84,11 +94,11 @@ export async function GET() {
               }),
               prisma.user.update({
                 where: { id: userId },
-                data: { walletBalance: { increment: rewardPaise } },
+                data: { walletBalance: { increment: creditPaise } },
               }),
             ]);
 
-            currentWalletBalance += rewardPaise;
+            currentWalletBalance += creditPaise;
             updatedTxns.unshift(newTxn);
           }
         }
@@ -129,7 +139,9 @@ export async function GET() {
       referralCount: user.referrals.length,
       referrals: referralsMapped,
       recentTxns: updatedTxns,
+      rewardType,
       rewardAmount,
+      rewardPercent,
       minWithdrawal,
       referralEnabled,
     });

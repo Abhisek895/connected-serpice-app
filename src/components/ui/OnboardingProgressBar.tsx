@@ -89,13 +89,12 @@ export default function OnboardingProgressBar({
           return (
             <div
               key={idx}
-              className={`p-2 rounded-xl border flex items-center justify-between transition ${
-                isDone
+              className={`p-2 rounded-xl border flex items-center justify-between transition ${isDone
                   ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300 font-semibold"
                   : isCurrent
-                  ? "bg-rose-500/20 border-rose-500/50 text-white font-bold ring-2 ring-rose-500/30 animate-pulse"
-                  : "bg-slate-800/40 border-slate-800 text-slate-400"
-              }`}
+                    ? "bg-rose-500/20 border-rose-500/50 text-white font-bold ring-2 ring-rose-500/30 animate-pulse"
+                    : "bg-slate-800/40 border-slate-800 text-slate-400"
+                }`}
             >
               <span className="truncate">{label}</span>
               {isDone && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 ml-1" />}

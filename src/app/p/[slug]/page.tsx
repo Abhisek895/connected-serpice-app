@@ -66,7 +66,7 @@ export async function generateMetadata(
   let customData: Record<string, any> = {};
   try {
     customData = event.customData ? JSON.parse(event.customData) : {};
-  } catch {}
+  } catch { }
 
   const envUrl = process.env.NEXT_PUBLIC_APP_URL;
   const headersList = await headers();

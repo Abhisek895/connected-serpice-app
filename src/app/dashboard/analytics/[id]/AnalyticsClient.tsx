@@ -14,8 +14,6 @@ type ResponseItem = {
   createdAt: string | Date;
 };
 
-import AnalyticsTourEngine from "@/components/ui/AnalyticsTourEngine";
-
 type AnalyticsClientProps = {
   event: any;
   customData: any;
@@ -87,10 +85,6 @@ export default function AnalyticsClient({ event, customData }: AnalyticsClientPr
 
   return (
     <div className="max-w-5xl mx-auto pb-12">
-      {isTourActive && (
-        <AnalyticsTourEngine onCompleteTour={handleTourComplete} />
-      )}
-
       <div className="mb-6">
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition">
           <ArrowLeft className="w-4 h-4" /> Back to Dashboard
@@ -209,8 +203,8 @@ export default function AnalyticsClient({ event, customData }: AnalyticsClientPr
                             <button
                               onClick={() => toggleSession(session.id)}
                               className={`px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-sm ${isExpanded
-                                  ? "bg-slate-800 text-white hover:bg-slate-700"
-                                  : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+                                ? "bg-slate-800 text-white hover:bg-slate-700"
+                                : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
                                 }`}
                             >
                               {isExpanded ? (
@@ -246,7 +240,7 @@ export default function AnalyticsClient({ event, customData }: AnalyticsClientPr
 
                                     let metaObj: any = null;
                                     if (metaStr) {
-                                      try { metaObj = JSON.parse(metaStr); } catch (e) {}
+                                      try { metaObj = JSON.parse(metaStr); } catch (e) { }
                                     }
 
                                     // Calculate the exact question they saw when they clicked this button

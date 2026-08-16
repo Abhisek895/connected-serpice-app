@@ -48,7 +48,7 @@ export default async function DashboardPage() {
               <p className="text-sm font-bold text-slate-900">
                 {walletBalance > 0
                   ? `💰 Wallet: ₹${(walletBalance / 100).toFixed(0)} available`
-                  : "💰 Earn ₹500 for every friend you refer!"}
+                  : "💰 Earn rewards for every friend you refer!"}
               </p>
               <p className="text-xs text-slate-500">
                 {walletBalance > 0

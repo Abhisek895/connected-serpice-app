@@ -57,14 +57,34 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. ─── REFERRAL REWARD ENGINE ──────────────────────────────────────────
-    // Check if referral system is enabled & get configured reward amount
+    // Check if referral system is enabled & get configured reward settings
     const enabledSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_enabled" } });
     const isReferralEnabled = enabledSetting?.value !== "false";
 
     if (isReferralEnabled) {
+      const rewardTypeSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_reward_type" } });
       const rewardSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_reward_amount" } });
-      const rewardINR = rewardSetting?.value ? parseInt(rewardSetting.value, 10) : 500;
-      const rewardPaise = rewardINR * 100;
+      const rewardPercentSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_reward_percent" } });
+
+      const rewardType = rewardTypeSetting?.value || "FIXED";
+      const rewardFixedINR = rewardSetting?.value ? parseInt(rewardSetting.value, 10) : 20;
+      const rewardPercent = rewardPercentSetting?.value ? parseInt(rewardPercentSetting.value, 10) : 20;
+
+      let rewardPaise = 0;
+      let rewardINRStr = "";
+      let rewardDetailText = "";
+
+      if (rewardType === "PERCENTAGE") {
+        const paymentPaise = payment.finalAmount || payment.amount || 19900;
+        rewardPaise = Math.round(paymentPaise * (rewardPercent / 100));
+        const rewardINR = (rewardPaise / 100);
+        rewardINRStr = rewardINR.toFixed(2);
+        rewardDetailText = `${rewardPercent}% of ₹${(paymentPaise / 100).toFixed(0)} (₹${rewardINRStr})`;
+      } else {
+        rewardPaise = rewardFixedINR * 100;
+        rewardINRStr = rewardFixedINR.toString();
+        rewardDetailText = `₹${rewardFixedINR}`;
+      }
 
       // Only trigger on payer's FIRST successful payment
       const payerSuccessfulPayments = await prisma.payment.count({
@@ -89,13 +109,13 @@ export async function POST(req: NextRequest) {
                 userId: payer.referredById,
                 type: "REFERRAL_EARNED",
                 amount: rewardPaise,
-                description: `Referral reward — your friend ${payer.email?.split("@")[0] || "someone"} made their first purchase! 🎉 (₹${rewardINR})`,
+                description: `Referral reward (${rewardDetailText}) — your friend ${payer.email?.split("@")[0] || "someone"} made their first purchase! 🎉`,
                 referenceId: payment.id,
                 status: "COMPLETED",
               },
             }),
           ]);
-          console.log(`[REFERRAL REWARD] Credited ₹${rewardINR} to referrer ${payer.referredById} for referring ${payer.email}`);
+          console.log(`[REFERRAL REWARD] Credited ₹${rewardINRStr} (${rewardType}) to referrer ${payer.referredById} for referring ${payer.email}`);
         }
       }
     }

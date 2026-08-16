@@ -431,15 +431,19 @@ export async function deleteCoupon(id: string) {
 export async function getAdminReferralSettings() {
   await checkAuth();
   try {
+    const rewardTypeSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_reward_type" } });
     const rewardSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_reward_amount" } });
+    const rewardPercentSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_reward_percent" } });
     const minWithdrawalSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_min_withdrawal" } });
     const enabledSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_enabled" } });
 
     return {
       success: true,
       settings: {
-        rewardAmount: rewardSetting?.value ? parseInt(rewardSetting.value, 10) : 500, // ₹500 default
-        minWithdrawal: minWithdrawalSetting?.value ? parseInt(minWithdrawalSetting.value, 10) : 500, // ₹500 default
+        rewardType: (rewardTypeSetting?.value as "FIXED" | "PERCENTAGE") || "FIXED",
+        rewardAmount: rewardSetting?.value ? parseInt(rewardSetting.value, 10) : 20, // ₹20 default
+        rewardPercent: rewardPercentSetting?.value ? parseInt(rewardPercentSetting.value, 10) : 20, // 20% default
+        minWithdrawal: minWithdrawalSetting?.value ? parseInt(minWithdrawalSetting.value, 10) : 50, // ₹50 default
         enabled: enabledSetting?.value !== "false", // default true
       },
     };
@@ -447,17 +451,21 @@ export async function getAdminReferralSettings() {
     return {
       success: false,
       error: error.message,
-      settings: { rewardAmount: 500, minWithdrawal: 500, enabled: true },
+      settings: { rewardType: "FIXED", rewardAmount: 20, rewardPercent: 20, minWithdrawal: 50, enabled: true },
     };
   }
 }
 
 export async function updateAdminReferralSettings({
+  rewardType = "FIXED",
   rewardAmount,
+  rewardPercent = 20,
   minWithdrawal,
   enabled,
 }: {
+  rewardType?: "FIXED" | "PERCENTAGE";
   rewardAmount: number;
+  rewardPercent?: number;
   minWithdrawal: number;
   enabled: boolean;
 }) {
@@ -465,9 +473,19 @@ export async function updateAdminReferralSettings({
   try {
     await prisma.$transaction([
       prisma.systemSetting.upsert({
+        where: { key: "referral_reward_type" },
+        update: { value: rewardType, description: "Referral reward type: FIXED or PERCENTAGE" },
+        create: { key: "referral_reward_type", value: rewardType, description: "Referral reward type: FIXED or PERCENTAGE" },
+      }),
+      prisma.systemSetting.upsert({
         where: { key: "referral_reward_amount" },
-        update: { value: rewardAmount.toString(), description: "Reward amount in INR per paid referral" },
-        create: { key: "referral_reward_amount", value: rewardAmount.toString(), description: "Reward amount in INR per paid referral" },
+        update: { value: rewardAmount.toString(), description: "Fixed reward amount in INR per paid referral" },
+        create: { key: "referral_reward_amount", value: rewardAmount.toString(), description: "Fixed reward amount in INR per paid referral" },
+      }),
+      prisma.systemSetting.upsert({
+        where: { key: "referral_reward_percent" },
+        update: { value: rewardPercent.toString(), description: "Reward percentage (%) of purchase price per paid referral" },
+        create: { key: "referral_reward_percent", value: rewardPercent.toString(), description: "Reward percentage (%) of purchase price per paid referral" },
       }),
       prisma.systemSetting.upsert({
         where: { key: "referral_min_withdrawal" },
