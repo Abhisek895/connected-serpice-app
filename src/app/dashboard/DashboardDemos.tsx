@@ -157,7 +157,7 @@ export default function DashboardDemos({
 
   return (
     <>
-      <div className="bg-gradient-to-r from-rose-50/60 via-purple-50/40 to-slate-50 border border-rose-100/80 rounded-3xl p-6 md:p-8 shadow-sm relative overflow-hidden mb-8">
+      <div className="bg-gradient-to-r from-rose-50/60 via-purple-50/40 to-slate-50 border border-rose-100/80 rounded-3xl p-6 md:p-8 shadow-sm relative overflow-hidden mb-8 w-full">
 
         {/* Toast Notification */}
         <AnimatePresence>
@@ -203,8 +203,8 @@ export default function DashboardDemos({
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
                   className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition shadow-xs ${selectedCategory === cat.id
-                      ? "bg-slate-900 text-white shadow-md"
-                      : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                    ? "bg-slate-900 text-white shadow-md"
+                    : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
                     }`}
                 >
                   {cat.label}

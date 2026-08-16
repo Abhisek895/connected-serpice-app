@@ -12,7 +12,7 @@ export default function DashboardLayout({
       
       {/* Main Content Viewport */}
       <main className="flex-1 min-w-0 overflow-y-auto pt-20 md:pt-6">
-        <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto w-full">
+        <div className="p-4 sm:p-6 md:p-8 max-w-[1600px] mx-auto w-full">
           {children}
         </div>
       </main>
