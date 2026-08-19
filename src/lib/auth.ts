@@ -31,6 +31,10 @@ export const authOptions: AuthOptions = {
           throw new Error("Your account has been suspended by an administrator.");
         }
 
+        if (user.role === "BANNED") {
+          throw new Error("Your account has been permanently banned by an administrator.");
+        }
+
         const isValidPassword = await bcrypt.compare(credentials.password, user.password);
 
         if (!isValidPassword) {

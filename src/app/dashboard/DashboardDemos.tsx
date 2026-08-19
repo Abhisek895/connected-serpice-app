@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Sparkles, Zap, Loader2, CheckCircle2, Copy, Edit3, Eye, X, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createInstantEventFromTemplate } from "./builder/actions";
@@ -28,6 +28,7 @@ export default function DashboardDemos({
   isPremiumUser?: boolean;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [selectedDemo, setSelectedDemo] = useState<string | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
@@ -48,6 +49,28 @@ export default function DashboardDemos({
   const [instantModalTitle, setInstantModalTitle] = useState("");
 
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
+  // Sync URL search params to modal state on mount or change
+  useEffect(() => {
+    const demoParam = searchParams.get("demo");
+    const actionParam = searchParams.get("action");
+
+    if (demoParam) {
+      if (actionParam === "customize" || actionParam === "builder") {
+        setCustomizeModalDemoId(demoParam);
+      } else if (actionParam === "instant") {
+        setSelectedDemo(demoParam);
+      }
+    }
+  }, [searchParams]);
+
+  const updateUrlParam = (demoId: string | null, action: "instant" | "customize" | null) => {
+    if (demoId && action) {
+      router.push(`/dashboard?demo=${encodeURIComponent(demoId)}&action=${action}`, { scroll: false });
+    } else {
+      router.push("/dashboard", { scroll: false });
+    }
+  };
 
   const activeDemos = demos.map(demo => {
     const dbPricing = themePricing?.find(t => t.name === demo.id);
@@ -71,6 +94,8 @@ export default function DashboardDemos({
   const [appliedCouponCode, setAppliedCouponCode] = useState<string>("");
 
   const handleActionClick = (demoId: string, action: "instant" | "builder") => {
+    const actionType = action === "instant" ? "instant" : "customize";
+    updateUrlParam(demoId, actionType);
     if (action === "instant") {
       // Step 1 FIRST: Open Title Modal to ask for title BEFORE payment!
       setSelectedDemo(demoId);
@@ -79,6 +104,16 @@ export default function DashboardDemos({
       // Try-Before-You-Buy: Always allow free customization first!
       setCustomizeModalDemoId(demoId);
     }
+  };
+
+  const handleCloseCustomize = () => {
+    setCustomizeModalDemoId(null);
+    updateUrlParam(null, null);
+  };
+
+  const handleCloseInstantTitleModal = () => {
+    setSelectedDemo(null);
+    updateUrlParam(null, null);
   };
 
   const handleTitleSubmit = (demoId: string, customTitle: string) => {
@@ -384,7 +419,7 @@ export default function DashboardDemos({
                 autoFocus
               />
               <div className="flex items-center gap-3">
-                <button onClick={() => setSelectedDemo(null)} className="flex-1 px-4 py-3 rounded-xl text-slate-600 font-bold bg-slate-100 hover:bg-slate-200 transition">Cancel</button>
+                <button onClick={handleCloseInstantTitleModal} className="flex-1 px-4 py-3 rounded-xl text-slate-600 font-bold bg-slate-100 hover:bg-slate-200 transition">Cancel</button>
                 <button
                   onClick={() => handleTitleSubmit(selectedDemo, instantModalTitle)}
                   className="flex-1 px-4 py-3 rounded-xl text-white font-bold bg-rose-500 hover:bg-rose-600 transition shadow-sm shadow-rose-200 flex items-center justify-center gap-2"
@@ -402,7 +437,7 @@ export default function DashboardDemos({
         {customizeModalDemoId && (
           <CustomizeModal
             demoId={customizeModalDemoId}
-            onClose={() => setCustomizeModalDemoId(null)}
+            onClose={handleCloseCustomize}
           />
         )}
       </AnimatePresence>

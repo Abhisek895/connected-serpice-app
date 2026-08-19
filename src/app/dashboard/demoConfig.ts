@@ -28,7 +28,9 @@ export const demos: DemoItem[] = [
     image: "/demos/surprise/images.jpeg",
     icon: Sparkles,
     borderColor: "border-rose-200",
-    hasInstantUse: false
+    hasInstantUse: false,
+    price: 7900,
+    durationDays: 14
   },
   {
     id: "birthday-wish",

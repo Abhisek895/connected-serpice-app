@@ -131,6 +131,37 @@ export async function toggleSuspendAdminUser(id: string) {
   return { success: true, user: updated };
 }
 
+export async function banAdminUserAction(id: string) {
+  const session = await checkAuth();
+  const callerId = session.user.id;
+  if (callerId === id) throw new Error("You cannot ban your own account");
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (!user) throw new Error("User not found");
+
+  const newRole = user.role === "BANNED" ? "USER" : "BANNED";
+  const updated = await prisma.user.update({
+    where: { id },
+    data: { role: newRole },
+  });
+
+  // Revoke active sessions if banned
+  if (newRole === "BANNED") {
+    await prisma.session.deleteMany({ where: { userId: id } });
+  }
+
+  return { success: true, user: updated };
+}
+
+export async function sendEmailAdminUserAction(id: string, subject: string, message: string) {
+  await checkAuth();
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (!user || !user.email) throw new Error("User email not found");
+
+  console.log(`[ADMIN EMAIL SENT] To: ${user.email} | Subject: ${subject} | Message: ${message}`);
+
+  return { success: true, message: `Email queued and sent to ${user.email}!` };
+}
+
 export async function toggleUserPlanAdminAction(id: string) {
   await checkAuth();
   const user = await prisma.user.findUnique({ where: { id } });

@@ -8,11 +8,13 @@ import {
   AlertCircle, MessageCircle, Smartphone, Edit3,
 } from "lucide-react";
 import { getTemplateClass, TemplateClass, TemplateField } from "./templateConfig";
+import { demos } from "./demoConfig";
 import {
   createInstantEventFromTemplate,
   uploadMedia,
   getEventCustomData,
   updatePublishedEvent,
+  checkPaymentAccess,
 } from "./builder/actions";
 import { useRouter } from "next/navigation";
 import CanvasConfetti from "@/components/ui/CanvasConfetti";
@@ -217,10 +219,36 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
   const [mobileTab, setMobileTab] = useState<"edit" | "preview">("edit");
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [isEventPaid, setIsEventPaid] = useState(false);
+  const [needsPayment, setNeedsPayment] = useState(false);
+  const [checkingPayment, setCheckingPayment] = useState(true);
 
-  // Pre-fill form when editing an existing event
+  const demoItem = demos.find((d) => d.id === demoId);
+
+  // Pre-fill form when editing an existing event & check payment gate
   useEffect(() => {
     if (!tmpl) return;
+
+    let isMounted = true;
+    const checkAccess = async () => {
+      setCheckingPayment(true);
+      if (editEventId || isPremiumUser) {
+        if (isMounted) {
+          setNeedsPayment(false);
+          setCheckingPayment(false);
+        }
+        return;
+      }
+      const hasPaid = await checkPaymentAccess(demoId);
+      const requiresPayment = (demoItem?.price ?? 0) > 0 && !hasPaid;
+      if (isMounted) {
+        setNeedsPayment(requiresPayment);
+        setIsEventPaid(hasPaid);
+        setCheckingPayment(false);
+      }
+    };
+
+    checkAccess();
+
     if (editEventId) {
       setIsLoading(true);
       getEventCustomData(editEventId).then((res) => {
@@ -235,10 +263,101 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
       // New event: pre-fill with class defaults so user sees defaults
       setFormValues(initFormValues(tmpl, {}));
     }
-  }, [demoId, editEventId]); // eslint-disable-line
+
+    return () => {
+      isMounted = false;
+    };
+  }, [demoId, editEventId, isPremiumUser]); // eslint-disable-line
 
   if (!tmpl) {
     return null; // unknown template
+  }
+
+  if (checkingPayment) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md w-screen h-screen">
+        <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-slate-100 flex flex-col items-center justify-center text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-rose-500 mb-3" />
+          <p className="text-sm font-bold text-slate-700">Checking template access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (needsPayment && demoItem) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto w-screen h-screen">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-rose-100 relative text-center"
+        >
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          <div className="w-16 h-16 bg-rose-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-rose-500 shadow-inner">
+            <Sparkles className="w-8 h-8 fill-rose-500" />
+          </div>
+
+          <span className="px-3 py-1 bg-rose-100 text-rose-700 text-xs font-bold rounded-full uppercase tracking-wider">
+            {demoItem.badge}
+          </span>
+
+          <h3 className="text-2xl font-bold text-slate-900 mt-3 mb-2">
+            Unlock {demoItem.title}
+          </h3>
+
+          <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+            Customize this template with your own photos, secret love letter, background music, and questions before sharing your unique proposal link!
+          </p>
+
+          <div className="bg-rose-50/70 border border-rose-100 rounded-2xl p-4 mb-6 flex items-center justify-between">
+            <div className="text-left">
+              <p className="text-xs font-bold text-rose-800 uppercase tracking-wider">Access Plan</p>
+              <p className="text-sm text-slate-600 mt-0.5">{demoItem.durationDays} Days Active Link</p>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-extrabold text-slate-900">
+                ₹{((demoItem.price ?? 0) / 100).toFixed(0)}
+              </p>
+              <p className="text-[10px] text-slate-400">One-time payment</p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setShowCheckoutModal(true)}
+            className="w-full py-3.5 px-6 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-sm shadow-lg shadow-rose-200 transition flex items-center justify-center gap-2"
+          >
+            <Sparkles className="w-4 h-4 fill-white" /> Pay ₹{((demoItem.price ?? 0) / 100).toFixed(0)} &amp; Unlock Customizer ➔
+          </button>
+
+          <p className="text-xs text-slate-400 mt-4">
+            🔒 Secure payment powered by Razorpay.
+          </p>
+
+          {showCheckoutModal && (
+            <CheckoutModal
+              demoId={demoId}
+              templateName={demoItem.title}
+              originalPrice={demoItem.price ?? 7900}
+              durationDays={demoItem.durationDays ?? 14}
+              isPremiumUser={isPremiumUser}
+              onClose={() => setShowCheckoutModal(false)}
+              onSuccess={() => {
+                setShowCheckoutModal(false);
+                setIsEventPaid(true);
+                setNeedsPayment(false);
+              }}
+            />
+          )}
+        </motion.div>
+      </div>
+    );
   }
 
   const totalSteps = tmpl.steps.length;

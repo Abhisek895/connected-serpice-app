@@ -102,10 +102,12 @@ export async function uploadMedia(eventId: string, formData: FormData) {
   return { success: true, url };
 }
 
-async function generateUserSlug(userId: string): Promise<string> {
+async function generateUserSlug(userId: string, demoId?: string): Promise<string> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   const rawPrefix = user?.name || user?.email?.split("@")[0] || "user";
   const userPrefix = rawPrefix.toLowerCase().replace(/[^a-z0-9]/g, "").substring(0, 14) || "user";
+  const cleanDemo = demoId ? demoId.toLowerCase().replace(/[^a-z0-9-]/g, "") : "";
+  const basePrefix = cleanDemo ? `${cleanDemo}-${userPrefix}` : userPrefix;
 
   let uniqueSlug = "";
   let isUnique = false;
@@ -114,7 +116,7 @@ async function generateUserSlug(userId: string): Promise<string> {
   while (!isUnique && attempts < 15) {
     attempts++;
     const randomHash = Math.random().toString(36).substring(2, 8);
-    uniqueSlug = `${userPrefix}-${randomHash}`;
+    uniqueSlug = `${basePrefix}-${randomHash}`;
     const check = await prisma.event.findUnique({ where: { slug: uniqueSlug } });
     if (!check) {
       isUnique = true;
@@ -122,7 +124,7 @@ async function generateUserSlug(userId: string): Promise<string> {
   }
 
   if (!isUnique) {
-    uniqueSlug = `${userPrefix}-${Date.now()}`;
+    uniqueSlug = `${basePrefix}-${Date.now()}`;
   }
 
   return uniqueSlug;
@@ -140,7 +142,15 @@ export async function publishEvent(eventId: string) {
     return { success: false, error: "Unauthorized or Event not found" };
   }
 
-  const uniqueSlug = await generateUserSlug(userId);
+  let demoId: string | undefined;
+  if (existingEvent.customData) {
+    try {
+      const cd = JSON.parse(existingEvent.customData);
+      demoId = cd.demoId;
+    } catch {}
+  }
+
+  const uniqueSlug = await generateUserSlug(userId, demoId);
 
   const event = await prisma.event.update({
     where: { id: eventId },
@@ -173,7 +183,7 @@ export async function createInstantEventFromTemplate(themeName: string, title?: 
     });
   }
 
-  const uniqueSlug = await generateUserSlug(userId);
+  const uniqueSlug = await generateUserSlug(userId, targetThemeName);
   let defaultUrl = `/p/${uniqueSlug}`;
 
   // Import class defaults from templateConfig to ensure object === class when not customized

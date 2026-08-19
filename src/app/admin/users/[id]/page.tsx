@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, User, ShieldAlert, Mail, Ban, ShieldCheck, Loader2, FileHeart, CreditCard, Gift, Users as UsersIcon } from "lucide-react";
-import { getAdminUserById, updateAdminUserRole, toggleUserPlanAdminAction } from "@/app/admin/actions";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, User, ShieldAlert, Mail, Ban, ShieldCheck, Loader2, FileHeart, CreditCard, Gift, Users as UsersIcon, AlertTriangle, X, CheckCircle2 } from "lucide-react";
+import { getAdminUserById, updateAdminUserRole, toggleUserPlanAdminAction, toggleSuspendAdminUser, banAdminUserAction, sendEmailAdminUserAction } from "@/app/admin/actions";
 import { useAdminAuth } from "@/components/admin/AdminAuthProvider";
 
 export default function UserDetailPage() {
@@ -14,11 +15,21 @@ export default function UserDetailPage() {
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isActionLoading, setIsActionLoading] = useState(false);
+  
+  // Custom Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState<"suspend" | "ban" | "email" | null>(null);
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailMessage, setEmailMessage] = useState("");
+  const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
     getAdminUserById(id as string)
-      .then(setUser)
+      .then((data) => {
+        setUser(data);
+        setEmailSubject(`Important Notice for ${data?.name || data?.email}`);
+        setEmailMessage(`Hello ${data?.name || "User"},\n\nWe are writing regarding your OurStory account (${data?.email})...\n\nBest regards,\nOurStory Team`);
+      })
       .catch(console.error)
       .finally(() => setIsLoading(false));
   }, [id]);
@@ -47,6 +58,55 @@ export default function UserDetailPage() {
       }
     } catch (err: any) {
       alert(err.message || "Failed to update plan.");
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const executeSendEmail = async () => {
+    if (!emailSubject.trim() || !emailMessage.trim()) return;
+    setIsActionLoading(true);
+    try {
+      const res = await sendEmailAdminUserAction(id as string, emailSubject, emailMessage);
+      setActionSuccessMsg(res.message || `Email sent to ${user.email}!`);
+      setConfirmModal(null);
+      setTimeout(() => setActionSuccessMsg(null), 5000);
+    } catch (err: any) {
+      alert(err.message || "Failed to send email.");
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const executeSuspendAccount = async () => {
+    setIsActionLoading(true);
+    try {
+      const res = await toggleSuspendAdminUser(id as string);
+      if (res.success) {
+        setUser({ ...user, role: res.user.role });
+        setActionSuccessMsg(`Account successfully ${res.user.role === "SUSPENDED" ? "suspended" : "reactivated"}!`);
+        setConfirmModal(null);
+        setTimeout(() => setActionSuccessMsg(null), 5000);
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to suspend account.");
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const executeBanUser = async () => {
+    setIsActionLoading(true);
+    try {
+      const res = await banAdminUserAction(id as string);
+      if (res.success) {
+        setUser({ ...user, role: res.user.role });
+        setActionSuccessMsg(`User successfully ${res.user.role === "BANNED" ? "banned" : "unbanned"}!`);
+        setConfirmModal(null);
+        setTimeout(() => setActionSuccessMsg(null), 5000);
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to ban user.");
     } finally {
       setIsActionLoading(false);
     }
@@ -187,14 +247,34 @@ export default function UserDetailPage() {
           <div className="bg-[#111827] border border-slate-800 rounded-xl p-6 shadow-sm">
             <h3 className="text-lg font-bold text-white mb-4">Quick Actions</h3>
             <div className="space-y-3">
-              <button className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm bg-slate-800 text-slate-300 hover:bg-slate-700 transition border border-slate-700">
-                <Mail className="w-4 h-4" /> Send Email
+              <button
+                onClick={() => setConfirmModal("email")}
+                disabled={isActionLoading}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-bold text-sm bg-slate-800 hover:bg-slate-700 text-slate-200 transition border border-slate-700 disabled:opacity-60 cursor-pointer"
+              >
+                <Mail className="w-4 h-4 text-sky-400" /> Send Email
               </button>
-              <button className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm bg-slate-800 text-slate-300 hover:bg-slate-700 transition border border-slate-700">
-                <ShieldCheck className="w-4 h-4" /> Suspend Account
+              <button
+                onClick={() => setConfirmModal("suspend")}
+                disabled={isActionLoading}
+                className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-bold text-sm transition border disabled:opacity-60 cursor-pointer ${
+                  user.role === "SUSPENDED"
+                    ? "bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30"
+                    : "bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700"
+                }`}
+              >
+                <ShieldCheck className="w-4 h-4" /> {user.role === "SUSPENDED" ? "Unsuspend Account" : "Suspend Account"}
               </button>
-              <button className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition border border-rose-500/20">
-                <Ban className="w-4 h-4" /> Ban User
+              <button
+                onClick={() => setConfirmModal("ban")}
+                disabled={isActionLoading}
+                className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-bold text-sm transition border disabled:opacity-60 cursor-pointer ${
+                  user.role === "BANNED"
+                    ? "bg-rose-500 text-white border-rose-400 hover:bg-rose-600"
+                    : "bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border-rose-500/20"
+                }`}
+              >
+                <Ban className="w-4 h-4" /> {user.role === "BANNED" ? "Unban User" : "Ban User"}
               </button>
             </div>
           </div>
@@ -243,6 +323,153 @@ export default function UserDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Custom Confirmation & Action Modals ── */}
+      <AnimatePresence>
+        {confirmModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-[#111827] border border-amber-500/30 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative text-center"
+            >
+              <button
+                onClick={() => setConfirmModal(null)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-slate-800 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {confirmModal === "suspend" && (
+                <>
+                  <div className="w-14 h-14 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 text-amber-400 shadow-inner">
+                    <AlertTriangle className="w-7 h-7" />
+                  </div>
+
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    {user.role === "SUSPENDED" ? "Unsuspend Account?" : "Suspend Account?"}
+                  </h3>
+
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 mb-6 text-left text-xs text-amber-200 leading-relaxed space-y-1.5">
+                    <p className="font-semibold text-amber-300">
+                      Are you sure you want to {user.role === "SUSPENDED" ? "reactivate" : "suspend"} this account (<strong className="text-white underline">{user.email}</strong>)?
+                    </p>
+                    <p className="text-amber-400/90 font-medium">
+                      {user.role === "SUSPENDED"
+                        ? "This will restore user login access to the dashboard."
+                        : "This user will not be able to log in or create proposals until unsuspended."}
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setConfirmModal(null)}
+                      className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={executeSuspendAccount}
+                      disabled={isActionLoading}
+                      className="flex-1 py-3 bg-amber-600 hover:bg-amber-700 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-600/30 transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                    >
+                      {isActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirm Suspend"}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {confirmModal === "ban" && (
+                <>
+                  <div className="w-14 h-14 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 text-rose-500 shadow-inner">
+                    <Ban className="w-7 h-7" />
+                  </div>
+
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    {user.role === "BANNED" ? "Unban User?" : "Ban User?"}
+                  </h3>
+
+                  <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-4 mb-6 text-left text-xs text-rose-200 leading-relaxed space-y-1.5">
+                    <p className="font-semibold text-rose-300">
+                      Are you sure you want to {user.role === "BANNED" ? "unban" : "ban"} this user (<strong className="text-white underline">{user.email}</strong>)?
+                    </p>
+                    <p className="text-rose-400/90 font-medium">
+                      {user.role === "BANNED"
+                        ? "This will remove the ban and allow login."
+                        : "This will immediately revoke active sessions and permanently block access."}
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setConfirmModal(null)}
+                      className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={executeBanUser}
+                      disabled={isActionLoading}
+                      className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs rounded-xl shadow-lg shadow-rose-600/30 transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                    >
+                      {isActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirm Ban"}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {confirmModal === "email" && (
+                <>
+                  <div className="w-14 h-14 bg-sky-500/10 border border-sky-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 text-sky-400 shadow-inner">
+                    <Mail className="w-7 h-7" />
+                  </div>
+
+                  <h3 className="text-xl font-bold text-white mb-2">Send Admin Email</h3>
+                  <p className="text-xs text-slate-400 mb-4">To: <strong className="text-sky-300">{user.email}</strong></p>
+
+                  <div className="space-y-3 text-left mb-6">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider block mb-1">Subject</label>
+                      <input
+                        type="text"
+                        value={emailSubject}
+                        onChange={(e) => setEmailSubject(e.target.value)}
+                        className="w-full px-3 py-2 bg-[#0a0f1e] border border-slate-700 rounded-xl text-white text-xs focus:border-sky-400 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider block mb-1">Message Body</label>
+                      <textarea
+                        rows={4}
+                        value={emailMessage}
+                        onChange={(e) => setEmailMessage(e.target.value)}
+                        className="w-full px-3 py-2 bg-[#0a0f1e] border border-slate-700 rounded-xl text-white text-xs focus:border-sky-400 focus:outline-none leading-relaxed"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setConfirmModal(null)}
+                      className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={executeSendEmail}
+                      disabled={isActionLoading || !emailSubject.trim() || !emailMessage.trim()}
+                      className="flex-1 py-3 bg-sky-600 hover:bg-sky-500 text-white font-black text-xs rounded-xl shadow-lg shadow-sky-600/30 transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                    >
+                      {isActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send Email"}
+                    </button>
+                  </div>
+                </>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

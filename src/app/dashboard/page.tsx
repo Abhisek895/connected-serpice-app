@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import DashboardDemos from "./DashboardDemos";
 import EventCardContainer from "./EventCardContainer";
 import DashboardStats from "./DashboardStats";
@@ -64,7 +65,9 @@ export default async function DashboardPage() {
         </Link>
 
         {/* ── Template Demos ── */}
-        <DashboardDemos themePricing={themePricing} isPremiumUser={isPremiumUser} />
+        <Suspense fallback={<div className="py-8 text-center text-slate-400 text-sm">Loading templates...</div>}>
+          <DashboardDemos themePricing={themePricing} isPremiumUser={isPremiumUser} />
+        </Suspense>
 
         {/* ── Saved Events OR Empty State ── */}
         {events.length > 0 ? (
