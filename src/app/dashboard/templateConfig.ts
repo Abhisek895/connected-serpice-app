@@ -36,7 +36,7 @@ export type TemplateClass = {
 export const TEMPLATE_CLASSES: TemplateClass[] = [
   {
     id: "im-sorry",
-    title: "Cute Forgive Me Proposal 🥺",
+    title: "Apology Storybook & Love Battery 💌🔋",
     hasInstantUse: true,
     defaultData: {
       demoId: "im-sorry",
@@ -49,8 +49,8 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
     },
     steps: [
       {
-        title: "Front Page Title",
-        description: "Customize the main header title displayed on the front page.",
+        title: "Front Page Title & Greeting",
+        description: "Customize the main header title and recipient name.",
         fields: [
           {
             key: "title",
@@ -61,7 +61,15 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
               "I'm Really Sorry... 🥺",
               "Please Hear Me Out... 💌",
               "A Message From My Heart 💖",
+              "Give Me One More Chance... 🥺",
             ],
+          },
+          {
+            key: "recipientName",
+            label: "Recipient / Partner Name",
+            type: "text",
+            placeholder: "Someone Special ✨",
+            presetSuggestions: ["My Cutie ❤️", "My Love 🌸", "Someone Special ✨"],
           },
         ],
       },
@@ -75,6 +83,24 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
             type: "textarea",
             placeholder: "Write your special heart-felt apology letter here...",
             hint: "Revealed inside the 'A Letter From My Heart 💌' drawer modal.",
+            presetSuggestions: [
+              "I am so deeply sorry for making you upset. You mean the entire world to me, and seeing you hurt breaks my heart into a million pieces. Please give me another chance! I love you endlessly ❤️",
+              "I know I made a mistake, but my love for you is 1000% real. I promise to treat you like the queen you are every single day. Forgive me please? 🥺",
+            ],
+          },
+          {
+            key: "_photo",
+            label: "Apology Memory Photo (optional)",
+            type: "file-image",
+            accept: "image/*",
+            hint: "Custom memory photo displayed on the Polaroid card.",
+          },
+          {
+            key: "_audio",
+            label: "Background Music (optional)",
+            type: "file-audio",
+            accept: "audio/*",
+            hint: "Replaces default music.",
           },
         ],
       },
@@ -88,46 +114,78 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
       demoId: "she-cant-say-no",
       title: "Do you love me? 🤗",
       question: "Do you love me? 🤗",
-      acceptBtn: "Yes",
-      rejectBtn: "No",
-      recipientName: "mvn",
+      acceptBtn: "Yes 😍",
+      rejectBtn: "No 🙈",
+      recipientName: "Someone Special ✨",
+      dodgeMessages: "Ek aur baar Soch lo! 🥺\nPlease think again! 😳\nbeautiful pls Man jao na! Kitna code likh waogi 😭",
     },
     steps: [
       {
         title: "Proposal Page Customization",
-        description: "Customize title, proposal question, and button labels.",
+        description: "Customize title, proposal question, recipient name, and button text.",
         fields: [
           {
             key: "title",
             label: "Opening Question Title",
             type: "text",
             placeholder: "Do you love me? 🤗",
+            presetSuggestions: [
+              "Do you love me? 🤗",
+              "Will you go out on a date with me? 🌹",
+              "Be my Valentine forever? 💖",
+              "Will you marry me? 💍",
+            ],
           },
           {
             key: "recipientName",
-            label: "Recipient Name / Note",
+            label: "Recipient Name",
             type: "text",
-            placeholder: "mvn",
-            hint: "Renders as '[Name] is all yours'",
+            placeholder: "Someone Special ✨",
+            presetSuggestions: ["Priya ✨", "My Cutie ❤️", "Someone Special ✨"],
           },
           {
             key: "acceptBtn",
             label: "Yes Button Text",
             type: "text",
-            placeholder: "Yes",
+            placeholder: "Yes 😍",
+            presetSuggestions: ["Yes 😍", "Of course! ❤️", "100% Yes! 🎉"],
           },
           {
             key: "rejectBtn",
             label: "No Button Text",
             type: "text",
-            placeholder: "No",
+            placeholder: "No 🙈",
+            presetSuggestions: ["No 🙈", "Never 😜", "Maybe 🤔"],
           },
+        ],
+      },
+      {
+        title: "Dodging 'No' Messages & Media",
+        description: "Customize the funny messages shown when they try to click No, and add optional photo/music.",
+        fields: [
           {
             key: "dodgeMessages",
-            label: "Dodging Messages (One per line)",
+            label: "Dodging 'No' Messages (One per line)",
             type: "textarea",
             placeholder: "Ek aur baar Soch lo! 🥺\nPlease think again! 😳\nbeautiful pls Man jao na! Kitna code likh waogi 😭",
-            hint: "Messages displayed sequentially as the recipient clicks/hovers No.",
+            hint: "Messages displayed sequentially as the recipient hovers or tries to click 'No'.",
+            presetSuggestions: [
+              "Ek aur baar Soch lo! 🥺\nPlease think again! 😳\nbeautiful pls Man jao na! Kitna code likh waogi 😭\nOkay now you HAVE to say Yes! ❤️",
+            ],
+          },
+          {
+            key: "_photo",
+            label: "Couple / Cat Sticker Photo (optional)",
+            type: "file-image",
+            accept: "image/*",
+            hint: "Upload a cute photo to show on the proposal card.",
+          },
+          {
+            key: "_audio",
+            label: "Romantic Audio Track (optional)",
+            type: "file-audio",
+            accept: "audio/*",
+            hint: "Replaces default background music.",
           },
         ],
       },
@@ -169,6 +227,7 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
             label: "Recipient / Partner Name",
             type: "text",
             placeholder: "Someone Special ✨",
+            presetSuggestions: ["Priya ✨", "My Cutie ❤️", "Someone Special ✨"],
           },
           {
             key: "loveMessage",
@@ -238,32 +297,40 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
             label: "Birthday Title",
             type: "text",
             placeholder: "Happy Birthday! 🎂",
+            presetSuggestions: [
+              "Happy Birthday! 🎂",
+              "Happy Birthday My Princess! 👑",
+              "Cheers to Another Amazing Year! 🎉",
+            ],
           },
           {
             key: "recipientName",
             label: "Recipient Name",
             type: "text",
             placeholder: "Someone Special ✨",
+            presetSuggestions: ["Priya ✨", "My Love 🌸", "Someone Special ✨"],
           },
           {
             key: "question",
             label: "Birthday Wish Heading",
             type: "text",
             placeholder: "Wishing you the happiest birthday! 🎂",
+            presetSuggestions: [
+              "Wishing you the happiest birthday! 🎂",
+              "Sending you endless love & warm hugs on your birthday! 💖",
+            ],
           },
           {
             key: "acceptBtn",
             label: "Positive Choice Button Text",
             type: "text",
             placeholder: "Love ❤️",
-            hint: "Text shown on the main interactive pink button.",
           },
           {
             key: "rejectBtn",
             label: "Funny Reaction Button Text",
             type: "text",
             placeholder: "Hate 💔",
-            hint: "Text shown on the second button.",
           },
           {
             key: "loveMessage",
@@ -271,19 +338,23 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
             type: "textarea",
             placeholder: "May all your dreams come true…",
             hint: "Shown with typewriter effect when they click 'Read My Message 💌'",
+            presetSuggestions: [
+              "May all your dreams come true. You deserve all the happiness, laughter, and sweetness in the world! Happy Birthday! 🎉",
+              "To the person who lights up every room — happy birthday! I am so grateful to have you in my life. ❤️",
+            ],
           },
         ],
       },
       {
         title: "Slideshow Photos & Music",
-        description: "Upload up to 6 slideshow photos (shown in rotation on the birthday card) and optional music.",
+        description: "Upload up to 3 slideshow photos (shown in rotation on the birthday card) and optional music.",
         fields: [
           {
             key: "_photo",
             label: "Slideshow Photo 1",
             type: "file-image",
             accept: "image/*",
-            hint: "Up to 6 photos shown in rotation. Leave empty to use default demo photos.",
+            hint: "Up to 3 photos shown in rotation. Leave empty to use default demo photos.",
           },
           {
             key: "_photo2",
@@ -310,7 +381,7 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
   },
   {
     id: "nasamajh-lakri",
-    title: "Cute Mey Proposal ❤️",
+    title: "Nasamajh Lakri Proposal ❤️",
     hasInstantUse: true,
     defaultData: {
       demoId: "nasamajh-lakri",
@@ -319,6 +390,7 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
       acceptBtn: "Yes 😍",
       rejectBtn: "No 🙈",
       recipientName: "Someone Special ✨",
+      dodgeMessages: "piliiiiiizzzzzzzzzzzzzzzzzzzzz? 💔\nThink again, piliiiiiizzzzzzzzzzzzzzzzzzzzzzz? 🌻",
     },
     steps: [
       {
@@ -330,18 +402,29 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
             label: "Opening Title",
             type: "text",
             placeholder: "Hi, Cute Mey 😊",
+            presetSuggestions: [
+              "Hi, Cute Mey 😊",
+              "Suno Na... ❤️",
+              "Hey Gorgeous 🌸",
+            ],
           },
           {
             key: "recipientName",
             label: "Recipient Name",
             type: "text",
             placeholder: "Someone Special ✨",
+            presetSuggestions: ["Priya ✨", "Cute Mey ❤️", "Someone Special ✨"],
           },
           {
             key: "question",
             label: "The Big Proposal Question",
             type: "text",
             placeholder: "Will you be mine? 💖",
+            presetSuggestions: [
+              "Will you be mine? 💖",
+              "Will you be my Valentine? 🌹",
+              "Wanna go out on a romantic date? ✨",
+            ],
           },
           {
             key: "acceptBtn",
@@ -355,12 +438,35 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
             type: "text",
             placeholder: "No 🙈",
           },
+        ],
+      },
+      {
+        title: "Dodging 'No' Messages & Music",
+        description: "Customize the funny messages shown when they try to click No, and add optional music.",
+        fields: [
           {
             key: "dodgeMessages",
             label: "Funny 'No' Button Messages (One per line)",
             type: "textarea",
             placeholder: "piliiiiiizzzzzzzzzzzzzzzzzzzzz? 💔\nThink again, piliiiiiizzzzzzzzzzzzzzzzzzzzzzz? 🌻",
             hint: "These messages show up one by one every time your partner tries to click 'No'. Put each message on a new line.",
+            presetSuggestions: [
+              "piliiiiiizzzzzzzzzzzzzzzzzzzzz? 💔\nThink again, piliiiiiizzzzzzzzzzzzzzzzzzzzzzz? 🌻\nItni pyaari baat pe bhi No? 🥺\nMan jao na ab! ❤️",
+            ],
+          },
+          {
+            key: "_photo",
+            label: "Couple Photo (optional)",
+            type: "file-image",
+            accept: "image/*",
+            hint: "Upload a photo to render on the proposal success screen.",
+          },
+          {
+            key: "_audio",
+            label: "Custom Background Music (optional)",
+            type: "file-audio",
+            accept: "audio/*",
+            hint: "Replaces default romantic audio track.",
           },
         ],
       },
@@ -375,25 +481,83 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
       title: "Date Planner 🌸",
       question: "Let's plan our perfect date! 🌸",
       recipientName: "Someone Special ✨",
+      foodOptions: "Biryani, Momo, Fuchka, Kathi Roll",
+      activityOptions: "Victoria Memorial Walk, Howrah Bridge Sunset Boat Ride, Coffee at Park Street",
       hasDefaultMusic: true,
       hasSummaryCard: true,
     },
     steps: [
       {
-        title: "Date Planner Customization",
-        description: "Personalize the title and recipient name for your Kolkata date night.",
+        title: "Date Planner Header & Recipient",
+        description: "Personalize the title, proposal question, and recipient name for your Kolkata date night.",
         fields: [
           {
             key: "title",
             label: "Planner Title",
             type: "text",
             placeholder: "Date Planner 🌸",
+            presetSuggestions: [
+              "Kolkata Date Night Planner 🌸",
+              "Our Special Kolkata Date 💕",
+              "A Romantic Evening Together ✨",
+            ],
           },
           {
             key: "recipientName",
             label: "Recipient / Partner Name",
             type: "text",
             placeholder: "Someone Special ✨",
+            presetSuggestions: ["Priya ✨", "My Love 🌸", "Someone Special ✨"],
+          },
+          {
+            key: "question",
+            label: "Opening Invitation Heading",
+            type: "text",
+            placeholder: "Let's plan our perfect date! 🌸",
+            presetSuggestions: [
+              "Let's plan our perfect date! 🌸",
+              "Would you go on a Kolkata date night with me? 💖",
+            ],
+          },
+        ],
+      },
+      {
+        title: "Date Menu & Activity Customization",
+        description: "Customize the food choices, date activities, and optional cover photo or music.",
+        fields: [
+          {
+            key: "foodOptions",
+            label: "Food Menu Items (Comma-separated)",
+            type: "text",
+            placeholder: "Biryani, Momo, Fuchka, Kathi Roll",
+            presetSuggestions: [
+              "Biryani, Momo, Fuchka, Kathi Roll",
+              "Pizza, Pasta, Brownie, Cold Coffee",
+            ],
+          },
+          {
+            key: "activityOptions",
+            label: "Date Activity Options (Comma-separated)",
+            type: "text",
+            placeholder: "Victoria Memorial Walk, Howrah Bridge Sunset Boat Ride, Coffee at Park Street",
+            presetSuggestions: [
+              "Victoria Memorial Walk, Sunset Boat Ride, Coffee at Park Street",
+              "St. Paul's Cathedral, Nandan Movie Date, Candlelight Dinner",
+            ],
+          },
+          {
+            key: "_photo",
+            label: "Cover / Couple Photo (optional)",
+            type: "file-image",
+            accept: "image/*",
+            hint: "Custom photo shown on the date summary card.",
+          },
+          {
+            key: "_audio",
+            label: "Background Music (optional)",
+            type: "file-audio",
+            accept: "audio/*",
+            hint: "Replaces default 'Tum Se Hi' music track.",
           },
         ],
       },
@@ -408,25 +572,83 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
       title: "Date Planner 🌿",
       question: "Let's plan our perfect date! 🌿",
       recipientName: "Someone Special ✨",
+      foodOptions: "Momo, Thukpa, Darjeeling Tea, Fried Rice",
+      activityOptions: "Tea Garden Stroll, Murti River Sunset Picnic, Malbazar Long Drive",
       hasDefaultMusic: true,
       hasSummaryCard: true,
     },
     steps: [
       {
-        title: "Date Planner Customization",
-        description: "Personalize the title and recipient name for your Jalpaiguri date night.",
+        title: "Date Planner Header & Recipient",
+        description: "Personalize the title, invitation question, and recipient name for your Jalpaiguri date night.",
         fields: [
           {
             key: "title",
             label: "Planner Title",
             type: "text",
             placeholder: "Date Planner 🌿",
+            presetSuggestions: [
+              "Jalpaiguri Date Night Planner 🌿",
+              "Tea Garden Romantic Date 💕",
+              "Our Dooars Getaway Evening ✨",
+            ],
           },
           {
             key: "recipientName",
             label: "Recipient / Partner Name",
             type: "text",
             placeholder: "Someone Special ✨",
+            presetSuggestions: ["Priya ✨", "My Love 🌸", "Someone Special ✨"],
+          },
+          {
+            key: "question",
+            label: "Opening Invitation Heading",
+            type: "text",
+            placeholder: "Let's plan our perfect date! 🌿",
+            presetSuggestions: [
+              "Let's plan our perfect date! 🌿",
+              "Let me take you on a magical tea garden date! 💖",
+            ],
+          },
+        ],
+      },
+      {
+        title: "Date Menu & Activity Customization",
+        description: "Customize the food choices, date activities, and optional cover photo or music.",
+        fields: [
+          {
+            key: "foodOptions",
+            label: "Food Menu Items (Comma-separated)",
+            type: "text",
+            placeholder: "Momo, Thukpa, Darjeeling Tea, Fried Rice",
+            presetSuggestions: [
+              "Momo, Thukpa, Darjeeling Tea, Fried Rice",
+              "Pastry, Chicken Roll, Espresso Coffee",
+            ],
+          },
+          {
+            key: "activityOptions",
+            label: "Date Activity Options (Comma-separated)",
+            type: "text",
+            placeholder: "Tea Garden Stroll, Murti River Sunset Picnic, Malbazar Long Drive",
+            presetSuggestions: [
+              "Tea Garden Stroll, Murti River Sunset Picnic, Malbazar Long Drive",
+              "Teesta River Walk, Rajbari Lake Sunset, Cozy Evening Coffee",
+            ],
+          },
+          {
+            key: "_photo",
+            label: "Cover / Couple Photo (optional)",
+            type: "file-image",
+            accept: "image/*",
+            hint: "Custom photo shown on the date summary card.",
+          },
+          {
+            key: "_audio",
+            label: "Background Music (optional)",
+            type: "file-audio",
+            accept: "audio/*",
+            hint: "Replaces default 'Tum Se Hi' music track.",
           },
         ],
       },

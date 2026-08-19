@@ -273,93 +273,6 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
     return null; // unknown template
   }
 
-  if (checkingPayment) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md w-screen h-screen">
-        <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-slate-100 flex flex-col items-center justify-center text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-rose-500 mb-3" />
-          <p className="text-sm font-bold text-slate-700">Checking template access...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (needsPayment && demoItem) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto w-screen h-screen">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-rose-100 relative text-center"
-        >
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition"
-          >
-            <X className="w-5 h-5" />
-          </button>
-
-          <div className="w-16 h-16 bg-rose-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-rose-500 shadow-inner">
-            <Sparkles className="w-8 h-8 fill-rose-500" />
-          </div>
-
-          <span className="px-3 py-1 bg-rose-100 text-rose-700 text-xs font-bold rounded-full uppercase tracking-wider">
-            {demoItem.badge}
-          </span>
-
-          <h3 className="text-2xl font-bold text-slate-900 mt-3 mb-2">
-            Unlock {demoItem.title}
-          </h3>
-
-          <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-            Customize this template with your own photos, secret love letter, background music, and questions before sharing your unique proposal link!
-          </p>
-
-          <div className="bg-rose-50/70 border border-rose-100 rounded-2xl p-4 mb-6 flex items-center justify-between">
-            <div className="text-left">
-              <p className="text-xs font-bold text-rose-800 uppercase tracking-wider">Access Plan</p>
-              <p className="text-sm text-slate-600 mt-0.5">{demoItem.durationDays} Days Active Link</p>
-            </div>
-            <div className="text-right">
-              <p className="text-2xl font-extrabold text-slate-900">
-                ₹{((demoItem.price ?? 0) / 100).toFixed(0)}
-              </p>
-              <p className="text-[10px] text-slate-400">One-time payment</p>
-            </div>
-          </div>
-
-          <button
-            onClick={() => setShowCheckoutModal(true)}
-            className="w-full py-3.5 px-6 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-sm shadow-lg shadow-rose-200 transition flex items-center justify-center gap-2"
-          >
-            <Sparkles className="w-4 h-4 fill-white" /> Pay ₹{((demoItem.price ?? 0) / 100).toFixed(0)} &amp; Unlock Customizer ➔
-          </button>
-
-          <p className="text-xs text-slate-400 mt-4">
-            🔒 Secure payment powered by Razorpay.
-          </p>
-
-          {showCheckoutModal && (
-            <CheckoutModal
-              demoId={demoId}
-              templateName={demoItem.title}
-              originalPrice={demoItem.price ?? 7900}
-              durationDays={demoItem.durationDays ?? 14}
-              isPremiumUser={isPremiumUser}
-              onClose={() => setShowCheckoutModal(false)}
-              onSuccess={() => {
-                setShowCheckoutModal(false);
-                setIsEventPaid(true);
-                setNeedsPayment(false);
-              }}
-            />
-          )}
-        </motion.div>
-      </div>
-    );
-  }
-
   const totalSteps = tmpl.steps.length;
   const step = tmpl.steps[currentStep];
 
@@ -405,6 +318,10 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
   };
 
   const handleSubmit = async () => {
+    if (needsPayment && !isEventPaid) {
+      setShowCheckoutModal(true);
+      return;
+    }
     setIsSubmitting(true);
     setError(null);
 
@@ -528,7 +445,7 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 10 }}
-        className="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-rose-100 relative"
+        className="bg-white rounded-3xl max-w-5xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-rose-100 relative"
       >
         {/* Header */}
         <div className="sticky top-0 z-40 bg-white rounded-t-3xl border-b border-slate-100 px-6 pt-5 pb-4 flex items-center justify-between">
@@ -553,33 +470,9 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
         </div>
 
         <div className="p-4 sm:p-6">
-          {/* Mobile Segmented Tab Control */}
-          <div className="flex md:hidden p-1 bg-slate-100 rounded-2xl mb-4 text-xs font-bold border border-slate-200/60">
-            <button
-              type="button"
-              onClick={() => setMobileTab("edit")}
-              className={`flex-1 py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 ${mobileTab === "edit"
-                ? "bg-white text-slate-900 shadow-sm border border-slate-100"
-                : "text-slate-500 hover:text-slate-700"
-                }`}
-            >
-              <Edit3 className="w-3.5 h-3.5 text-rose-500" /> Edit Details
-            </button>
-            <button
-              type="button"
-              onClick={() => setMobileTab("preview")}
-              className={`flex-1 py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 ${mobileTab === "preview"
-                ? "bg-white text-rose-600 shadow-sm border border-slate-100"
-                : "text-slate-500 hover:text-slate-700"
-                }`}
-            >
-              <Smartphone className="w-3.5 h-3.5 text-rose-500" /> Live Preview ✨
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
             {/* Left Column: Form Inputs */}
-            <div className={`${mobileTab === "edit" ? "block" : "hidden"} md:block md:col-span-7 space-y-4`}>
+            <div className="lg:col-span-7 space-y-4">
               {/* Step Progress */}
               {totalSteps > 1 && (
                 <div className="flex items-center gap-2 mb-2">
@@ -644,24 +537,18 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
                     <span>{error}</span>
                   </div>
                 )}
-
-
               </div>
             </div>
 
-            {/* Right Column: Interactive Live Phone Preview */}
-            <div className={`${mobileTab === "preview" ? "flex" : "hidden"} md:flex md:col-span-5 flex-col items-center justify-center bg-slate-50 rounded-2xl p-3 py-4 border border-slate-100 self-center w-full`}>
+            {/* Right Column: Interactive Live Phone Preview (Always Visible On All Screen Sizes) */}
+            <div className="lg:col-span-5 flex flex-col items-center justify-center bg-slate-50 rounded-2xl p-4 border border-slate-100 w-full sticky top-20">
               <div className="w-full flex items-center justify-between mb-3 px-1">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                   <Smartphone className="w-4 h-4 text-rose-500" /> Live Recipient View
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setMobileTab("edit")}
-                  className="md:hidden text-[11px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 px-3 py-1 rounded-xl border border-rose-200 transition"
-                >
-                  ✍️ Back to Form
-                </button>
+                <span className="text-[10px] font-bold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
+                  Updates Live ✨
+                </span>
               </div>
               <LivePhonePreview
                 demoId={demoId}
@@ -721,6 +608,23 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
           )}
         </div>
       </motion.div>
+
+      {showCheckoutModal && demoItem && (
+        <CheckoutModal
+          demoId={demoId}
+          templateName={demoItem.title}
+          originalPrice={demoItem.price ?? 7900}
+          durationDays={demoItem.durationDays ?? 14}
+          isPremiumUser={isPremiumUser}
+          onClose={() => setShowCheckoutModal(false)}
+          onSuccess={() => {
+            setShowCheckoutModal(false);
+            setIsEventPaid(true);
+            setNeedsPayment(false);
+            handleSubmit();
+          }}
+        />
+      )}
     </div>
   );
 }

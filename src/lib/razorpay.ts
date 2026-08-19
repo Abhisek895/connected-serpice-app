@@ -1,13 +1,14 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
 
-const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || "rzp_test_dummykey";
-const keySecret = process.env.RAZORPAY_KEY_SECRET || "dummysecret";
-
-export const razorpay = new Razorpay({
-  key_id: keyId,
-  key_secret: keySecret,
-});
+export function getRazorpay() {
+  const keyId = process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "";
+  const keySecret = process.env.RAZORPAY_KEY_SECRET || "";
+  return new Razorpay({
+    key_id: keyId,
+    key_secret: keySecret,
+  });
+}
 
 /**
  * Checks if production/test Razorpay keys are configured and not placeholders.

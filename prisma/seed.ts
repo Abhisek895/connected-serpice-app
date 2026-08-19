@@ -103,7 +103,20 @@ async function main() {
     });
   }
 
+  // Seed the GUEST system user — all no-login guest purchases link to this account
+  await prisma.user.upsert({
+    where: { email: "guest@ourstory.internal" },
+    update: {},
+    create: {
+      email: "guest@ourstory.internal",
+      name: "OurStory Guest",
+      role: "GUEST",
+      plan: "GUEST",
+    },
+  });
+
   console.log("Database has been seeded with FREE100% and FREE1 trial coupons! 🚀");
+  console.log("GUEST system user seeded! 👤");
 }
 
 main()

@@ -222,6 +222,38 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
                 </div>
               </div>
             )
+          ) : isStep2 ? (
+            /* Step 2 View for Dodge / Planner / Media templates */
+            <div className="relative z-10 my-auto space-y-3 px-1 w-full text-center">
+              {isPlanner ? (
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-3 text-white space-y-2">
+                  <span className="text-xs font-bold text-rose-300 block">🌸 Menu & Date Plan Summary</span>
+                  <div className="bg-black/40 rounded-xl p-2 text-left space-y-1 text-[9.5px]">
+                    <p className="text-rose-200 font-bold">🍔 Food Menu:</p>
+                    <p className="text-slate-300 truncate">{formValues["foodOptions"] || defaultData["foodOptions"] || "Biryani, Momo, Fuchka"}</p>
+                    <p className="text-rose-200 font-bold pt-1">📍 Activities:</p>
+                    <p className="text-slate-300 truncate">{formValues["activityOptions"] || defaultData["activityOptions"] || "Victoria Walk, Boat Ride"}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-3 text-white space-y-2">
+                  <span className="text-xs font-bold text-rose-300 block">😜 Dodging 'No' Messages Preview</span>
+                  <div className="bg-black/50 rounded-xl p-2 text-left text-[9.5px] text-rose-100 space-y-1 max-h-[120px] overflow-y-auto font-mono">
+                    {(formValues["dodgeMessages"] || defaultData["dodgeMessages"] || "Think again! 🥺")
+                      .split("\n")
+                      .map((msg: string, idx: number) => (
+                        <p key={idx} className="truncate">▪ {msg}</p>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {photoUrl && (
+                <div className="w-16 h-16 rounded-xl overflow-hidden mx-auto border border-white/30 shadow-md">
+                  <img src={photoUrl} alt="Uploaded Media" className="w-full h-full object-cover" />
+                </div>
+              )}
+            </div>
           ) : (
             /* Step 1 / Cover View for other templates */
             <div className="relative z-10 my-auto space-y-3 px-1">

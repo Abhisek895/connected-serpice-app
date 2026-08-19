@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { razorpay } from "@/lib/razorpay";
+import { getRazorpay } from "@/lib/razorpay";
 import { prisma } from "@/lib/prisma"; // Assuming standard prisma location
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth"; // Update if auth logic is elsewhere
@@ -75,6 +75,7 @@ export async function POST(req: NextRequest) {
         },
       };
 
+      const razorpay = getRazorpay();
       const order = await razorpay.orders.create(options);
       if (!order) {
         return NextResponse.json({ error: "Failed to create order" }, { status: 500 });

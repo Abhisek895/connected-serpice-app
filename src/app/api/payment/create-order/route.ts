@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
-import { razorpay, hasValidRazorpayKeys } from "@/lib/razorpay";
+import { getRazorpay, hasValidRazorpayKeys } from "@/lib/razorpay";
 
 export async function POST(req: Request) {
   try {
@@ -144,6 +144,7 @@ export async function POST(req: Request) {
           receipt: `rcpt_${userId}_${Date.now()}`,
         };
 
+        const razorpay = getRazorpay();
         const order = await razorpay.orders.create(orderOptions);
         if (order && order.id) {
           orderId = order.id;
