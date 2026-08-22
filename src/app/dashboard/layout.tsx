@@ -1,4 +1,5 @@
 import DashboardSidebar from "./DashboardSidebar";
+import Link from "next/link";
 
 export default function DashboardLayout({
   children,
@@ -16,6 +17,15 @@ export default function DashboardLayout({
           {children}
         </div>
       </main>
+
+      {/* Mobile FAB — Create New + */}
+      <Link
+        href="/dashboard/builder"
+        className="md:hidden fixed bottom-5 right-5 z-40 flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-rose-500 to-pink-600 text-white font-extrabold text-sm rounded-full shadow-xl shadow-rose-500/40 hover:shadow-rose-500/60 hover:scale-105 transition-all active:scale-95"
+      >
+        <span className="text-lg leading-none">+</span>
+        <span>Create</span>
+      </Link>
     </div>
   );
 }

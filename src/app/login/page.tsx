@@ -158,11 +158,7 @@ function LoginForm() {
         {/* Google OAuth Button */}
         <button
           type="button"
-          onClick={() => {
-            setEmail("sarkarabhisek50@gmail.com");
-            setPassword("Abhisek@123");
-            setError("Google OAuth requires real credentials in .env. We have auto-filled your credentials above! Click 'Sign In' below.");
-          }}
+          onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
           className="w-full py-3 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-sm rounded-2xl transition flex items-center justify-center gap-3 shadow-sm"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">

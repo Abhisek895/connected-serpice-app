@@ -346,12 +346,12 @@ export default function DashboardDemos({
                     className="w-full py-1.5 px-3 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold transition flex items-center justify-between group"
                   >
                     <span className="flex items-center gap-1.5">
-                      <Eye className="w-3.5 h-3.5 text-slate-500 group-hover:text-rose-500" /> 1. Preview Demo
+                      <Eye className="w-3.5 h-3.5 text-slate-500 group-hover:text-rose-500" /> Preview Demo
                     </span>
                     <span className="text-[10px] text-slate-400 font-normal">Test Live</span>
                   </a>
 
-                  {/* 2. Use As-Is (Instant) — only for instant templates */}
+                  {/* Use As-Is (Instant) — only for instant templates */}
                   {demo.hasInstantUse && (
                     <button
                       onClick={() => handleActionClick(demo.id, "instant")}
@@ -365,7 +365,7 @@ export default function DashboardDemos({
                         ) : (
                           <Zap className="w-3.5 h-3.5 fill-white" />
                         )}
-                        {demo.hasInstantUse && !isPaid ? "2. Use As-Is (Instant)" : "Use As-Is (Instant)"}
+                        Use As-Is (Instant)
                       </span>
                       <span className="text-[10px] bg-rose-600 px-1.5 py-0.5 rounded font-normal">Direct Link</span>
                     </button>
@@ -382,7 +382,7 @@ export default function DashboardDemos({
                   >
                     <span className="flex items-center gap-1.5">
                       <Edit3 className="w-3.5 h-3.5" />
-                      {!demo.hasInstantUse ? "2. Edit & Customize" : "3. Edit & Customize"}
+                      Edit & Customize
                     </span>
                     <span className="text-[10px] opacity-80 font-normal">Add Your Text/Photos</span>
                   </button>
@@ -410,19 +410,26 @@ export default function DashboardDemos({
             >
               <h3 className="text-xl font-bold text-slate-900 mb-2">Give it a Title 🎀</h3>
               <p className="text-sm text-slate-500 mb-4">What would you like to call this event?</p>
-              <input
-                type="text"
-                value={instantModalTitle}
-                onChange={(e) => setInstantModalTitle(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-rose-400 focus:ring-4 focus:ring-rose-100 transition outline-none text-slate-800 mb-5"
-                placeholder="e.g. For Sarah ❤️"
-                autoFocus
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={instantModalTitle}
+                  onChange={(e) => setInstantModalTitle(e.target.value.slice(0, 60))}
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-rose-400 focus:ring-4 focus:ring-rose-100 transition outline-none text-slate-800 mb-1"
+                  placeholder="e.g. For Sarah ❤️"
+                  autoFocus
+                />
+                <span className={`text-[10px] font-semibold absolute right-3 bottom-3.5 ${instantModalTitle.length >= 55 ? 'text-amber-500' : 'text-slate-400'}`}>
+                  {instantModalTitle.length}/60
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mb-5">Try: &quot;For Priya 💖&quot;, &quot;Surprise for Ananya ✨&quot;, &quot;For My Best Girl 🌸&quot;</p>
               <div className="flex items-center gap-3">
                 <button onClick={handleCloseInstantTitleModal} className="flex-1 px-4 py-3 rounded-xl text-slate-600 font-bold bg-slate-100 hover:bg-slate-200 transition">Cancel</button>
                 <button
                   onClick={() => handleTitleSubmit(selectedDemo, instantModalTitle)}
-                  className="flex-1 px-4 py-3 rounded-xl text-white font-bold bg-rose-500 hover:bg-rose-600 transition shadow-sm shadow-rose-200 flex items-center justify-center gap-2"
+                  disabled={instantModalTitle.trim().length === 0}
+                  className="flex-1 px-4 py-3 rounded-xl text-white font-bold bg-rose-500 hover:bg-rose-600 transition shadow-sm shadow-rose-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Continue ➔
                 </button>

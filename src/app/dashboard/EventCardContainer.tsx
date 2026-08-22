@@ -50,6 +50,8 @@ export default function EventCardContainer({ events, isPremiumUser }: { events: 
 
           const displayTitle = customData.internalTitle || customData.title || `Proposal for ${event.theme?.name || "Unknown Theme"}`;
           const views = event.responses.filter((r) => r.action === "VIEWED").length;
+          const yesCount = event.responses.filter((r) => r.action === "ACCEPTED").length;
+          const noCount = event.responses.filter((r) => r.action === "REJECTED").length;
           const isPublished = event.status === "PUBLISHED";
           const demoId: string = customData.demoId || "";
 
@@ -138,15 +140,30 @@ export default function EventCardContainer({ events, isPremiumUser }: { events: 
 
                 {/* Analytics */}
                 <div className="mb-4" data-tour="event-card-analytics">
-                  <div className="bg-slate-50 p-3 rounded-2xl flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-white p-2 rounded-xl text-blue-500 shadow-sm">
-                        <Eye className="w-4 h-4" />
+                  <div className="bg-slate-50 p-3 rounded-2xl grid grid-cols-3 gap-2">
+                    {/* Views */}
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="bg-white p-1.5 rounded-xl text-blue-500 shadow-sm">
+                        <Eye className="w-3.5 h-3.5" />
                       </div>
-                      <div>
-                        <p className="text-xs text-slate-500 font-medium">Total Views</p>
-                        <p className="text-lg font-bold text-slate-900">{views}</p>
+                      <p className="text-[10px] text-slate-500 font-medium">Views</p>
+                      <p className="text-base font-bold text-slate-900 leading-none">{views}</p>
+                    </div>
+                    {/* YES */}
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="bg-white p-1.5 rounded-xl text-emerald-500 shadow-sm">
+                        <span className="text-xs font-black">YES</span>
                       </div>
+                      <p className="text-[10px] text-slate-500 font-medium">Said YES</p>
+                      <p className="text-base font-bold text-emerald-600 leading-none">{yesCount}</p>
+                    </div>
+                    {/* NO */}
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="bg-white p-1.5 rounded-xl text-rose-400 shadow-sm">
+                        <span className="text-xs font-black">NO</span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-medium">Said No</p>
+                      <p className="text-base font-bold text-rose-500 leading-none">{noCount}</p>
                     </div>
                   </div>
                 </div>

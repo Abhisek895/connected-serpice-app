@@ -30,8 +30,9 @@ function BuilderWizard() {
       if (demoId !== "custom") {
         const hasAccess = await checkPaymentAccess(demoId);
         if (!hasAccess) {
-          alert("Please complete payment to access this template.");
-          router.push("/dashboard");
+          setError("Access denied. Please complete payment to use this template.");
+          setIsLoading(false);
+          setTimeout(() => router.push("/dashboard"), 2500);
           return;
         }
       }
@@ -393,7 +394,7 @@ function BuilderWizard() {
                 <div className="flex flex-col sm:flex-row gap-4">
                   <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handlePublish} disabled={isLoading} className="flex-1 bg-slate-900 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:scale-100">
                     {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
-                    {isLoading ? 'Publishing...' : 'Publish for Free'}
+                    {isLoading ? 'Publishing...' : '🚀 Publish & Go Live'}
                   </motion.button>
                   <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1 bg-rose-500 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-rose-600 transition-all shadow-rose-200 flex items-center justify-center gap-2">
                     <Sparkles className="w-5 h-5" /> Upgrade to Premium (₹99)

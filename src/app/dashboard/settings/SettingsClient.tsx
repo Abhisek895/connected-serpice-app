@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Settings, User, Mail, CreditCard, Shield, Zap, Lock, Key, Loader2, CheckCircle2, Eye, EyeOff } from "lucide-react"
+import { User, Mail, CreditCard, Shield, Zap, Lock, Key, Loader2, CheckCircle2, Eye, EyeOff, Save } from "lucide-react"
 
 type UserProps = {
   displayName: string;
@@ -12,7 +12,34 @@ type UserProps = {
 export default function SettingsClient({ user }: { user: UserProps }) {
   const [activeTab, setActiveTab] = useState("profile");
 
-  // Password Update State
+  // Profile Update State
+  const [displayName, setDisplayName] = useState(user.displayName);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState("");
+  const [saveError, setSaveError] = useState("");
+
+  const handleSaveProfile = async () => {
+    setSaveSuccess(""); setSaveError(""); setIsSaving(true);
+    try {
+      const res = await fetch("/api/settings/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ displayName }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSaveSuccess("Profile updated successfully!");
+        setTimeout(() => setSaveSuccess(""), 3500);
+      } else {
+        setSaveError(data.error || "Failed to save profile.");
+      }
+    } catch {
+      setSaveError("Something went wrong. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [otp, setOtp] = useState("");
@@ -157,7 +184,12 @@ export default function SettingsClient({ user }: { user: UserProps }) {
                   <label className="block text-sm font-bold text-slate-700 mb-2">Display Name</label>
                   <div className="relative">
                     <User className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input type="text" defaultValue={user.displayName} className="w-full border border-slate-200 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-700" />
+                    <input
+                      type="text"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      className="w-full border border-slate-200 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-700"
+                    />
                   </div>
                 </div>
                 <div>
@@ -166,12 +198,27 @@ export default function SettingsClient({ user }: { user: UserProps }) {
                     <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input type="email" defaultValue={user.displayEmail} disabled className="w-full border border-slate-200 bg-slate-50 rounded-xl pl-10 pr-4 py-3 text-slate-500 cursor-not-allowed" />
                   </div>
+                  <p className="text-xs text-slate-400 mt-1.5">Email address cannot be changed.</p>
                 </div>
               </div>
 
-              <div className="flex justify-end pt-4">
-                <button className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-md transition">
-                  Save Changes
+              {saveError && (
+                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-sm rounded-xl">{saveError}</div>
+              )}
+              {saveSuccess && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm rounded-xl flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" /> {saveSuccess}
+                </div>
+              )}
+
+              <div className="flex justify-end pt-2">
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={isSaving}
+                  className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-md transition flex items-center gap-2 disabled:opacity-70"
+                >
+                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {isSaving ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </div>
@@ -215,20 +262,12 @@ export default function SettingsClient({ user }: { user: UserProps }) {
               )}
 
               <div className="border-t border-slate-100 pt-6">
-                 <h4 className="font-bold text-slate-900 mb-4">Payment Methods</h4>
-                 <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl mb-4">
-                    <div className="flex items-center gap-3">
-                       <CreditCard className="w-6 h-6 text-slate-400" />
-                       <div>
-                         <p className="font-medium text-slate-700">Visa ending in 4242</p>
-                         <p className="text-xs text-slate-500">Expires 12/28</p>
-                       </div>
-                    </div>
-                    <button className="text-rose-500 text-sm font-bold hover:text-rose-600">Edit</button>
+                 <h4 className="font-bold text-slate-900 mb-2">Payment History</h4>
+                 <p className="text-sm text-slate-500 mb-4">Your payment receipts and invoices are managed via Razorpay.</p>
+                 <div className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                    <CreditCard className="w-5 h-5 text-slate-400" />
+                    <p className="text-sm text-slate-600">No payment records found. Purchase a template to see your history here.</p>
                  </div>
-                 <button className="text-slate-600 text-sm font-medium hover:text-slate-900 flex items-center gap-2">
-                    + Add Payment Method
-                 </button>
               </div>
             </div>
           </div>
@@ -360,9 +399,9 @@ export default function SettingsClient({ user }: { user: UserProps }) {
                     <p className="font-medium text-slate-700">Authenticator App</p>
                     <p className="text-xs text-slate-500 mt-1">Not configured</p>
                   </div>
-                  <button className="px-4 py-2 bg-slate-900 text-white text-sm font-bold rounded-lg hover:bg-slate-800 transition">
-                    Enable 2FA
-                  </button>
+                  <span className="px-3 py-1.5 bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold rounded-lg">
+                    🚧 Coming Soon
+                  </span>
                 </div>
               </div>
 

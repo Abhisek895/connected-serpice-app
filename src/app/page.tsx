@@ -117,6 +117,47 @@ export default function Home() {
         </div>
 
         {/* ========================================================= */}
+        {/* 3. LIVE PRODUCT PREVIEW                                   */}
+        {/* ========================================================= */}
+        <div className="mt-12 sm:mt-16 w-full max-w-xs mx-auto">
+          <div className="relative">
+            {/* Phone frame */}
+            <div className="bg-slate-900 rounded-[2.5rem] p-2 shadow-2xl shadow-slate-900/40 ring-1 ring-slate-700/50">
+              <div className="bg-gradient-to-b from-rose-50 via-white to-pink-50 rounded-[2rem] overflow-hidden" style={{ minHeight: '340px' }}>
+                {/* Notch */}
+                <div className="flex justify-center pt-3 pb-1">
+                  <div className="w-20 h-5 bg-slate-900 rounded-full" />
+                </div>
+                {/* Mock proposal page content */}
+                <div className="px-5 pt-3 pb-6 text-center">
+                  <div className="text-3xl mb-2">💖</div>
+                  <h3 className="text-sm font-pacifico text-rose-500 mb-1">OurStory</h3>
+                  <p className="text-[11px] text-slate-600 font-semibold mb-3">A surprise for you, Priya ✨</p>
+                  <div className="bg-white/80 rounded-2xl p-3 mb-3 border border-rose-100 shadow-xs">
+                    <p className="text-[10px] text-slate-700 leading-relaxed italic">&ldquo;Every moment with you is a memory I want to keep forever. Will you be mine? 💕&rdquo;</p>
+                  </div>
+                  <p className="text-[11px] font-bold text-slate-800 mb-3">Will you be my girlfriend? 🥺</p>
+                  <div className="flex gap-2">
+                    <div className="flex-1 py-1.5 bg-rose-500 text-white text-[10px] font-bold rounded-xl shadow-sm">YES! 😍</div>
+                    <div className="flex-1 py-1.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-xl">No 🙈</div>
+                  </div>
+                  <div className="mt-3 flex items-center justify-center gap-1 text-[8px] text-slate-400">
+                    <span>💖 Made with OurStory</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Floating badge */}
+            <div className="absolute -right-4 top-8 bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-xl shadow-lg shadow-emerald-400/40 rotate-3">
+              ✅ She said YES!
+            </div>
+            <div className="absolute -left-4 bottom-12 bg-white border border-rose-100 text-rose-600 text-[10px] font-bold px-2.5 py-1.5 rounded-xl shadow-md -rotate-2">
+              👀 Just Opened!
+            </div>
+          </div>
+        </div>
+
+        {/* ========================================================= */}
         {/* 3. TEMPLATE COUNT / VARIETY STRIP                         */}
         {/* ========================================================= */}
         <div className="w-full mt-14 sm:mt-20 rounded-3xl bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 p-px">
@@ -222,10 +263,13 @@ export default function Home() {
           <span className="font-pacifico text-rose-500 text-base">OurStory</span>
           <span>&copy; {new Date().getFullYear()} OurStory Platform. All rights reserved.</span>
         </div>
-        <div className="flex items-center gap-6">
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
           <Link href="/dashboard" className="hover:text-slate-600 transition">Dashboard</Link>
           <Link href="/login" className="hover:text-slate-600 transition">Login</Link>
           <Link href="/dashboard/builder" className="hover:text-slate-600 transition">Builder</Link>
+          <Link href="/privacy" className="hover:text-slate-600 transition">Privacy</Link>
+          <Link href="/terms" className="hover:text-slate-600 transition">Terms</Link>
+          <a href="mailto:support@ourstory.love" className="hover:text-slate-600 transition">Contact</a>
         </div>
       </footer>
     </div>

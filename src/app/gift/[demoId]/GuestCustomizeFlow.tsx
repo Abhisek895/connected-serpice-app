@@ -7,7 +7,7 @@ import Link from "next/link";
 import {
   X, Sparkles, ChevronRight, ChevronLeft, Loader2, Send,
   CheckCircle2, Copy, ExternalLink, Image as ImageIcon, Music,
-  AlertCircle, Smartphone, Edit3, Tag, Heart, Compass, Gift, Zap, Eye, LucideIcon,
+  AlertCircle, Smartphone, Edit3, Tag, Heart, Compass, Gift, Zap, Eye, Bell, LucideIcon,
 } from "lucide-react";
 import type { DemoItem } from "@/app/dashboard/demoConfig";
 import type { TemplateClass, TemplateField } from "@/app/dashboard/templateConfig";
@@ -196,6 +196,10 @@ export default function GuestCustomizeFlow({
   const [formValues, setFormValues] = useState<Record<string, string>>({});
   const [fileStatuses, setFileStatuses] = useState<Record<string, "idle" | "uploading" | "done">>({});
   const [showCheckoutView, setShowCheckoutView] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
+  const [showExitPushToast, setShowExitPushToast] = useState(false);
+  const [showPaymentPushModal, setShowPaymentPushModal] = useState(false);
+  const [showPaymentCancelledPushModal, setShowPaymentCancelledPushModal] = useState(false);
 
   // Coupon & Payment state
   const [couponCode, setCouponCode] = useState("LOVE2026");
@@ -360,7 +364,13 @@ export default function GuestCustomizeFlow({
             campaign
           );
         },
-        modal: { ondismiss: () => setIsProcessing(false) },
+        modal: {
+          ondismiss: () => {
+            setIsProcessing(false);
+            setError(null);
+            setShowPaymentCancelledPushModal(true);
+          },
+        },
         theme: { color: "#e11d48" },
       };
 
@@ -431,6 +441,24 @@ export default function GuestCustomizeFlow({
               window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
             }}
           />
+
+          {/* Save Page to Dashboard Account Banner */}
+          <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-rose-950 to-slate-900 text-white flex flex-col sm:flex-row items-center justify-between gap-3 border border-rose-500/30">
+            <div>
+              <p className="text-xs font-black text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400 fill-amber-400" /> Save Page &amp; Track Live Views
+              </p>
+              <p className="text-xs text-slate-300 font-medium mt-0.5">
+                Create a free account to track when {formValues["recipientName"] || "they"} open your surprise &amp; answer YES! 💖
+              </p>
+            </div>
+            <Link
+              href="/register"
+              className="whitespace-nowrap px-4 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer"
+            >
+              Create Free Account ➔
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -441,7 +469,61 @@ export default function GuestCustomizeFlow({
   // ───────────────────────────────────────────────────────────────────────────
   if (viewState === "landing") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-rose-950 to-slate-950 relative overflow-hidden flex items-center justify-center p-4">
+      <>
+        {/* 🔔 Cute Push Notification Toast (Populates AFTER clicking "Yes, exit") */}
+        <AnimatePresence>
+          {showExitPushToast && (
+            <motion.div
+              initial={{ opacity: 0, y: -50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -30, scale: 0.9 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              className="fixed top-4 left-1/2 -translate-x-1/2 z-[10000] w-full max-w-sm px-3 pointer-events-auto"
+            >
+              <div className="bg-slate-900/95 backdrop-blur-xl border border-rose-500/40 text-white rounded-2xl p-4 shadow-2xl flex items-start gap-3.5 relative overflow-hidden ring-1 ring-white/10">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 via-pink-500 to-amber-400" />
+                
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shrink-0 shadow-md shadow-rose-500/30 mt-0.5">
+                  <Bell className="w-4 h-4 text-white animate-bounce" />
+                </div>
+
+                <div className="flex-1 min-w-0 pr-2">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-amber-400 fill-amber-400" /> OurStory Special Offer
+                    </span>
+                    <span className="text-[10px] text-slate-400">now</span>
+                  </div>
+                  <p className="text-xs font-black text-white leading-snug">
+                    Aww, don&apos;t let {formValues["recipientName"] || "your special someone"} wait! 🥺🌸
+                  </p>
+                  <p className="text-[11px] text-slate-300 font-medium leading-relaxed mt-1">
+                    Your surprise is almost ready! Finish now &amp; use code <span className="text-amber-300 font-black bg-amber-400/20 px-1.5 py-0.5 rounded">LOVE2026</span> for extra discount! 💖
+                  </p>
+
+                  <button
+                    onClick={() => {
+                      setShowExitPushToast(false);
+                      setViewState("customize");
+                    }}
+                    className="mt-2.5 px-3 py-1.5 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-extrabold text-[11px] rounded-xl shadow-md shadow-rose-500/30 transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span>Re-Open &amp; Finish Surprise</span> ✨
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => setShowExitPushToast(false)}
+                  className="text-slate-400 hover:text-white p-1 rounded-lg transition shrink-0"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-rose-950 to-slate-950 relative overflow-hidden flex items-center justify-center p-4">
         {/* Floating hearts background */}
         {Array.from({ length: 12 }, (_, i) => (
           <motion.div
@@ -541,6 +623,7 @@ export default function GuestCustomizeFlow({
           </div>
         </motion.div>
       </div>
+      </>
     );
   }
 
@@ -672,6 +755,84 @@ export default function GuestCustomizeFlow({
             </p>
           </div>
         </motion.div>
+
+        {/* 🌸 CUTE PAYMENT CANCELLED PUSH POPUP MODAL (Renders in Checkout view) */}
+        <AnimatePresence>
+          {showPaymentCancelledPushModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md"
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                className="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden relative border border-rose-100 text-center"
+              >
+                {/* Top gradient accent line */}
+                <div className="h-1.5 bg-gradient-to-r from-rose-400 via-pink-500 to-amber-400" />
+
+                <div className="p-6 space-y-4">
+                  {/* Cute heart illustration */}
+                  <motion.div
+                    animate={{ scale: [1, 1.15, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                    className="w-16 h-16 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center mx-auto shadow-inner text-3xl"
+                  >
+                    💖
+                  </motion.div>
+
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-black text-slate-900 leading-tight">
+                      Aww, payment was paused! 🥺🌸
+                    </h3>
+                    <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                      Don&apos;t worry! Your special surprise for <span className="font-extrabold text-rose-600">{formValues["recipientName"] || "your special someone"}</span> is safely saved.
+                    </p>
+                  </div>
+
+                  {/* Coupon Badge */}
+                  <div className="bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200 rounded-2xl p-3.5 space-y-1">
+                    <div className="inline-flex items-center gap-1 bg-amber-400 text-amber-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                      🏷️ LOVE2026 Applied (50% OFF)
+                    </div>
+                    <p className="text-xs font-black text-rose-600 pt-0.5">
+                      Unlock for only ₹{finalPriceINR.toFixed(0)} right now! ✨
+                    </p>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="space-y-2 pt-1">
+                    <button
+                      onClick={() => {
+                        setShowPaymentCancelledPushModal(false);
+                        handlePayment();
+                      }}
+                      className="w-full py-3.5 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-rose-200 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Sparkles className="w-4 h-4 fill-white" />
+                      🚀 Retry Payment &amp; Activate Link
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setShowPaymentCancelledPushModal(false);
+                        setShowCheckoutView(false);
+                        setViewState("customize");
+                      }}
+                      className="w-full py-2.5 text-slate-400 hover:text-slate-600 font-bold text-xs transition cursor-pointer"
+                    >
+                      Edit My Surprise ✏️
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
@@ -680,6 +841,7 @@ export default function GuestCustomizeFlow({
   // Main Dual-Column Customizer Interface (100% Matching CustomizeModal)
   // ───────────────────────────────────────────────────────────────────────────
   return (
+    <>
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-3 sm:p-6">
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <motion.div
@@ -793,12 +955,12 @@ export default function GuestCustomizeFlow({
               <ChevronLeft className="w-4 h-4" /> Back
             </button>
           ) : (
-            <Link
-              href="/dashboard"
-              className="py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition inline-block"
+            <button
+              onClick={() => setShowExitModal(true)}
+              className="py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition inline-block cursor-pointer"
             >
               Browse Templates
-            </Link>
+            </button>
           )}
 
           {currentStep < totalSteps - 1 ? (
@@ -819,5 +981,302 @@ export default function GuestCustomizeFlow({
         </div>
       </motion.div>
     </div>
+
+    {/* 💔 Exit Confirmation Modal */}
+    <AnimatePresence>
+      {showExitModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.92, y: 20 }}
+            transition={{ type: "spring", stiffness: 300, damping: 24 }}
+            className="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden text-center"
+          >
+            {/* Top gradient bar */}
+            <div className="h-1.5 bg-gradient-to-r from-rose-400 via-pink-500 to-rose-600" />
+
+            <div className="px-6 pt-6 pb-7 flex flex-col items-center gap-4">
+              {/* Animated broken heart */}
+              <motion.div
+                animate={{ rotate: [0, -8, 8, -8, 0], scale: [1, 1.1, 1] }}
+                transition={{ duration: 1.2, ease: "easeInOut", repeat: Infinity, repeatDelay: 2 }}
+                className="text-5xl"
+              >
+                💔
+              </motion.div>
+
+              <div className="space-y-1.5">
+                <h3 className="text-lg font-black text-slate-900">
+                  Wait… don’t go yet! 🥺
+                </h3>
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  <span className="font-bold text-rose-500">{formValues["recipientName"] || "Your special someone"}</span> is waiting for this surprise.
+                  <br />
+                  It only takes a moment to finish — and their smile will be worth it. ✨
+                </p>
+              </div>
+
+              {/* Cute reassurance badge */}
+              <div className="bg-rose-50 border border-rose-100 rounded-2xl px-4 py-2.5 w-full">
+                <p className="text-xs font-semibold text-rose-700">
+                  💖 You’re {Math.round(((currentStep + 1) / totalSteps) * 100)}% done… so close!
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2.5 w-full pt-1">
+                {/* Primary: stay */}
+                <button
+                  onClick={() => setShowExitModal(false)}
+                  className="w-full py-3.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-rose-200 hover:from-rose-600 hover:to-pink-700 transition-all"
+                >
+                  No, keep going! 💪
+                </button>
+
+                {/* Secondary: confirm exit -> opens Cute Payment Push Modal */}
+                <button
+                  onClick={() => {
+                    setShowExitModal(false);
+                    setShowPaymentPushModal(true);
+                  }}
+                  className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm rounded-2xl transition-all cursor-pointer"
+                >
+                  Yes, exit
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+
+    {/* 🎁 CUTE PAYMENT PUSH RETENTION MODAL (Triggers when clicking "Yes, exit") */}
+    <AnimatePresence>
+      {showPaymentPushModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: "spring", stiffness: 300, damping: 24 }}
+            className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden relative border border-rose-100 text-center"
+          >
+            {/* Header banner */}
+            <div className="bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white px-6 py-4 relative overflow-hidden">
+              <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-3 py-1 rounded-full border border-white/30 inline-block mb-1">
+                🎁 Exclusive Exit Offer
+              </span>
+              <h3 className="text-lg font-black leading-tight">
+                Don&apos;t leave {formValues["recipientName"] || "your special someone"} waiting! 🥺💖
+              </h3>
+            </div>
+
+            <div className="p-6 space-y-5">
+              {/* Cute heart illustration */}
+              <div className="flex justify-center -mt-2">
+                <div className="w-16 h-16 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center shadow-inner text-3xl">
+                  ✨
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                Your surprise for <span className="font-extrabold text-rose-600">{formValues["recipientName"] || "someone special"}</span> is already created! Unlock instant link publishing right now with an extra exit discount!
+              </p>
+
+              {/* Discount Offer Card */}
+              <div className="bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200 rounded-2xl p-4 text-center space-y-2 relative">
+                <div className="inline-flex items-center gap-1.5 bg-amber-400 text-amber-950 text-[11px] font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                  🏷️ Code: LOVE2026 Auto-Applied
+                </div>
+
+                <div className="flex items-center justify-center gap-3 pt-1">
+                  <span className="text-sm font-bold text-slate-400 line-through">₹{origPriceINR.toFixed(0)}</span>
+                  <span className="text-3xl font-black text-rose-600">₹{finalPriceINR.toFixed(0)}</span>
+                  {finalPriceINR === 0 && (
+                    <span className="bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded">FREE PASS</span>
+                  )}
+                </div>
+
+                <p className="text-[11px] text-slate-500 font-semibold">
+                  ⚡ Includes 14-day live page duration + real-time view tracker
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2.5 pt-1">
+                <button
+                  onClick={() => {
+                    setShowPaymentPushModal(false);
+                    setShowCheckoutView(true);
+                  }}
+                  className="w-full py-4 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white font-extrabold text-sm rounded-2xl shadow-xl shadow-rose-200 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4 fill-white" />
+                  {finalPriceINR === 0 ? "🚀 Activate Free Link Now (₹0)" : `🚀 Claim Discount & Pay ₹${finalPriceINR.toFixed(0)}`}
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowPaymentPushModal(false);
+                    setViewState("landing");
+                    setCurrentStep(0);
+                    setShowExitPushToast(true);
+                    setTimeout(() => setShowExitPushToast(false), 6000);
+                  }}
+                  className="w-full py-2.5 text-slate-400 hover:text-slate-600 font-bold text-xs transition"
+                >
+                  No thanks, I&apos;ll pass for now ➔
+                </button>
+              </div>
+
+              <p className="text-[10px] text-slate-400">🔒 256-Bit SSL Encrypted Payment via Razorpay</p>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+
+    {/* 🔔 Cute Push Notification Toast (Populates AFTER clicking "Yes, exit") */}
+    <AnimatePresence>
+      {showExitPushToast && (
+        <motion.div
+          initial={{ opacity: 0, y: -50, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -30, scale: 0.9 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          className="fixed top-4 left-1/2 -translate-x-1/2 z-[10000] w-full max-w-sm px-3"
+        >
+          <div className="bg-slate-900/95 backdrop-blur-xl border border-rose-500/30 text-white rounded-2xl p-4 shadow-2xl flex items-start gap-3.5 relative overflow-hidden">
+            {/* Top gradient glow line */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 via-pink-500 to-amber-400" />
+            
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shrink-0 shadow-md shadow-rose-500/30 mt-0.5">
+              <Bell className="w-4 h-4 text-white animate-bounce" />
+            </div>
+
+            <div className="flex-1 min-w-0 pr-2">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-amber-400 fill-amber-400" /> OurStory Special Offer
+                </span>
+                <span className="text-[10px] text-slate-400">now</span>
+              </div>
+              <p className="text-xs font-black text-white leading-snug">
+                Aww, don&apos;t let {formValues["recipientName"] || "your special someone"} wait! 🥺🌸
+              </p>
+              <p className="text-[11px] text-slate-300 font-medium leading-relaxed mt-1">
+                Your surprise is almost ready! Finish now &amp; use code <span className="text-amber-300 font-black bg-amber-400/20 px-1.5 py-0.5 rounded">LOVE2026</span> for extra discount! 💖
+              </p>
+
+              <button
+                onClick={() => {
+                  setShowExitPushToast(false);
+                  setViewState("customize");
+                }}
+                className="mt-2.5 px-3 py-1.5 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-extrabold text-[11px] rounded-xl shadow-md shadow-rose-500/30 transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>Re-Open &amp; Finish Surprise</span> ✨
+              </button>
+            </div>
+
+            <button
+              onClick={() => setShowExitPushToast(false)}
+              className="text-slate-400 hover:text-white p-1 rounded-lg transition shrink-0"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+
+    {/* 🌸 CUTE PAYMENT CANCELLED PUSH POPUP MODAL (Pushes user to retry payment without ugly text) */}
+    <AnimatePresence>
+      {showPaymentCancelledPushModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: "spring", stiffness: 300, damping: 24 }}
+            className="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden relative border border-rose-100 text-center"
+          >
+            {/* Top gradient accent line */}
+            <div className="h-1.5 bg-gradient-to-r from-rose-400 via-pink-500 to-amber-400" />
+
+            <div className="p-6 space-y-4">
+              {/* Cute heart illustration */}
+              <motion.div
+                animate={{ scale: [1, 1.15, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                className="w-16 h-16 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center mx-auto shadow-inner text-3xl"
+              >
+                💖
+              </motion.div>
+
+              <div className="space-y-1">
+                <h3 className="text-lg font-black text-slate-900 leading-tight">
+                  Aww, payment was paused! 🥺🌸
+                </h3>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                  Don&apos;t worry! Your special surprise for <span className="font-extrabold text-rose-600">{formValues["recipientName"] || "your special someone"}</span> is safely saved.
+                </p>
+              </div>
+
+              {/* Coupon Badge */}
+              <div className="bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200 rounded-2xl p-3.5 space-y-1">
+                <div className="inline-flex items-center gap-1 bg-amber-400 text-amber-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                  🏷️ LOVE2026 Applied (50% OFF)
+                </div>
+                <p className="text-xs font-black text-rose-600 pt-0.5">
+                  Unlock for only ₹{finalPriceINR.toFixed(0)} right now! ✨
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2 pt-1">
+                <button
+                  onClick={() => {
+                    setShowPaymentCancelledPushModal(false);
+                    handlePayment();
+                  }}
+                  className="w-full py-3.5 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-rose-200 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4 fill-white" />
+                  🚀 Retry Payment &amp; Activate Link
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowPaymentCancelledPushModal(false);
+                    setShowCheckoutView(false);
+                    setViewState("customize");
+                  }}
+                  className="w-full py-2.5 text-slate-400 hover:text-slate-600 font-bold text-xs transition"
+                >
+                  Edit My Surprise ✏️
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </>
   );
 }
