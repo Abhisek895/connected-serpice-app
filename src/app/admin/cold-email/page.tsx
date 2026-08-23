@@ -760,6 +760,7 @@ export default function ColdEmailAdminPage() {
                     <th className="p-4 text-center">Failed</th>
                     <th className="p-4 text-center">Pending</th>
                     <th className="p-4 text-center">Next Dispatch</th>
+                    <th className="p-4 text-center">Start Time</th>
                     <th className="p-4 text-center">Status</th>
                     <th className="p-4 text-right">Actions</th>
                   </tr>
@@ -806,6 +807,16 @@ export default function ColdEmailAdminPage() {
 
                         <td className="p-4 text-center">
                           <LiveCountdown status={c.status} delayMs={c.delayMs} pendingCount={c.pendingCount} />
+                        </td>
+
+                        <td className="p-4 text-center font-mono text-[11px] text-slate-300">
+                          {c.startedAt ? (
+                            <span title={new Date(c.startedAt).toLocaleString()}>
+                              {new Date(c.startedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          ) : (
+                            <span className="text-slate-500">--</span>
+                          )}
                         </td>
 
                         <td className="p-4 text-center">

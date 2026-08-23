@@ -84,21 +84,35 @@ export async function sendColdEmail({
 }): Promise<{ success: boolean; messageId?: string; error?: string }> {
   try {
     const transporter = createTransporter(smtpAccount);
-    const fromName = smtpAccount.fromName || "OurStory";
-    const fromEmail = smtpAccount.fromEmail || smtpAccount.username;
-
-    // Convert basic HTML to plain text fallback
-    const textContent = htmlContent.replace(/<[^>]+>/g, "").trim();
+    const fromName = smtpAccount.fromName || "OurStory Team";
+    let fromEmail = (smtpAccount.fromEmail || smtpAccount.username).trim();
+    if (smtpAccount.provider === "gmail" || (smtpAccount.host && smtpAccount.host.includes("gmail"))) {
+      fromEmail = smtpAccount.username.trim();
+    }
 
     const recipientAddress = toName ? `"${toName}" <${toEmail}>` : toEmail;
+    const isHtml = /<[a-z][\s\S]*>/i.test(htmlContent);
 
-    const info = await transporter.sendMail({
+    const mailOptions: any = {
       from: `"${fromName}" <${fromEmail}>`,
       to: recipientAddress,
       subject,
-      text: textContent,
-      html: htmlContent,
-    });
+      headers: {
+        "X-Mailer": "OurStory Engine v1.0",
+        "X-Priority": "3",
+        "List-Unsubscribe": `<mailto:${fromEmail}?subject=unsubscribe>`,
+      },
+    };
+
+    if (isHtml) {
+      mailOptions.text = htmlToPlainText(htmlContent);
+      mailOptions.html = htmlContent;
+    } else {
+      // 100% Pure text/plain singlepart format for 100% Primary Inbox placement
+      mailOptions.text = htmlContent;
+    }
+
+    const info = await transporter.sendMail(mailOptions);
 
     return {
       success: true,
@@ -111,4 +125,12 @@ export async function sendColdEmail({
       error: err.message || "Failed to send email via SMTP",
     };
   }
+}
+
+function htmlToPlainText(html: string): string {
+  if (!html) return "";
+  let text = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "");
+  text = text.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "");
+  text = text.replace(/<[^>]+>/g, " ");
+  return text.replace(/\s+/g, " ").trim();
 }

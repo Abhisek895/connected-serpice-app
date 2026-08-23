@@ -295,7 +295,8 @@ export async function parseAndValidateRecipients(rawContent: string): Promise<{
     }
 
     seenEmails.add(email);
-    validRecipients.push({ email, name: name || undefined });
+    const finalName = name.trim() ? name.trim() : extractNameFromEmail(email);
+    validRecipients.push({ email, name: finalName || undefined });
   }
 
   return {
@@ -307,6 +308,19 @@ export async function parseAndValidateRecipients(rawContent: string): Promise<{
       duplicates,
     },
   };
+}
+
+function extractNameFromEmail(email: string): string {
+  if (!email || !email.includes("@")) return "";
+  const prefix = email.split("@")[0];
+  // Remove digits & replace dots/underscores/dashes with spaces
+  const cleaned = prefix.replace(/[0-9]/g, "").replace(/[\._-]/g, " ").trim();
+  if (!cleaned) return "";
+  return cleaned
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
 }
 
 // ─── Campaign Management ──────────────────────────────────────────────────────
