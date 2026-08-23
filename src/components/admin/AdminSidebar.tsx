@@ -34,6 +34,7 @@ export default function AdminSidebar() {
     { name: "Payments", href: "/admin/payments", icon: CreditCard, roles: ["admin", "super_admin"] },
     { name: "Reports", href: "/admin/reports", icon: Flag, roles: ["admin", "super_admin", "moderator"] },
     { name: "Content", href: "/admin/content", icon: ShieldAlert, roles: ["admin", "super_admin", "moderator"] },
+    { name: "Cold Email", href: "/admin/cold-email", icon: Mail, roles: ["admin", "super_admin"] },
     { name: "AI Insights", href: "/admin/ai-insights", icon: BrainCircuit, roles: ["super_admin"] },
     { name: "Audit Logs", href: "/admin/audit-logs", icon: ListOrdered, roles: ["super_admin"] },
     { name: "Email Tools", href: "/admin/email", icon: Mail, roles: ["super_admin"] },

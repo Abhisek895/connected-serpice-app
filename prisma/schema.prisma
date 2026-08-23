@@ -219,3 +219,92 @@ model SystemSetting {
   updatedAt   DateTime @updatedAt
 }
 
+// ─── Cold Email Campaign System ──────────────────────────────────────────────
+model SmtpAccount {
+  id                String          @id @default(cuid())
+  name              String
+  provider          String          @default("custom") // "gmail", "smtp", "outlook", etc.
+  host              String
+  port              Int             @default(587)
+  username          String
+  encryptedPassword String
+  fromName          String          @default("OurStory")
+  fromEmail         String
+  dailyLimit        Int             @default(200)
+  hourlyLimit       Int             @default(30)
+  delayMs           Int             @default(5000)
+  isActive          Boolean         @default(true)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  recipients        ColdRecipient[]
+  logs              ColdLog[]
+  campaigns         ColdCampaign[]
+}
+
+model ColdCampaign {
+  id              String          @id @default(cuid())
+  name            String
+  subject         String
+  content         String
+  status          String          @default("DRAFT") // "DRAFT", "QUEUED", "RUNNING", "PAUSED", "COMPLETED", "CANCELLED"
+  smtpAccountId   String?
+  smtpAccount     SmtpAccount?    @relation(fields: [smtpAccountId], references: [id], onDelete: SetNull)
+  totalRecipients Int             @default(0)
+  sentCount       Int             @default(0)
+  failedCount     Int             @default(0)
+  pendingCount    Int             @default(0)
+  hourlyLimit     Int?            @default(30)
+  dailyLimit      Int?            @default(200)
+  delayMs         Int?            @default(5000)
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  recipients      ColdRecipient[]
+  logs            ColdLog[]
+}
+
+model ColdRecipient {
+  id             String        @id @default(cuid())
+  campaignId     String
+  campaign       ColdCampaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  email          String
+  name           String?
+  status         String        @default("PENDING") // "PENDING", "PROCESSING", "SENT", "FAILED", "SKIPPED"
+  smtpAccountId  String?
+  smtpAccount    SmtpAccount?  @relation(fields: [smtpAccountId], references: [id], onDelete: SetNull)
+  attemptCount   Int           @default(0)
+  lastError      String?
+  nextAttemptAt  DateTime?
+  sentAt         DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  logs           ColdLog[]
+
+  @@index([campaignId, status])
+  @@index([status, nextAttemptAt])
+}
+
+model ColdLog {
+  id             String        @id @default(cuid())
+  campaignId     String?
+  campaign       ColdCampaign? @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  recipientId    String?
+  recipient      ColdRecipient?@relation(fields: [recipientId], references: [id], onDelete: SetNull)
+  smtpAccountId  String?
+  smtpAccount    SmtpAccount?  @relation(fields: [smtpAccountId], references: [id], onDelete: SetNull)
+  recipientEmail String
+  status         String        // "SENT", "FAILED", "RETRYING", "PAUSED", "SYSTEM"
+  attempt        Int           @default(1)
+  error          String?
+  createdAt      DateTime      @default(now())
+
+  @@index([campaignId])
+  @@index([smtpAccountId])
+  @@index([createdAt])
+}
+
+

@@ -16,7 +16,7 @@ async function checkAuth() {
 // ─── User Detail ─────────────────────────────────────────────────────────────
 export async function getAdminUserById(id: string) {
   await checkAuth();
-  const user = await prisma.user.findUnique({
+  const user = await (prisma.user as any).findUnique({
     where: { id },
     select: {
       id: true, name: true, email: true, role: true, plan: true, platform: true,
@@ -209,7 +209,7 @@ export async function getLocalAdminGrowth() {
 // ─── Users ───────────────────────────────────────────────────────────────────
 export async function updateUserPlatformAdminAction(id: string, platform: string) {
   await checkAuth();
-  const updated = await prisma.user.update({
+  const updated = await (prisma.user as any).update({
     where: { id },
     data: { platform },
   });
@@ -218,7 +218,7 @@ export async function updateUserPlatformAdminAction(id: string, platform: string
 
 export async function getAdminUsers(search = "", role = "") {
   await checkAuth();
-  const rawUsers = await prisma.user.findMany({
+  const rawUsers = await (prisma.user as any).findMany({
     where: {
       AND: [
         search ? { OR: [{ name: { contains: search } }, { email: { contains: search } }] } : {},
@@ -258,10 +258,10 @@ export async function getAdminUsers(search = "", role = "") {
     },
   });
 
-  const users = rawUsers.map((u) => {
+  const users = rawUsers.map((u: any) => {
     let resolvedPlatform = u.platform;
     if (!resolvedPlatform || resolvedPlatform === "Web") {
-      if (u.accounts?.some((a) => a.provider === "google")) {
+      if (u.accounts?.some((a: any) => a.provider === "google")) {
         resolvedPlatform = "Google 🌐";
       } else if (u.referredBy) {
         resolvedPlatform = "WhatsApp 💬";
@@ -333,17 +333,19 @@ export async function getAdminEvents() {
 // ─── Audit Logs (Recent user signups + events) ───────────────────────────────
 export async function getAdminAuditLog() {
   await checkAuth();
-  const [recentUsers, recentEvents, recentPayments] = await Promise.all([
+  const [recentUsers, recentEvents, recentPayments, recentColdLogs] = await Promise.all([
     prisma.user.findMany({ orderBy: { createdAt: "desc" }, take: 30, select: { id: true, name: true, email: true, role: true, createdAt: true } }),
     prisma.event.findMany({ orderBy: { createdAt: "desc" }, take: 30, include: { user: { select: { name: true, email: true } } } }),
     prisma.payment.findMany({ orderBy: { createdAt: "desc" }, take: 30, include: { user: { select: { name: true, email: true } } } }),
+    (prisma as any).coldLog.findMany({ orderBy: { createdAt: "desc" }, take: 30 }),
   ]);
 
   const logs = [
-    ...recentUsers.map((u) => ({ type: "USER_SIGNUP", actor: u.email || u.name || u.id, detail: `Role: ${u.role}`, at: u.createdAt })),
-    ...recentEvents.map((e) => ({ type: "PAGE_CREATED", actor: e.user?.email || e.userId, detail: `Slug: ${e.slug} | Status: ${e.status}`, at: e.createdAt })),
-    ...recentPayments.map((p) => ({ type: "PAYMENT", actor: p.user?.email || p.userId, detail: `₹${(p.amount / 100).toFixed(2)} — ${p.status}`, at: p.createdAt })),
-  ].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+    ...recentUsers.map((u: any) => ({ type: "USER_SIGNUP", actor: u.email || u.name || u.id, detail: `Role: ${u.role}`, at: u.createdAt })),
+    ...recentEvents.map((e: any) => ({ type: "PAGE_CREATED", actor: e.user?.email || e.userId, detail: `Slug: ${e.slug} | Status: ${e.status}`, at: e.createdAt })),
+    ...recentPayments.map((p: any) => ({ type: "PAYMENT", actor: p.user?.email || p.userId, detail: `₹${(p.amount / 100).toFixed(2)} — ${p.status}`, at: p.createdAt })),
+    ...recentColdLogs.map((c: any) => ({ type: "COLD_EMAIL", actor: c.recipientEmail, detail: `Status: ${c.status} | ${c.error || "Processed"}`, at: c.createdAt })),
+  ].sort((a: any, b: any) => new Date(b.at).getTime() - new Date(a.at).getTime());
 
   return logs.slice(0, 80);
 }
