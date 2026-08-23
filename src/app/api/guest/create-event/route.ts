@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
+import { creditReferrer } from "@/lib/referral";
+import { getCurrentUser } from "@/lib/session";
 
 /**
  * POST /api/guest/create-event
@@ -149,12 +151,28 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: "Payment not verified" }, { status: 402 });
     }
 
-    // ── Get GUEST user ──────────────────────────────────────────────────────────
+    // Trigger instant referral credit for guest payment if referredByCode is present
+    try {
+      const guestPayment = await prisma.payment.findFirst({
+        where: { razorpayOrderId },
+        orderBy: { createdAt: "desc" },
+      });
+      if (guestPayment) {
+        await creditReferrer(guestPayment as any);
+      }
+    } catch (refErr) {
+      console.error("[guest-referral-credit] Error:", refErr);
+    }
+
+    // ── Get GUEST user or logged-in user ────────────────────────────────────────
+    const { userId: sessionUserId } = await getCurrentUser();
     const guestUser = await prisma.user.findUnique({
       where: { email: "guest@ourstory.internal" },
     });
 
-    if (!guestUser) {
+    const targetUserId = sessionUserId || guestUser?.id;
+
+    if (!targetUserId) {
       return NextResponse.json({ success: false, message: "Guest system not configured" }, { status: 500 });
     }
 
@@ -172,7 +190,8 @@ export async function POST(req: Request) {
       ...classDefaults,
       ...(userCustomData || {}),
       demoId,
-      isGuest: true,
+      isGuest: !sessionUserId,
+      razorpayOrderId: razorpayOrderId || null,
       source: utmSource || null,
       campaign: utmCampaign || null,
     };
@@ -189,7 +208,7 @@ export async function POST(req: Request) {
     // ── Create the event ────────────────────────────────────────────────────────
     await prisma.event.create({
       data: {
-        userId: guestUser.id,
+        userId: targetUserId,
         themeId: theme.id,
         slug,
         status: "PUBLISHED",

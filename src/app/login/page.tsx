@@ -22,6 +22,12 @@ function LoginForm() {
     } else if (errorParam) {
       setError("Authentication failed. Please check your credentials and try again.");
     }
+
+    const claim = searchParams.get("claimSlug");
+    if (claim) {
+      document.cookie = `ourstory_guest_claim_slug=${claim}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax`;
+      localStorage.setItem("ourstory_guest_claim_slug", claim);
+    }
   }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,7 +46,8 @@ function LoginForm() {
         setError(res.error || "Invalid email or password");
         setLoading(false);
       } else {
-        router.push("/dashboard");
+        const redirectTarget = searchParams.get("redirect") || searchParams.get("callbackUrl") || "/dashboard";
+        router.push(redirectTarget);
         router.refresh();
       }
     } catch (err) {

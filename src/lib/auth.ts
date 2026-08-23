@@ -74,6 +74,23 @@ export const authOptions: AuthOptions = {
   session: {
     strategy: "jwt",
   },
+  events: {
+    async createUser({ user }) {
+      try {
+        const { cookies } = await import("next/headers");
+        const cStore = await cookies();
+        const cookiePlatform = cStore.get("ourstory_platform")?.value;
+        const finalPlatform = cookiePlatform ? decodeURIComponent(cookiePlatform) : "Google 🌐";
+
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { platform: finalPlatform } as any,
+        });
+      } catch (e) {
+        console.error("Failed to set platform on Google user create:", e);
+      }
+    },
+  },
   pages: {
     signIn: "/login",
     newUser: "/dashboard",

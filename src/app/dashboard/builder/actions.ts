@@ -147,7 +147,7 @@ export async function publishEvent(eventId: string) {
     try {
       const cd = JSON.parse(existingEvent.customData);
       demoId = cd.demoId;
-    } catch {}
+    } catch { }
   }
 
   const uniqueSlug = await generateUserSlug(userId, demoId);

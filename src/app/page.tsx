@@ -1,6 +1,9 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Heart, Sparkles, Image as ImageIcon, Music, ArrowRight, ShieldCheck, Zap, Star } from "lucide-react";
 import type { Metadata } from "next";
+import { demos } from "@/app/dashboard/demoConfig";
+import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
   title: "OurStory | Digital Memories & Proposals",
@@ -30,7 +33,35 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ ref?: string; demo?: string }>;
+}) {
+  const { ref, demo } = await searchParams;
+
+  if (demo) {
+    let resolvedDemoId = demo.trim();
+
+    // 1. Direct match with template slug (e.g. "surprise", "im-sorry")
+    const matchConfig = demos.find((d) => d.id === resolvedDemoId);
+    if (!matchConfig) {
+      // 2. Look up DB Theme by CUID or name
+      const dbTheme = await prisma.theme.findFirst({
+        where: { OR: [{ id: resolvedDemoId }, { name: resolvedDemoId }] },
+      });
+      if (dbTheme && demos.some((d) => d.id === dbTheme.name)) {
+        resolvedDemoId = dbTheme.name;
+      } else {
+        // Fallback default if unmapped
+        resolvedDemoId = "surprise";
+      }
+    }
+
+    const refQuery = ref ? `?ref=${encodeURIComponent(ref.trim())}` : "";
+    redirect(`/gift/${resolvedDemoId}${refQuery}`);
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-rose-50/30 flex flex-col font-sans text-slate-800 antialiased overflow-x-hidden">
 

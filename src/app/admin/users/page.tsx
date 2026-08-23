@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Search, Loader2, Ban, CheckCircle2, Trash2, AlertCircle, AlertTriangle, X, ExternalLink, Users as UsersIcon, Gift } from "lucide-react";
-import { getAdminUsers, deleteAdminUser, toggleSuspendAdminUser, toggleUserPlanAdminAction } from "@/app/admin/actions";
+import { getAdminUsers, deleteAdminUser, toggleSuspendAdminUser, toggleUserPlanAdminAction, updateUserPlatformAdminAction } from "@/app/admin/actions";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function AdminUsersPage() {
@@ -91,6 +91,20 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handlePlatformChange = async (userId: string, newPlatform: string) => {
+    setActionLoadingId(userId);
+    try {
+      const res = await updateUserPlatformAdminAction(userId, newPlatform);
+      if (res.success) {
+        setUsers(users.map(u => u.id === userId ? { ...u, platform: newPlatform } : u));
+      }
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
   const roleColors: Record<string, string> = {
     super_admin: "text-purple-400 bg-purple-400/10 border border-purple-400/20",
     admin: "text-blue-400 bg-blue-400/10 border border-blue-400/20",
@@ -168,6 +182,7 @@ export default function AdminUsersPage() {
                   <th className="px-4 py-3 font-semibold">User</th>
                   <th className="px-4 py-3 font-semibold">Role / Status</th>
                   <th className="px-4 py-3 font-semibold">Plan</th>
+                  <th className="px-4 py-3 font-semibold">Platform</th>
                   <th className="px-4 py-3 font-semibold">Referred By</th>
                   <th className="px-4 py-3 font-semibold">Referrals Made</th>
                   <th className="px-4 py-3 font-semibold">Joined</th>
@@ -214,6 +229,13 @@ export default function AdminUsersPage() {
                         >
                           {u.plan === "PREMIUM" ? "👑 PREMIUM" : "FREE"}
                         </button>
+                      </td>
+
+                      {/* Platform (Automatically Detected) */}
+                      <td className="px-4 py-3 text-xs">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-800/90 border border-slate-700/80 text-indigo-300">
+                          {u.platform || "Direct / Web 💻"}
+                        </span>
                       </td>
 
                       {/* Referred By */}

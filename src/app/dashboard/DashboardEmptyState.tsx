@@ -1,10 +1,13 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { Sparkles, ArrowRight, Heart } from "lucide-react";
+import { Sparkles, ArrowRight, Heart, Link2 } from "lucide-react";
+import ClaimGuestPageModal from "./ClaimGuestPageModal";
 
 export default function DashboardEmptyState() {
+  const [showClaimModal, setShowClaimModal] = useState(false);
   const floatingHearts = ["💖", "✨", "💌", "🌸", "💕", "🎁", "🥺", "💝"];
 
   return (
@@ -64,7 +67,7 @@ export default function DashboardEmptyState() {
       </div>
 
       {/* CTA Buttons */}
-      <div className="relative z-10 flex flex-col sm:flex-row gap-3 w-full max-w-xs">
+      <div className="relative z-10 flex flex-col sm:flex-row gap-3 w-full max-w-sm">
         <Link
           href="/dashboard"
           className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white font-bold rounded-2xl shadow-lg shadow-rose-300/40 hover:shadow-rose-300/60 hover:scale-[1.02] transition-all text-sm"
@@ -72,14 +75,20 @@ export default function DashboardEmptyState() {
           <Sparkles className="w-4 h-4 fill-white" />
           Browse Templates
         </Link>
-        <Link
-          href="/dashboard/builder"
-          className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-white text-slate-700 font-bold rounded-2xl border border-slate-200 hover:border-rose-300 hover:bg-rose-50/50 transition-all text-sm"
+        <button
+          onClick={() => setShowClaimModal(true)}
+          className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-white text-slate-700 font-bold rounded-2xl border border-slate-200 hover:border-rose-300 hover:bg-rose-50/50 transition-all text-sm cursor-pointer"
         >
-          Build Custom
-          <ArrowRight className="w-4 h-4" />
-        </Link>
+          <Link2 className="w-4 h-4 text-rose-500" />
+          Link Guest Page
+        </button>
       </div>
+
+      <AnimatePresence>
+        {showClaimModal && (
+          <ClaimGuestPageModal onClose={() => setShowClaimModal(false)} />
+        )}
+      </AnimatePresence>
 
       {/* Social proof */}
       <p className="relative z-10 mt-6 text-xs text-slate-400 font-medium">

@@ -16,6 +16,7 @@ export async function POST(req: Request) {
       couponCode,
       utmSource,   // e.g. "instagram"
       utmCampaign, // e.g. "reel"
+      referredByCode,
     } = await req.json();
 
     if (!demoId) {
@@ -40,7 +41,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: "Template not found" }, { status: 404 });
     }
 
-    let finalAmount = theme.price;
+    // Payment requirement commented out for now — all templates are 100% free
+    let finalAmount = 0;
     let couponId: string | null = null;
     const cleanCode = couponCode ? couponCode.trim().toUpperCase() : "";
 
@@ -87,7 +89,8 @@ export async function POST(req: Request) {
           plan: sourceLabel || "GUEST_FREE",
           demoId: theme.name,
           couponId,
-        },
+          referredByCode: referredByCode || null,
+        } as any,
       });
 
       if (couponId) {
@@ -135,7 +138,8 @@ export async function POST(req: Request) {
         plan: sourceLabel || "GUEST_PURCHASE",
         demoId: theme.name,
         couponId,
-      },
+        referredByCode: referredByCode || null,
+      } as any,
     });
 
     return NextResponse.json({

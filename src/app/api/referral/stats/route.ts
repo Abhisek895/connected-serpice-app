@@ -26,35 +26,42 @@ export async function GET() {
     const referralEnabled = enabledSetting?.value !== "false";
     const rewardPaise = rewardType === "PERCENTAGE" ? 0 : rewardAmount * 100;
 
-    // 2. Fetch User with Referrals and Wallet Transactions
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        referralCode: true,
-        walletBalance: true,
-        referrals: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            createdAt: true,
-            payments: {
-              where: { status: "SUCCESS" },
-              select: { id: true, amount: true, createdAt: true },
-              orderBy: { createdAt: "desc" },
-              take: 1,
+    // 2. Fetch User with Referrals and Wallet Transactions + Active Themes
+    const [user, activeThemes] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          referralCode: true,
+          walletBalance: true,
+          referrals: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              createdAt: true,
+              payments: {
+                where: { status: "SUCCESS" },
+                select: { id: true, amount: true, createdAt: true },
+                orderBy: { createdAt: "desc" },
+                take: 1,
+              },
             },
+            orderBy: { createdAt: "desc" },
+            take: 20,
           },
-          orderBy: { createdAt: "desc" },
-          take: 20,
+          walletTxns: {
+            select: { id: true, type: true, amount: true, description: true, referenceId: true, createdAt: true, status: true },
+            orderBy: { createdAt: "desc" },
+            take: 20,
+          },
         },
-        walletTxns: {
-          select: { id: true, type: true, amount: true, description: true, referenceId: true, createdAt: true, status: true },
-          orderBy: { createdAt: "desc" },
-          take: 20,
-        },
-      },
-    });
+      }),
+      prisma.theme.findMany({
+        where: { isActive: true },
+        select: { id: true, name: true, title: true, description: true, price: true, durationDays: true, isPremium: true },
+        orderBy: { price: "asc" },
+      }),
+    ]);
 
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
@@ -66,11 +73,13 @@ export async function GET() {
       for (const ref of user.referrals) {
         const hasPaid = ref.payments.length > 0;
         if (hasPaid) {
-          // Check if a referral reward transaction already exists for this referral
+          const paymentIds = ref.payments.map((p) => p.id);
           const hasRewardRecord = updatedTxns.some(
             (t) =>
               t.type === "REFERRAL_EARNED" &&
-              (t.referenceId === ref.id || (t.description && ref.email && t.description.includes(ref.email.split("@")[0])))
+              (t.referenceId === ref.id ||
+                (t.referenceId && paymentIds.includes(t.referenceId)) ||
+                (t.description && ref.email && t.description.includes(ref.email.split("@")[0])))
           );
 
           if (!hasRewardRecord) {
@@ -112,11 +121,14 @@ export async function GET() {
 
     const referralsMapped = user.referrals.map((ref) => {
       const hasPaid = ref.payments.length > 0;
+      const paymentIds = ref.payments.map((p) => p.id);
       const isRewardCredited = updatedTxns.some(
         (t) =>
           t.type === "REFERRAL_EARNED" &&
           t.status === "COMPLETED" &&
-          (t.referenceId === ref.id || (t.description && ref.email && t.description.includes(ref.email.split("@")[0])))
+          (t.referenceId === ref.id ||
+            (t.referenceId && paymentIds.includes(t.referenceId)) ||
+            (t.description && ref.email && t.description.includes(ref.email.split("@")[0])))
       );
 
       return {
@@ -144,6 +156,7 @@ export async function GET() {
       rewardPercent,
       minWithdrawal,
       referralEnabled,
+      themes: activeThemes,
     });
   } catch (err) {
     console.error("[referral/stats]", err);

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Script from "next/script";
 import Link from "next/link";
+import { useSession, signIn } from "next-auth/react";
 import {
   X, Sparkles, ChevronRight, ChevronLeft, Loader2, Send,
   CheckCircle2, Copy, ExternalLink, Image as ImageIcon, Music,
@@ -205,7 +206,7 @@ export default function GuestCustomizeFlow({
   const [couponCode, setCouponCode] = useState("LOVE2026");
   const [couponStatus, setCouponStatus] = useState<"idle" | "validating" | "valid" | "invalid">("idle");
   const [couponMessage, setCouponMessage] = useState("");
-  const [finalPrice, setFinalPrice] = useState(demo.price ?? 0);
+  const [finalPrice, setFinalPrice] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
@@ -222,8 +223,20 @@ export default function GuestCustomizeFlow({
         vals[f.key] = tmpl.defaultData[f.key] ?? "";
       }
     }
+
+    // Restore saved draft from localStorage if present
+    if (typeof window !== "undefined") {
+      const savedDraft = localStorage.getItem(`ourstory_draft_${demo.id}`);
+      if (savedDraft) {
+        try {
+          const parsed = JSON.parse(savedDraft);
+          Object.assign(vals, parsed);
+        } catch (e) { }
+      }
+    }
+
     setFormValues(vals);
-    setFinalPrice(demo.price ?? 0);
+    setFinalPrice(0);
 
     // Sync URL action parameter
     if (typeof window !== "undefined") {
@@ -236,7 +249,7 @@ export default function GuestCustomizeFlow({
         setViewState("customize");
       }
     }
-  }, [tmpl]);
+  }, [tmpl, demo.id]);
 
   // Coupon auto-validation
   useEffect(() => {
@@ -276,7 +289,13 @@ export default function GuestCustomizeFlow({
   }
 
   const handleFieldChange = (key: string, value: string) => {
-    setFormValues((prev) => ({ ...prev, [key]: value }));
+    setFormValues((prev) => {
+      const updated = { ...prev, [key]: value };
+      if (typeof window !== "undefined") {
+        localStorage.setItem(`ourstory_draft_${demo.id}`, JSON.stringify(updated));
+      }
+      return updated;
+    });
   };
 
   const handleFileChange = async (file: File, fieldKey: string) => {
@@ -315,11 +334,28 @@ export default function GuestCustomizeFlow({
     }
   };
 
+  const { data: session, status: sessionStatus } = useSession();
+  const isLoggedIn = sessionStatus === "authenticated" && Boolean(session?.user);
+  const [showLoginRequiredModal, setShowLoginRequiredModal] = useState(false);
+
   async function handlePayment() {
+    // Mandatory login enforcement: User must be signed in to publish/get their link
+    if (!isLoggedIn) {
+      setShowLoginRequiredModal(true);
+      return;
+    }
+
     setIsProcessing(true);
     setError(null);
     const { source, campaign } = getUtmParams();
     const activeCoupon = couponStatus === "valid" ? couponCode : undefined;
+
+    // Read referral code from cookie / localStorage
+    let refCode: string | undefined = undefined;
+    if (typeof document !== "undefined") {
+      const match = document.cookie.match(new RegExp("(?:^|; )ourstory_ref_code=([^;]*)"));
+      refCode = match ? decodeURIComponent(match[1]) : (localStorage.getItem("ourstory_ref_code") || undefined);
+    }
 
     try {
       const res = await fetch("/api/guest/create-order", {
@@ -330,6 +366,7 @@ export default function GuestCustomizeFlow({
           couponCode: activeCoupon,
           utmSource: source,
           utmCampaign: campaign,
+          referredByCode: refCode,
         }),
       });
       const data = await res.json();
@@ -411,6 +448,13 @@ export default function GuestCustomizeFlow({
       const data = await res.json();
       if (!data.success) throw new Error(data.message || "Failed to create event");
 
+      if (data.slug) {
+        if (typeof document !== "undefined") {
+          document.cookie = `ourstory_guest_claim_slug=${data.slug}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax`;
+          localStorage.setItem("ourstory_guest_claim_slug", data.slug);
+        }
+      }
+
       setPublishedUrl(`${window.location.origin}${data.shareUrl}`);
     } catch (err: any) {
       setError(err.message || "Something went wrong creating your page");
@@ -453,7 +497,7 @@ export default function GuestCustomizeFlow({
               </p>
             </div>
             <Link
-              href="/register"
+              href={`/register${publishedUrl.includes("/p/") ? `?claimSlug=${encodeURIComponent(publishedUrl.split("/p/")[1])}` : ""}`}
               className="whitespace-nowrap px-4 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer"
             >
               Create Free Account ➔
@@ -482,7 +526,7 @@ export default function GuestCustomizeFlow({
             >
               <div className="bg-slate-900/95 backdrop-blur-xl border border-rose-500/40 text-white rounded-2xl p-4 shadow-2xl flex items-start gap-3.5 relative overflow-hidden ring-1 ring-white/10">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 via-pink-500 to-amber-400" />
-                
+
                 <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shrink-0 shadow-md shadow-rose-500/30 mt-0.5">
                   <Bell className="w-4 h-4 text-white animate-bounce" />
                 </div>
@@ -524,105 +568,105 @@ export default function GuestCustomizeFlow({
         </AnimatePresence>
 
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-rose-950 to-slate-950 relative overflow-hidden flex items-center justify-center p-4">
-        {/* Floating hearts background */}
-        {Array.from({ length: 12 }, (_, i) => (
+          {/* Floating hearts background */}
+          {Array.from({ length: 12 }, (_, i) => (
+            <motion.div
+              key={i}
+              className="absolute text-rose-500/20 select-none pointer-events-none"
+              style={{ left: `${(i * 8.3) % 100}%`, top: `${(i * 13.7) % 100}%`, fontSize: `${1.5 + (i % 3) * 0.8}rem` }}
+              animate={{ y: [-20, 20, -20], opacity: [0.1, 0.3, 0.1] }}
+              transition={{ duration: 3 + i * 0.4, repeat: Infinity, delay: i * 0.3 }}
+            >
+              💖
+            </motion.div>
+          ))}
+
           <motion.div
-            key={i}
-            className="absolute text-rose-500/20 select-none pointer-events-none"
-            style={{ left: `${(i * 8.3) % 100}%`, top: `${(i * 13.7) % 100}%`, fontSize: `${1.5 + (i % 3) * 0.8}rem` }}
-            animate={{ y: [-20, 20, -20], opacity: [0.1, 0.3, 0.1] }}
-            transition={{ duration: 3 + i * 0.4, repeat: Infinity, delay: i * 0.3 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-md w-full relative z-10"
           >
-            💖
-          </motion.div>
-        ))}
-
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-md w-full relative z-10"
-        >
-          <div className="text-center mb-4">
-            <span className="text-rose-400 text-xs font-bold tracking-widest uppercase">💖 Made with OurStory</span>
-          </div>
-
-          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-white/10">
-            {/* Thumbnail */}
-            <div className="relative h-52 w-full overflow-hidden bg-slate-900">
-              <img src={demo.image} alt={demo.title} className="w-full h-full object-cover object-[center_25%]" />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
-              <div className="absolute top-3 left-3 flex gap-1.5">
-                <span className={`${demo.badgeColor} px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm flex items-center gap-1`}>
-                  <Icon className="w-3 h-3" /> {demo.badge}
-                </span>
-                {(demo.price ?? 0) > 0 && (
-                  <span className="bg-amber-400 text-amber-950 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm border border-amber-300">
-                    ₹{((demo.price ?? 0) / 100).toFixed(0)} / {demo.durationDays ?? 14}d
-                  </span>
-                )}
-              </div>
+            <div className="text-center mb-4">
+              <span className="text-rose-400 text-xs font-bold tracking-widest uppercase">💖 Made with OurStory</span>
             </div>
 
-            {/* Body */}
-            <div className="p-6 space-y-4">
-              <div>
-                <h1 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
-                  <Icon className="w-5 h-5 text-rose-500 shrink-0" />
-                  {demo.title}
-                </h1>
-                <p className="text-xs text-slate-600 leading-relaxed mt-1.5">{demo.description}</p>
+            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-white/10">
+              {/* Thumbnail */}
+              <div className="relative h-52 w-full overflow-hidden bg-slate-900">
+                <img src={demo.image} alt={demo.title} className="w-full h-full object-cover object-[center_25%]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
+                <div className="absolute top-3 left-3 flex gap-1.5">
+                  <span className={`${demo.badgeColor} px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm flex items-center gap-1`}>
+                    <Icon className="w-3 h-3" /> {demo.badge}
+                  </span>
+                  {(demo.price ?? 0) > 0 && (
+                    <span className="bg-amber-400 text-amber-950 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm border border-amber-300">
+                      ₹{((demo.price ?? 0) / 100).toFixed(0)} / {demo.durationDays ?? 14}d
+                    </span>
+                  )}
+                </div>
               </div>
 
-              {/* 3 Distinct Action Buttons */}
-              <div className="space-y-2.5 pt-1">
-                {/* 1. Preview Demo */}
-                <a
-                  href={demo.previewUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-3 px-4 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold transition flex items-center justify-between group"
-                >
-                  <span className="flex items-center gap-2">
-                    <Eye className="w-4 h-4 text-slate-400 group-hover:text-rose-500" />
-                    1. Preview Demo
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-normal">Test Live</span>
-                </a>
+              {/* Body */}
+              <div className="p-6 space-y-4">
+                <div>
+                  <h1 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+                    <Icon className="w-5 h-5 text-rose-500 shrink-0" />
+                    {demo.title}
+                  </h1>
+                  <p className="text-xs text-slate-600 leading-relaxed mt-1.5">{demo.description}</p>
+                </div>
 
-                {/* 2. Use As-Is (Instant Direct Link) — skips form editing completely */}
-                {demo.hasInstantUse && (
-                  <button
-                    onClick={() => { setShowCheckoutView(true); setViewState("checkout"); }}
-                    className="w-full py-3 px-4 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition shadow-md shadow-rose-200 flex items-center justify-between cursor-pointer"
+                {/* 3 Distinct Action Buttons */}
+                <div className="space-y-2.5 pt-1">
+                  {/* 1. Preview Demo */}
+                  <a
+                    href={demo.previewUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3 px-4 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold transition flex items-center justify-between group"
                   >
                     <span className="flex items-center gap-2">
-                      <Zap className="w-4 h-4 fill-white" /> 2. Use As-Is (Instant)
+                      <Eye className="w-4 h-4 text-slate-400 group-hover:text-rose-500" />
+                      1. Preview Demo
                     </span>
-                    <span className="text-[10px] bg-rose-600 px-2 py-0.5 rounded font-medium">Direct Link (5s)</span>
+                    <span className="text-[10px] text-slate-400 font-normal">Test Live</span>
+                  </a>
+
+                  {/* 2. Use As-Is (Instant Direct Link) — skips form editing completely */}
+                  {demo.hasInstantUse && (
+                    <button
+                      onClick={() => { setShowCheckoutView(true); setViewState("checkout"); }}
+                      className="w-full py-3 px-4 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition shadow-md shadow-rose-200 flex items-center justify-between cursor-pointer"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Zap className="w-4 h-4 fill-white" /> 2. Use As-Is (Instant)
+                      </span>
+                      <span className="text-[10px] bg-rose-600 px-2 py-0.5 rounded font-medium">Direct Link (5s)</span>
+                    </button>
+                  )}
+
+                  {/* 3. Edit & Customize (Add Your Text/Photos) — opens customizer form editor */}
+                  <button
+                    onClick={() => setViewState("customize")}
+                    className={`w-full py-3 px-4 rounded-xl text-white text-xs font-bold transition shadow-sm flex items-center justify-between cursor-pointer ${!demo.hasInstantUse ? "bg-rose-500 hover:bg-rose-600 shadow-rose-200" : "bg-slate-900 hover:bg-slate-800"}`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Edit3 className="w-4 h-4" />
+                      {!demo.hasInstantUse ? "2. Edit & Customize" : "3. Edit & Customize"}
+                    </span>
+                    <span className="text-[10px] opacity-80 font-normal">Add Your Text/Photos</span>
                   </button>
-                )}
+                </div>
 
-                {/* 3. Edit & Customize (Add Your Text/Photos) — opens customizer form editor */}
-                <button
-                  onClick={() => setViewState("customize")}
-                  className={`w-full py-3 px-4 rounded-xl text-white text-xs font-bold transition shadow-sm flex items-center justify-between cursor-pointer ${!demo.hasInstantUse ? "bg-rose-500 hover:bg-rose-600 shadow-rose-200" : "bg-slate-900 hover:bg-slate-800"}`}
-                >
-                  <span className="flex items-center gap-2">
-                    <Edit3 className="w-4 h-4" />
-                    {!demo.hasInstantUse ? "2. Edit & Customize" : "3. Edit & Customize"}
-                  </span>
-                  <span className="text-[10px] opacity-80 font-normal">Add Your Text/Photos</span>
-                </button>
-              </div>
-
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
-                <span className="flex items-center gap-1"><Heart className="w-3 h-3 text-rose-500 fill-rose-500" /> Instant Share Link</span>
-                <span>🔒 SSL Encrypted</span>
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
+                  <span className="flex items-center gap-1"><Heart className="w-3 h-3 text-rose-500 fill-rose-500" /> Instant Share Link</span>
+                  <span>🔒 SSL Encrypted</span>
+                </div>
               </div>
             </div>
-          </div>
-        </motion.div>
-      </div>
+          </motion.div>
+        </div>
       </>
     );
   }
@@ -833,6 +877,78 @@ export default function GuestCustomizeFlow({
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* 💖 MANDATORY LOGIN / SIGN-IN POPUP MODAL */}
+        <AnimatePresence>
+          {showLoginRequiredModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[10002] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md"
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                className="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden relative border border-rose-100 p-6 text-center"
+              >
+                <button
+                  onClick={() => setShowLoginRequiredModal(false)}
+                  className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-100 transition cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                <motion.div
+                  animate={{ scale: [1, 1.15, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                  className="w-16 h-16 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center mx-auto mb-4 shadow-inner text-3xl"
+                >
+                  💖
+                </motion.div>
+
+                <h3 className="text-lg font-black text-slate-900 leading-tight mb-1">
+                  Sign In Required to Get Link 🔒
+                </h3>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed mb-6">
+                  To publish <strong className="text-slate-800">{demo.title}</strong> and save it permanently to your account dashboard, please sign in or create a free account.
+                </p>
+
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => signIn("google", { callbackUrl: typeof window !== "undefined" ? window.location.href : "/dashboard" })}
+                    className="w-full py-3.5 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-2xl transition flex items-center justify-center gap-2.5 shadow-sm cursor-pointer"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z" />
+                      <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.29v3.15C3.26 21.3 7.31 24 12 24z" />
+                      <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.29C.47 8.21 0 10.05 0 12s.47 3.79 1.29 5.42l3.99-3.15z" />
+                      <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.58l3.99 3.15c.95-2.83 3.6-4.98 6.72-4.98z" />
+                    </svg>
+                    Sign In with Google
+                  </button>
+
+                  <Link
+                    href={`/register${typeof window !== "undefined" ? `?redirect=${encodeURIComponent(window.location.href)}` : ""}`}
+                    className="block w-full py-3.5 px-4 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-extrabold text-xs rounded-2xl shadow-md shadow-rose-200 transition text-center"
+                  >
+                    Create Free Account ✨
+                  </Link>
+
+                  <Link
+                    href={`/login${typeof window !== "undefined" ? `?redirect=${encodeURIComponent(window.location.href)}` : ""}`}
+                    className="block text-xs font-semibold text-rose-600 hover:underline pt-1 text-center"
+                  >
+                    Already have an account? Sign In
+                  </Link>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
@@ -842,441 +958,441 @@ export default function GuestCustomizeFlow({
   // ───────────────────────────────────────────────────────────────────────────
   return (
     <>
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-3 sm:p-6">
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 10 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="bg-white rounded-3xl max-w-5xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-rose-100 relative"
-      >
-        {/* Header */}
-        <div className="sticky top-0 z-40 bg-white rounded-t-3xl border-b border-slate-100 px-6 pt-5 pb-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-rose-100 rounded-2xl text-rose-600 flex-shrink-0">
-              <Icon className="w-5 h-5 text-rose-500" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-slate-900 leading-tight">
-                Customize &amp; Save 💌
-              </h3>
-              <p className="text-xs text-slate-500">{demo.title}</p>
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-3 sm:p-6">
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="bg-white rounded-3xl max-w-5xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-rose-100 relative"
+        >
+          {/* Header */}
+          <div className="sticky top-0 z-40 bg-white rounded-t-3xl border-b border-slate-100 px-6 pt-5 pb-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-rose-100 rounded-2xl text-rose-600 flex-shrink-0">
+                <Icon className="w-5 h-5 text-rose-500" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 leading-tight">
+                  Customize &amp; Save 💌
+                </h3>
+                <p className="text-xs text-slate-500">{demo.title}</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="p-4 sm:p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-            {/* Left Column: Form Inputs */}
-            <div className="lg:col-span-7 space-y-4">
-              {/* Step Progress */}
-              {totalSteps > 1 && (
-                <div className="flex items-center gap-2 mb-2">
-                  {tmpl.steps.map((s, i) => (
-                    <div key={i} className="flex items-center gap-2 flex-1">
-                      <div
-                        className={`flex-1 h-1.5 rounded-full transition-all ${i <= currentStep ? "bg-rose-500" : "bg-slate-200"
-                          }`}
-                      />
-                    </div>
-                  ))}
-                  <span className="text-xs font-bold text-slate-400 whitespace-nowrap">
-                    {currentStep + 1} / {totalSteps}
-                  </span>
-                </div>
-              )}
-
-              {/* Form Steps Body */}
-              <div>
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={currentStep}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.2 }}
-                    className="space-y-4"
-                  >
-                    {/* Step Header */}
-                    <div className="mb-2">
-                      <h4 className="font-bold text-slate-900">{step.title}</h4>
-                      <p className="text-xs text-slate-500 mt-0.5">{step.description}</p>
-                    </div>
-
-                    {/* Fields */}
-                    {step.fields.map((field) => (
-                      <FieldInput
-                        key={field.key}
-                        field={field}
-                        value={formValues[field.key]}
-                        onChange={(val) => handleFieldChange(field.key, val)}
-                        onFileChange={handleFileChange}
-                        fileStatus={fileStatuses[field.key] as any}
-                      />
+          <div className="p-4 sm:p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+              {/* Left Column: Form Inputs */}
+              <div className="lg:col-span-7 space-y-4">
+                {/* Step Progress */}
+                {totalSteps > 1 && (
+                  <div className="flex items-center gap-2 mb-2">
+                    {tmpl.steps.map((s, i) => (
+                      <div key={i} className="flex items-center gap-2 flex-1">
+                        <div
+                          className={`flex-1 h-1.5 rounded-full transition-all ${i <= currentStep ? "bg-rose-500" : "bg-slate-200"
+                            }`}
+                        />
+                      </div>
                     ))}
-                  </motion.div>
-                </AnimatePresence>
-
-                {error && (
-                  <div className="mt-4 flex items-start gap-2.5 bg-red-50 border border-red-200 rounded-2xl p-3.5 text-sm text-red-700">
-                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                    <span>{error}</span>
+                    <span className="text-xs font-bold text-slate-400 whitespace-nowrap">
+                      {currentStep + 1} / {totalSteps}
+                    </span>
                   </div>
                 )}
-              </div>
-            </div>
 
-            {/* Right Column: Interactive Live Phone Preview (Always Visible On All Screen Sizes) */}
-            <div className="lg:col-span-5 flex flex-col items-center justify-center bg-slate-50 rounded-2xl p-4 border border-slate-100 w-full sticky top-20">
-              <div className="w-full flex items-center justify-between mb-3 px-1">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                  <Smartphone className="w-4 h-4 text-rose-500" /> Live Recipient View
-                </p>
-                <span className="text-[10px] font-bold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
-                  Updates Live ✨
-                </span>
-              </div>
-              <LivePhonePreview
-                demoId={demo.id}
-                formValues={formValues}
-                defaultData={tmpl.defaultData}
-                currentStep={currentStep}
-              />
-            </div>
-          </div>
-        </div>
+                {/* Form Steps Body */}
+                <div>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={currentStep}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.2 }}
+                      className="space-y-4"
+                    >
+                      {/* Step Header */}
+                      <div className="mb-2">
+                        <h4 className="font-bold text-slate-900">{step.title}</h4>
+                        <p className="text-xs text-slate-500 mt-0.5">{step.description}</p>
+                      </div>
 
-        {/* Footer */}
-        <div className="sticky bottom-0 z-40 bg-white border-t border-slate-100 px-6 py-4 flex items-center gap-3 rounded-b-3xl">
-          {currentStep > 0 ? (
-            <button
-              onClick={() => setCurrentStep((s) => s - 1)}
-              className="py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer"
-            >
-              <ChevronLeft className="w-4 h-4" /> Back
-            </button>
-          ) : (
-            <button
-              onClick={() => setShowExitModal(true)}
-              className="py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition inline-block cursor-pointer"
-            >
-              Browse Templates
-            </button>
-          )}
+                      {/* Fields */}
+                      {step.fields.map((field) => (
+                        <FieldInput
+                          key={field.key}
+                          field={field}
+                          value={formValues[field.key]}
+                          onChange={(val) => handleFieldChange(field.key, val)}
+                          onFileChange={handleFileChange}
+                          fileStatus={fileStatuses[field.key] as any}
+                        />
+                      ))}
+                    </motion.div>
+                  </AnimatePresence>
 
-          {currentStep < totalSteps - 1 ? (
-            <button
-              onClick={() => setCurrentStep((s) => s + 1)}
-              className="flex-1 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer"
-            >
-              Next Step <ChevronRight className="w-4 h-4" />
-            </button>
-          ) : (
-            <button
-              onClick={() => setShowCheckoutView(true)}
-              className="flex-1 py-2.5 px-4 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs transition shadow-md shadow-rose-200 flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Send className="w-4 h-4" /> Continue to Payment →
-            </button>
-          )}
-        </div>
-      </motion.div>
-    </div>
-
-    {/* 💔 Exit Confirmation Modal */}
-    <AnimatePresence>
-      {showExitModal && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.92, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.92, y: 20 }}
-            transition={{ type: "spring", stiffness: 300, damping: 24 }}
-            className="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden text-center"
-          >
-            {/* Top gradient bar */}
-            <div className="h-1.5 bg-gradient-to-r from-rose-400 via-pink-500 to-rose-600" />
-
-            <div className="px-6 pt-6 pb-7 flex flex-col items-center gap-4">
-              {/* Animated broken heart */}
-              <motion.div
-                animate={{ rotate: [0, -8, 8, -8, 0], scale: [1, 1.1, 1] }}
-                transition={{ duration: 1.2, ease: "easeInOut", repeat: Infinity, repeatDelay: 2 }}
-                className="text-5xl"
-              >
-                💔
-              </motion.div>
-
-              <div className="space-y-1.5">
-                <h3 className="text-lg font-black text-slate-900">
-                  Wait… don’t go yet! 🥺
-                </h3>
-                <p className="text-sm text-slate-500 leading-relaxed">
-                  <span className="font-bold text-rose-500">{formValues["recipientName"] || "Your special someone"}</span> is waiting for this surprise.
-                  <br />
-                  It only takes a moment to finish — and their smile will be worth it. ✨
-                </p>
-              </div>
-
-              {/* Cute reassurance badge */}
-              <div className="bg-rose-50 border border-rose-100 rounded-2xl px-4 py-2.5 w-full">
-                <p className="text-xs font-semibold text-rose-700">
-                  💖 You’re {Math.round(((currentStep + 1) / totalSteps) * 100)}% done… so close!
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-2.5 w-full pt-1">
-                {/* Primary: stay */}
-                <button
-                  onClick={() => setShowExitModal(false)}
-                  className="w-full py-3.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-rose-200 hover:from-rose-600 hover:to-pink-700 transition-all"
-                >
-                  No, keep going! 💪
-                </button>
-
-                {/* Secondary: confirm exit -> opens Cute Payment Push Modal */}
-                <button
-                  onClick={() => {
-                    setShowExitModal(false);
-                    setShowPaymentPushModal(true);
-                  }}
-                  className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm rounded-2xl transition-all cursor-pointer"
-                >
-                  Yes, exit
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-
-    {/* 🎁 CUTE PAYMENT PUSH RETENTION MODAL (Triggers when clicking "Yes, exit") */}
-    <AnimatePresence>
-      {showPaymentPushModal && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md"
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ type: "spring", stiffness: 300, damping: 24 }}
-            className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden relative border border-rose-100 text-center"
-          >
-            {/* Header banner */}
-            <div className="bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white px-6 py-4 relative overflow-hidden">
-              <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-3 py-1 rounded-full border border-white/30 inline-block mb-1">
-                🎁 Exclusive Exit Offer
-              </span>
-              <h3 className="text-lg font-black leading-tight">
-                Don&apos;t leave {formValues["recipientName"] || "your special someone"} waiting! 🥺💖
-              </h3>
-            </div>
-
-            <div className="p-6 space-y-5">
-              {/* Cute heart illustration */}
-              <div className="flex justify-center -mt-2">
-                <div className="w-16 h-16 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center shadow-inner text-3xl">
-                  ✨
-                </div>
-              </div>
-
-              <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                Your surprise for <span className="font-extrabold text-rose-600">{formValues["recipientName"] || "someone special"}</span> is already created! Unlock instant link publishing right now with an extra exit discount!
-              </p>
-
-              {/* Discount Offer Card */}
-              <div className="bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200 rounded-2xl p-4 text-center space-y-2 relative">
-                <div className="inline-flex items-center gap-1.5 bg-amber-400 text-amber-950 text-[11px] font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
-                  🏷️ Code: LOVE2026 Auto-Applied
-                </div>
-
-                <div className="flex items-center justify-center gap-3 pt-1">
-                  <span className="text-sm font-bold text-slate-400 line-through">₹{origPriceINR.toFixed(0)}</span>
-                  <span className="text-3xl font-black text-rose-600">₹{finalPriceINR.toFixed(0)}</span>
-                  {finalPriceINR === 0 && (
-                    <span className="bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded">FREE PASS</span>
+                  {error && (
+                    <div className="mt-4 flex items-start gap-2.5 bg-red-50 border border-red-200 rounded-2xl p-3.5 text-sm text-red-700">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <span>{error}</span>
+                    </div>
                   )}
                 </div>
-
-                <p className="text-[11px] text-slate-500 font-semibold">
-                  ⚡ Includes 14-day live page duration + real-time view tracker
-                </p>
               </div>
 
-              {/* Action Buttons */}
-              <div className="space-y-2.5 pt-1">
-                <button
-                  onClick={() => {
-                    setShowPaymentPushModal(false);
-                    setShowCheckoutView(true);
-                  }}
-                  className="w-full py-4 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white font-extrabold text-sm rounded-2xl shadow-xl shadow-rose-200 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Sparkles className="w-4 h-4 fill-white" />
-                  {finalPriceINR === 0 ? "🚀 Activate Free Link Now (₹0)" : `🚀 Claim Discount & Pay ₹${finalPriceINR.toFixed(0)}`}
-                </button>
-
-                <button
-                  onClick={() => {
-                    setShowPaymentPushModal(false);
-                    setViewState("landing");
-                    setCurrentStep(0);
-                    setShowExitPushToast(true);
-                    setTimeout(() => setShowExitPushToast(false), 6000);
-                  }}
-                  className="w-full py-2.5 text-slate-400 hover:text-slate-600 font-bold text-xs transition"
-                >
-                  No thanks, I&apos;ll pass for now ➔
-                </button>
+              {/* Right Column: Interactive Live Phone Preview (Always Visible On All Screen Sizes) */}
+              <div className="lg:col-span-5 flex flex-col items-center justify-center bg-slate-50 rounded-2xl p-4 border border-slate-100 w-full sticky top-20">
+                <div className="w-full flex items-center justify-between mb-3 px-1">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                    <Smartphone className="w-4 h-4 text-rose-500" /> Live Recipient View
+                  </p>
+                  <span className="text-[10px] font-bold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
+                    Updates Live ✨
+                  </span>
+                </div>
+                <LivePhonePreview
+                  demoId={demo.id}
+                  formValues={formValues}
+                  defaultData={tmpl.defaultData}
+                  currentStep={currentStep}
+                />
               </div>
-
-              <p className="text-[10px] text-slate-400">🔒 256-Bit SSL Encrypted Payment via Razorpay</p>
             </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          </div>
 
-    {/* 🔔 Cute Push Notification Toast (Populates AFTER clicking "Yes, exit") */}
-    <AnimatePresence>
-      {showExitPushToast && (
-        <motion.div
-          initial={{ opacity: 0, y: -50, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -30, scale: 0.9 }}
-          transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          className="fixed top-4 left-1/2 -translate-x-1/2 z-[10000] w-full max-w-sm px-3"
-        >
-          <div className="bg-slate-900/95 backdrop-blur-xl border border-rose-500/30 text-white rounded-2xl p-4 shadow-2xl flex items-start gap-3.5 relative overflow-hidden">
-            {/* Top gradient glow line */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 via-pink-500 to-amber-400" />
-            
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shrink-0 shadow-md shadow-rose-500/30 mt-0.5">
-              <Bell className="w-4 h-4 text-white animate-bounce" />
-            </div>
-
-            <div className="flex-1 min-w-0 pr-2">
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-amber-400 fill-amber-400" /> OurStory Special Offer
-                </span>
-                <span className="text-[10px] text-slate-400">now</span>
-              </div>
-              <p className="text-xs font-black text-white leading-snug">
-                Aww, don&apos;t let {formValues["recipientName"] || "your special someone"} wait! 🥺🌸
-              </p>
-              <p className="text-[11px] text-slate-300 font-medium leading-relaxed mt-1">
-                Your surprise is almost ready! Finish now &amp; use code <span className="text-amber-300 font-black bg-amber-400/20 px-1.5 py-0.5 rounded">LOVE2026</span> for extra discount! 💖
-              </p>
-
+          {/* Footer */}
+          <div className="sticky bottom-0 z-40 bg-white border-t border-slate-100 px-6 py-4 flex items-center gap-3 rounded-b-3xl">
+            {currentStep > 0 ? (
               <button
-                onClick={() => {
-                  setShowExitPushToast(false);
-                  setViewState("customize");
-                }}
-                className="mt-2.5 px-3 py-1.5 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-extrabold text-[11px] rounded-xl shadow-md shadow-rose-500/30 transition-all flex items-center gap-1.5 cursor-pointer"
+                onClick={() => setCurrentStep((s) => s - 1)}
+                className="py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer"
               >
-                <span>Re-Open &amp; Finish Surprise</span> ✨
+                <ChevronLeft className="w-4 h-4" /> Back
               </button>
-            </div>
+            ) : (
+              <button
+                onClick={() => setShowExitModal(true)}
+                className="py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition inline-block cursor-pointer"
+              >
+                Browse Templates
+              </button>
+            )}
 
-            <button
-              onClick={() => setShowExitPushToast(false)}
-              className="text-slate-400 hover:text-white p-1 rounded-lg transition shrink-0"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            {currentStep < totalSteps - 1 ? (
+              <button
+                onClick={() => setCurrentStep((s) => s + 1)}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer"
+              >
+                Next Step <ChevronRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowCheckoutView(true)}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs transition shadow-md shadow-rose-200 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Send className="w-4 h-4" /> Continue to Payment →
+              </button>
+            )}
           </div>
         </motion.div>
-      )}
-    </AnimatePresence>
+      </div>
 
-    {/* 🌸 CUTE PAYMENT CANCELLED PUSH POPUP MODAL (Pushes user to retry payment without ugly text) */}
-    <AnimatePresence>
-      {showPaymentCancelledPushModal && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md"
-        >
+      {/* 💔 Exit Confirmation Modal */}
+      <AnimatePresence>
+        {showExitModal && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ type: "spring", stiffness: 300, damping: 24 }}
-            className="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden relative border border-rose-100 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
           >
-            {/* Top gradient accent line */}
-            <div className="h-1.5 bg-gradient-to-r from-rose-400 via-pink-500 to-amber-400" />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 24 }}
+              className="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden text-center"
+            >
+              {/* Top gradient bar */}
+              <div className="h-1.5 bg-gradient-to-r from-rose-400 via-pink-500 to-rose-600" />
 
-            <div className="p-6 space-y-4">
-              {/* Cute heart illustration */}
-              <motion.div
-                animate={{ scale: [1, 1.15, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                className="w-16 h-16 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center mx-auto shadow-inner text-3xl"
-              >
-                💖
-              </motion.div>
-
-              <div className="space-y-1">
-                <h3 className="text-lg font-black text-slate-900 leading-tight">
-                  Aww, payment was paused! 🥺🌸
-                </h3>
-                <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                  Don&apos;t worry! Your special surprise for <span className="font-extrabold text-rose-600">{formValues["recipientName"] || "your special someone"}</span> is safely saved.
-                </p>
-              </div>
-
-              {/* Coupon Badge */}
-              <div className="bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200 rounded-2xl p-3.5 space-y-1">
-                <div className="inline-flex items-center gap-1 bg-amber-400 text-amber-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                  🏷️ LOVE2026 Applied (50% OFF)
-                </div>
-                <p className="text-xs font-black text-rose-600 pt-0.5">
-                  Unlock for only ₹{finalPriceINR.toFixed(0)} right now! ✨
-                </p>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="space-y-2 pt-1">
-                <button
-                  onClick={() => {
-                    setShowPaymentCancelledPushModal(false);
-                    handlePayment();
-                  }}
-                  className="w-full py-3.5 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-rose-200 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+              <div className="px-6 pt-6 pb-7 flex flex-col items-center gap-4">
+                {/* Animated broken heart */}
+                <motion.div
+                  animate={{ rotate: [0, -8, 8, -8, 0], scale: [1, 1.1, 1] }}
+                  transition={{ duration: 1.2, ease: "easeInOut", repeat: Infinity, repeatDelay: 2 }}
+                  className="text-5xl"
                 >
-                  <Sparkles className="w-4 h-4 fill-white" />
-                  🚀 Retry Payment &amp; Activate Link
-                </button>
+                  💔
+                </motion.div>
+
+                <div className="space-y-1.5">
+                  <h3 className="text-lg font-black text-slate-900">
+                    Wait… don’t go yet! 🥺
+                  </h3>
+                  <p className="text-sm text-slate-500 leading-relaxed">
+                    <span className="font-bold text-rose-500">{formValues["recipientName"] || "Your special someone"}</span> is waiting for this surprise.
+                    <br />
+                    It only takes a moment to finish — and their smile will be worth it. ✨
+                  </p>
+                </div>
+
+                {/* Cute reassurance badge */}
+                <div className="bg-rose-50 border border-rose-100 rounded-2xl px-4 py-2.5 w-full">
+                  <p className="text-xs font-semibold text-rose-700">
+                    💖 You’re {Math.round(((currentStep + 1) / totalSteps) * 100)}% done… so close!
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-2.5 w-full pt-1">
+                  {/* Primary: stay */}
+                  <button
+                    onClick={() => setShowExitModal(false)}
+                    className="w-full py-3.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-rose-200 hover:from-rose-600 hover:to-pink-700 transition-all"
+                  >
+                    No, keep going! 💪
+                  </button>
+
+                  {/* Secondary: confirm exit -> opens Cute Payment Push Modal */}
+                  <button
+                    onClick={() => {
+                      setShowExitModal(false);
+                      setShowPaymentPushModal(true);
+                    }}
+                    className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm rounded-2xl transition-all cursor-pointer"
+                  >
+                    Yes, exit
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 🎁 CUTE PAYMENT PUSH RETENTION MODAL (Triggers when clicking "Yes, exit") */}
+      <AnimatePresence>
+        {showPaymentPushModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 24 }}
+              className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden relative border border-rose-100 text-center"
+            >
+              {/* Header banner */}
+              <div className="bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white px-6 py-4 relative overflow-hidden">
+                <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-3 py-1 rounded-full border border-white/30 inline-block mb-1">
+                  🎁 Exclusive Exit Offer
+                </span>
+                <h3 className="text-lg font-black leading-tight">
+                  Don&apos;t leave {formValues["recipientName"] || "your special someone"} waiting! 🥺💖
+                </h3>
+              </div>
+
+              <div className="p-6 space-y-5">
+                {/* Cute heart illustration */}
+                <div className="flex justify-center -mt-2">
+                  <div className="w-16 h-16 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center shadow-inner text-3xl">
+                    ✨
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                  Your surprise for <span className="font-extrabold text-rose-600">{formValues["recipientName"] || "someone special"}</span> is already created! Unlock instant link publishing right now with an extra exit discount!
+                </p>
+
+                {/* Discount Offer Card */}
+                <div className="bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200 rounded-2xl p-4 text-center space-y-2 relative">
+                  <div className="inline-flex items-center gap-1.5 bg-amber-400 text-amber-950 text-[11px] font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                    🏷️ Code: LOVE2026 Auto-Applied
+                  </div>
+
+                  <div className="flex items-center justify-center gap-3 pt-1">
+                    <span className="text-sm font-bold text-slate-400 line-through">₹{origPriceINR.toFixed(0)}</span>
+                    <span className="text-3xl font-black text-rose-600">₹{finalPriceINR.toFixed(0)}</span>
+                    {finalPriceINR === 0 && (
+                      <span className="bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded">FREE PASS</span>
+                    )}
+                  </div>
+
+                  <p className="text-[11px] text-slate-500 font-semibold">
+                    ⚡ Includes 14-day live page duration + real-time view tracker
+                  </p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="space-y-2.5 pt-1">
+                  <button
+                    onClick={() => {
+                      setShowPaymentPushModal(false);
+                      setShowCheckoutView(true);
+                    }}
+                    className="w-full py-4 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white font-extrabold text-sm rounded-2xl shadow-xl shadow-rose-200 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Sparkles className="w-4 h-4 fill-white" />
+                    {finalPriceINR === 0 ? "🚀 Activate Free Link Now (₹0)" : `🚀 Claim Discount & Pay ₹${finalPriceINR.toFixed(0)}`}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setShowPaymentPushModal(false);
+                      setViewState("landing");
+                      setCurrentStep(0);
+                      setShowExitPushToast(true);
+                      setTimeout(() => setShowExitPushToast(false), 6000);
+                    }}
+                    className="w-full py-2.5 text-slate-400 hover:text-slate-600 font-bold text-xs transition"
+                  >
+                    No thanks, I&apos;ll pass for now ➔
+                  </button>
+                </div>
+
+                <p className="text-[10px] text-slate-400">🔒 256-Bit SSL Encrypted Payment via Razorpay</p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 🔔 Cute Push Notification Toast (Populates AFTER clicking "Yes, exit") */}
+      <AnimatePresence>
+        {showExitPushToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -30, scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-[10000] w-full max-w-sm px-3"
+          >
+            <div className="bg-slate-900/95 backdrop-blur-xl border border-rose-500/30 text-white rounded-2xl p-4 shadow-2xl flex items-start gap-3.5 relative overflow-hidden">
+              {/* Top gradient glow line */}
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 via-pink-500 to-amber-400" />
+
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shrink-0 shadow-md shadow-rose-500/30 mt-0.5">
+                <Bell className="w-4 h-4 text-white animate-bounce" />
+              </div>
+
+              <div className="flex-1 min-w-0 pr-2">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-amber-400 fill-amber-400" /> OurStory Special Offer
+                  </span>
+                  <span className="text-[10px] text-slate-400">now</span>
+                </div>
+                <p className="text-xs font-black text-white leading-snug">
+                  Aww, don&apos;t let {formValues["recipientName"] || "your special someone"} wait! 🥺🌸
+                </p>
+                <p className="text-[11px] text-slate-300 font-medium leading-relaxed mt-1">
+                  Your surprise is almost ready! Finish now &amp; use code <span className="text-amber-300 font-black bg-amber-400/20 px-1.5 py-0.5 rounded">LOVE2026</span> for extra discount! 💖
+                </p>
 
                 <button
                   onClick={() => {
-                    setShowPaymentCancelledPushModal(false);
-                    setShowCheckoutView(false);
+                    setShowExitPushToast(false);
                     setViewState("customize");
                   }}
-                  className="w-full py-2.5 text-slate-400 hover:text-slate-600 font-bold text-xs transition"
+                  className="mt-2.5 px-3 py-1.5 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-extrabold text-[11px] rounded-xl shadow-md shadow-rose-500/30 transition-all flex items-center gap-1.5 cursor-pointer"
                 >
-                  Edit My Surprise ✏️
+                  <span>Re-Open &amp; Finish Surprise</span> ✨
                 </button>
               </div>
+
+              <button
+                onClick={() => setShowExitPushToast(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg transition shrink-0"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
+
+      {/* 🌸 CUTE PAYMENT CANCELLED PUSH POPUP MODAL (Pushes user to retry payment without ugly text) */}
+      <AnimatePresence>
+        {showPaymentCancelledPushModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 24 }}
+              className="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden relative border border-rose-100 text-center"
+            >
+              {/* Top gradient accent line */}
+              <div className="h-1.5 bg-gradient-to-r from-rose-400 via-pink-500 to-amber-400" />
+
+              <div className="p-6 space-y-4">
+                {/* Cute heart illustration */}
+                <motion.div
+                  animate={{ scale: [1, 1.15, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                  className="w-16 h-16 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center mx-auto shadow-inner text-3xl"
+                >
+                  💖
+                </motion.div>
+
+                <div className="space-y-1">
+                  <h3 className="text-lg font-black text-slate-900 leading-tight">
+                    Aww, payment was paused! 🥺🌸
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                    Don&apos;t worry! Your special surprise for <span className="font-extrabold text-rose-600">{formValues["recipientName"] || "your special someone"}</span> is safely saved.
+                  </p>
+                </div>
+
+                {/* Coupon Badge */}
+                <div className="bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200 rounded-2xl p-3.5 space-y-1">
+                  <div className="inline-flex items-center gap-1 bg-amber-400 text-amber-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                    🏷️ LOVE2026 Applied (50% OFF)
+                  </div>
+                  <p className="text-xs font-black text-rose-600 pt-0.5">
+                    Unlock for only ₹{finalPriceINR.toFixed(0)} right now! ✨
+                  </p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="space-y-2 pt-1">
+                  <button
+                    onClick={() => {
+                      setShowPaymentCancelledPushModal(false);
+                      handlePayment();
+                    }}
+                    className="w-full py-3.5 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-rose-200 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Sparkles className="w-4 h-4 fill-white" />
+                    🚀 Retry Payment &amp; Activate Link
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setShowPaymentCancelledPushModal(false);
+                      setShowCheckoutView(false);
+                      setViewState("customize");
+                    }}
+                    className="w-full py-2.5 text-slate-400 hover:text-slate-600 font-bold text-xs transition"
+                  >
+                    Edit My Surprise ✏️
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

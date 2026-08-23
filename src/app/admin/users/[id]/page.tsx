@@ -167,6 +167,10 @@ export default function UserDetailPage() {
                 <div className="mt-1 font-medium text-emerald-400 font-bold">₹{((user.walletBalance ?? 0) / 100).toFixed(0)}</div>
               </div>
               <div className="bg-[#0a0f1e] p-3 rounded-lg border border-slate-800">
+                <div className="text-xs text-slate-500 uppercase tracking-wider">Platform</div>
+                <div className="mt-1 font-bold text-indigo-400 text-xs">{user.platform || "Web 💻"}</div>
+              </div>
+              <div className="bg-[#0a0f1e] p-3 rounded-lg border border-slate-800">
                 <div className="text-xs text-slate-500 uppercase tracking-wider">Joined</div>
                 <div className="mt-1 font-medium text-slate-300">{new Date(user.createdAt).toLocaleDateString()}</div>
               </div>

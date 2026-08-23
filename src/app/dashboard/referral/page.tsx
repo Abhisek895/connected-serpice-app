@@ -4,8 +4,19 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Gift, Copy, CheckCircle2, Share2, Wallet, Users, TrendingUp,
-  Banknote, ExternalLink, Loader2, QrCode, X, Sparkles
+  Banknote, ExternalLink, Loader2, X, Sparkles, Link2,
+  Zap, Clock, Star, MessageCircle
 } from "lucide-react";
+
+type Theme = {
+  id: string;
+  name: string;
+  title: string | null;
+  description: string | null;
+  price: number;
+  durationDays: number;
+  isPremium: boolean;
+};
 
 type ReferralStats = {
   referralCode: string | null;
@@ -26,10 +37,38 @@ type ReferralStats = {
   rewardPercent?: number;
   minWithdrawal?: number;
   referralEnabled?: boolean;
+  themes?: Theme[];
 };
 
+// Template emojis by name keyword matching
+const TEMPLATE_EMOJI: Record<string, string> = {
+  "surprise": "💖",
+  "birthday": "🎂",
+  "apology": "💌",
+  "sorry": "💌",
+  "proposal": "💍",
+  "nasamajh": "❤️",
+  "date": "🌸",
+  "kolkata": "🌸",
+  "jalpaiguri": "🌿",
+  "galaxy": "🌌",
+  "love": "💖",
+};
+
+function getTemplateEmoji(name: string): string {
+  const lower = name.toLowerCase();
+  for (const [key, emoji] of Object.entries(TEMPLATE_EMOJI)) {
+    if (lower.includes(key)) return emoji;
+  }
+  return "✨";
+}
+
+function getWhatsAppMessage(templateTitle: string, url: string): string {
+  return `💖 Create a beautiful *${templateTitle}* for someone special!\n\nUse my link to sign up on OurStory and get started:\n👉 ${url}\n\n✨ Made with love on OurStory`;
+}
+
 function StatCard({ icon: Icon, label, value, color, sub }: {
-  icon: any; label: string; value: string; color: string; sub?: string;
+  icon: React.ElementType; label: string; value: string; color: string; sub?: string;
 }) {
   return (
     <motion.div
@@ -48,11 +87,129 @@ function StatCard({ icon: Icon, label, value, color, sub }: {
   );
 }
 
+function TemplateReferralCard({
+  theme,
+  referralCode,
+  baseUrl,
+  rewardLabel,
+  index,
+}: {
+  theme: Theme;
+  referralCode: string;
+  baseUrl: string;
+  rewardLabel: string;
+  index: number;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const displayTitle = theme.title || theme.name;
+  const emoji = getTemplateEmoji(theme.name);
+  const referralUrl = `${baseUrl}/?ref=${referralCode}&demo=${theme.name}`;
+  const isInstant = theme.price === 0;
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(referralUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  const shareWhatsApp = () => {
+    const waUrl = `${referralUrl}&utm_source=whatsapp`;
+    const msg = getWhatsAppMessage(displayTitle, waUrl);
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
+  };
+
+  const shareInstagram = () => {
+    const instaUrl = `${referralUrl}&utm_source=instagram`;
+    navigator.clipboard.writeText(instaUrl);
+    window.open(`https://www.instagram.com/`, "_blank", "noopener");
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.06, duration: 0.4 }}
+      className="group bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-rose-200/60 transition-all duration-300 overflow-hidden"
+    >
+      {/* Card Header */}
+      <div className="p-5 pb-3">
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-rose-100 to-pink-100 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform duration-300">
+              {emoji}
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-sm leading-tight">{displayTitle}</h3>
+              <div className="flex items-center gap-1.5 mt-1">
+                <span className="flex items-center gap-1 text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded-full">
+                  <Zap className="w-2.5 h-2.5 fill-rose-500" />
+                  ₹{theme.price > 0 ? (theme.price >= 500 ? Math.round(theme.price / 100) : theme.price) : "0"}
+                </span>
+                <span className="flex items-center gap-1 text-[11px] font-medium text-slate-400 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full">
+                  <Clock className="w-2.5 h-2.5" />
+                  {theme.durationDays}d access
+                </span>
+                {isInstant && (
+                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
+                    Instant
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          {/* Earn badge */}
+          <div className="shrink-0 text-right">
+            <div className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-xl px-2.5 py-1 flex items-center gap-1">
+              <Star className="w-2.5 h-2.5 fill-emerald-500" />
+              Earn {rewardLabel}
+            </div>
+          </div>
+        </div>
+
+        {/* Link display */}
+        <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 group-hover:border-rose-200/60 transition-colors">
+          <Link2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          <p className="flex-1 text-[11px] font-mono text-slate-500 truncate">{referralUrl}</p>
+          <button
+            onClick={copyLink}
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all shrink-0 ${
+              copied
+                ? "bg-emerald-500 text-white"
+                : "bg-slate-200 hover:bg-slate-300 text-slate-700"
+            }`}
+          >
+            {copied ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+            {copied ? "Copied!" : "Copy"}
+          </button>
+        </div>
+      </div>
+
+      {/* Share buttons */}
+      <div className="px-5 pb-5 pt-2 flex gap-2">
+        <button
+          onClick={shareWhatsApp}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#128C4F] border border-[#25D366]/30 rounded-xl font-bold text-xs transition-all"
+        >
+          <MessageCircle className="w-3.5 h-3.5" />
+          WhatsApp
+        </button>
+        <button
+          onClick={shareInstagram}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 text-purple-700 border border-purple-200/60 rounded-xl font-bold text-xs transition-all"
+        >
+          <ExternalLink className="w-3.5 h-3.5" />
+          Instagram
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function ReferralPage() {
   const [stats, setStats] = useState<ReferralStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [upiId, setUpiId] = useState("");
@@ -78,20 +235,6 @@ export default function ReferralPage() {
     } finally {
       setGenerating(false);
     }
-  };
-
-  const copyLink = () => {
-    if (stats?.referralUrl) {
-      navigator.clipboard.writeText(stats.referralUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    }
-  };
-
-  const shareWhatsApp = () => {
-    if (!stats?.referralUrl) return;
-    const msg = `💖 Try OurStory — create beautiful proposal & memory pages for your loved ones! Use my link to sign up: ${stats.referralUrl}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
   };
 
   const handleWithdraw = async () => {
@@ -123,6 +266,12 @@ export default function ReferralPage() {
     ? `${stats.rewardPercent ?? 20}%`
     : `₹${stats?.rewardAmount ?? 20}`;
 
+  // Derive base URL from the server-returned referralUrl (uses NEXTAUTH_URL internally)
+  // e.g. "http://localhost:3000/?ref=VBMC5A" → "http://localhost:3000"
+  const baseUrl = stats?.referralUrl
+    ? stats.referralUrl.split("/?ref=")[0].replace(/\/$/, "")
+    : (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-32">
@@ -131,8 +280,11 @@ export default function ReferralPage() {
     );
   }
 
+  const themes = stats?.themes ?? [];
+  const hasCode = !!stats?.referralCode;
+
   return (
-    <div className="max-w-3xl space-y-8 animate-in fade-in duration-500">
+    <div className="max-w-4xl space-y-8 animate-in fade-in duration-500">
 
       {/* Header */}
       <div>
@@ -143,7 +295,8 @@ export default function ReferralPage() {
           Earn & Referrals
         </h1>
         <p className="text-slate-500 mt-1.5 text-sm leading-relaxed">
-          Share OurStory with friends → They sign up &amp; make their first purchase → You earn <span className="font-bold text-emerald-600">{rewardLabel}</span> per referral, credited to your wallet instantly!
+          Share any template link with your unique code → Friends sign up & buy → You earn{" "}
+          <span className="font-bold text-emerald-600">{rewardLabel}</span> per referral, credited instantly!
         </p>
       </div>
 
@@ -152,7 +305,7 @@ export default function ReferralPage() {
         <StatCard icon={Wallet} label="Wallet Balance" value={`₹${walletRupees.toFixed(0)}`}
           color="bg-emerald-50 text-emerald-600" sub="Available to spend or withdraw" />
         <StatCard icon={Users} label="Friends Referred" value={`${stats?.referralCount ?? 0}`}
-          color="bg-sky-50 text-sky-600" sub="Total signups via your link" />
+          color="bg-sky-50 text-sky-600" sub="Total signups via your links" />
         <StatCard icon={TrendingUp} label="Total Earned" value={`₹${earnedRupees.toFixed(0)}`}
           color="bg-amber-50 text-amber-600" sub="All-time referral earnings" />
       </div>
@@ -179,82 +332,96 @@ export default function ReferralPage() {
         </div>
       )}
 
-      {/* Referral Link Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-br from-slate-900 via-slate-800 to-rose-950 rounded-3xl p-6 text-white shadow-xl"
-      >
-        <div className="flex items-center gap-2 mb-4">
+      {/* ── How It Works steps ── */}
+      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-rose-950 rounded-3xl p-6 text-white shadow-xl">
+        <div className="flex items-center gap-2 mb-5">
           <Sparkles className="w-5 h-5 text-amber-400 fill-amber-400" />
-          <h2 className="font-bold text-base">Your Referral Link</h2>
+          <h2 className="font-bold text-base">How to Earn with Your Referral Links</h2>
         </div>
 
-        {stats?.referralUrl ? (
-          <>
-            {/* Link display */}
-            <div className="flex items-center gap-3 bg-white/10 border border-white/15 rounded-2xl p-3 mb-4 backdrop-blur-sm">
-              <p className="flex-1 text-sm font-mono text-white/90 truncate">{stats.referralUrl}</p>
-              <button
-                onClick={copyLink}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all ${
-                  copied ? "bg-emerald-500 text-white" : "bg-white/15 hover:bg-white/25 text-white"
-                }`}
-              >
-                {copied ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                {copied ? "Copied!" : "Copy"}
-              </button>
+        <div className="grid grid-cols-3 gap-3 text-center mb-6">
+          {[
+            { step: "1", text: "Share any template link below" },
+            { step: "2", text: "Friend signs up & buys" },
+            { step: "3", text: `You earn ${rewardLabel} instantly` },
+          ].map(s => (
+            <div key={s.step} className="text-xs text-white/70">
+              <div className="w-8 h-8 rounded-full bg-white/15 border border-white/20 flex items-center justify-center text-white font-bold text-sm mx-auto mb-2">
+                {s.step}
+              </div>
+              {s.text}
             </div>
+          ))}
+        </div>
 
-            {/* Share buttons */}
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={shareWhatsApp}
-                className="flex items-center gap-2 px-4 py-2 bg-[#25D366]/90 hover:bg-[#25D366] text-white rounded-xl font-bold text-sm transition-all shadow-sm"
-              >
-                <Share2 className="w-4 h-4" /> Share on WhatsApp
-              </button>
-              <button
-                onClick={() => window.open(`https://www.instagram.com/`, "_blank")}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl font-bold text-sm transition-all shadow-sm"
-              >
-                <ExternalLink className="w-4 h-4" /> Post on Instagram
-              </button>
-            </div>
-
-            {/* How it works */}
-            <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-3 gap-3 text-center">
-              {[
-                { step: "1", text: "Share your link" },
-                { step: "2", text: "Friend signs up & buys" },
-                { step: "3", text: `You earn ${rewardLabel} instantly` },
-              ].map(s => (
-                <div key={s.step} className="text-xs text-white/70">
-                  <div className="w-6 h-6 rounded-full bg-white/15 border border-white/20 flex items-center justify-center text-white font-bold text-xs mx-auto mb-1">{s.step}</div>
-                  {s.text}
-                </div>
-              ))}
-            </div>
-          </>
-        ) : (
-          <div className="text-center py-4">
-            <p className="text-sm text-white/70 mb-4">Generate your unique referral link to start earning!</p>
+        {!hasCode ? (
+          <div className="text-center py-2">
+            <p className="text-sm text-white/70 mb-4">Generate your unique referral code to unlock all template links!</p>
             <button
               onClick={generateCode}
               disabled={generating}
               className="flex items-center gap-2 mx-auto px-6 py-3 bg-rose-500 hover:bg-rose-400 text-white rounded-2xl font-bold text-sm transition-all shadow-lg shadow-rose-900/30"
             >
               {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Gift className="w-4 h-4" />}
-              {generating ? "Generating…" : "Generate My Referral Link"}
+              {generating ? "Generating…" : "Generate My Referral Code"}
             </button>
           </div>
+        ) : (
+          <div className="bg-white/10 border border-white/15 rounded-2xl px-4 py-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[11px] text-white/50 uppercase tracking-wider font-semibold mb-0.5">Your Referral Code</p>
+              <p className="text-xl font-black tracking-widest text-amber-400">{stats?.referralCode}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[11px] text-white/50 uppercase tracking-wider font-semibold mb-0.5">Links Available</p>
+              <p className="text-xl font-black text-white">{themes.length}</p>
+            </div>
+          </div>
         )}
-      </motion.div>
+      </div>
 
-      {/* Referral List */}
+      {/* ── Per-Template Referral Links Grid ── */}
+      {hasCode && themes.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
+              <Share2 className="w-5 h-5 text-rose-500" />
+              Your Referral Links
+            </h2>
+            <span className="bg-rose-100 text-rose-600 px-3 py-1 rounded-full text-xs font-bold">
+              {themes.length} Templates
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {themes.map((theme, i) => (
+              <TemplateReferralCard
+                key={theme.id}
+                theme={theme}
+                referralCode={stats!.referralCode!}
+                baseUrl={baseUrl}
+                rewardLabel={rewardLabel}
+                index={i}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── No templates yet fallback ── */}
+      {hasCode && themes.length === 0 && (
+        <div className="text-center py-10 bg-slate-50 rounded-2xl border border-slate-100">
+          <div className="text-4xl mb-3">🎨</div>
+          <p className="font-bold text-slate-700">No templates available yet</p>
+          <p className="text-sm text-slate-400 mt-1">Templates will appear here once the admin adds them.</p>
+        </div>
+      )}
+
+      {/* ── Referral List ── */}
       {(stats?.referrals?.length ?? 0) > 0 && (
         <div>
           <h3 className="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
-            <Users className="w-5 h-5 text-sky-500" /> Your Referrals
+            <Users className="w-5 h-5 text-sky-500" /> Your Referred Friends
           </h3>
           <div className="space-y-2">
             {stats!.referrals.map((ref, i) => (
@@ -287,11 +454,11 @@ export default function ReferralPage() {
       )}
 
       {/* Empty state for no referrals */}
-      {(stats?.referrals?.length ?? 0) === 0 && stats?.referralUrl && (
+      {(stats?.referrals?.length ?? 0) === 0 && hasCode && (
         <div className="text-center py-10 bg-slate-50 rounded-2xl border border-slate-100">
           <div className="text-4xl mb-3">👥</div>
           <p className="font-bold text-slate-700">No referrals yet</p>
-          <p className="text-sm text-slate-400 mt-1">Share your link above to start earning!</p>
+          <p className="text-sm text-slate-400 mt-1">Share your template links above to start earning!</p>
         </div>
       )}
 

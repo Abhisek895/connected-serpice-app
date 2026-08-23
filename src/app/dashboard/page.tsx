@@ -8,12 +8,55 @@ import { getCurrentUser } from "@/lib/session";
 import DeleteAllButton from "./DeleteAllButton";
 import DashboardTourClient from "./DashboardTourClient";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { Gift, ArrowRight } from "lucide-react";
 
 export default async function DashboardPage() {
   const { userId } = await getCurrentUser();
   const dbUser = await prisma.user.findUnique({ where: { id: userId } });
   const isPremiumUser = dbUser?.plan === "PREMIUM" || dbUser?.role === "super_admin";
+
+  // ── Auto-claim any guest event in cookies ─────────────────────────────────
+  if (userId) {
+    try {
+      const cookieStore = await cookies();
+      const guestClaimSlug = cookieStore.get("ourstory_guest_claim_slug")?.value;
+
+      if (guestClaimSlug) {
+        const guestUser = await prisma.user.findUnique({
+          where: { email: "guest@ourstory.internal" },
+          select: { id: true },
+        });
+
+        if (guestUser) {
+          const guestEvent = await prisma.event.findUnique({
+            where: { slug: guestClaimSlug },
+          });
+
+          if (guestEvent && guestEvent.userId === guestUser.id) {
+            // Transfer event
+            await prisma.event.update({
+              where: { id: guestEvent.id },
+              data: { userId },
+            });
+
+            // Transfer payment
+            try {
+              const customData = JSON.parse(guestEvent.customData || "{}");
+              if (customData.razorpayOrderId) {
+                await prisma.payment.updateMany({
+                  where: { razorpayOrderId: customData.razorpayOrderId },
+                  data: { userId },
+                });
+              }
+            } catch (e) { }
+          }
+        }
+      }
+    } catch (claimErr) {
+      console.error("Dashboard auto-claim error:", claimErr);
+    }
+  }
 
   const events = await prisma.event.findMany({
     where: { userId },

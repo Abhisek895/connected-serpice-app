@@ -21,10 +21,10 @@ export async function getCurrentUser() {
     let dummyUser = await prisma.user.findFirst({ where: { email: "test@example.com" } });
     if (!dummyUser) {
       dummyUser = await prisma.user.create({
-        data: { 
-          email: "test@example.com", 
+        data: {
+          email: "test@example.com",
           name: "Test User",
-          plan: "FREE" 
+          plan: "FREE"
         },
       });
     }
@@ -33,9 +33,9 @@ export async function getCurrentUser() {
     name = dummyUser.name || "Test User";
   }
 
-  return { 
-    userId, 
-    email: email || "user@example.com", 
+  return {
+    userId,
+    email: email || "user@example.com",
     name: name || "OurStory User",
     image: image || null
   };

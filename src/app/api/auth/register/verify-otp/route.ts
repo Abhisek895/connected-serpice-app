@@ -65,6 +65,33 @@ export async function POST(req: Request) {
       }
     }
 
+    // Detect acquisition platform from cookies, headers, or referrer
+    const userAgent = req.headers.get("user-agent") || "";
+    const referer = req.headers.get("referer") || req.headers.get("referrer") || "";
+    const cookieHeader = req.headers.get("cookie") || "";
+    const cookieMatch = cookieHeader.match(new RegExp("(?:^|; )ourstory_platform=([^;]*)"));
+    const cookiePlatform = cookieMatch ? decodeURIComponent(cookieMatch[1]) : undefined;
+
+    let detectedPlatform = body.platform || cookiePlatform;
+
+    if (!detectedPlatform || typeof detectedPlatform !== "string") {
+      if (referer.includes("whatsapp") || referer.includes("wa.me")) detectedPlatform = "WhatsApp 💬";
+      else if (referer.includes("instagram")) detectedPlatform = "Instagram 📸";
+      else if (referer.includes("facebook") || referer.includes("fb.com")) detectedPlatform = "Facebook 👥";
+      else if (referer.includes("t.co") || referer.includes("twitter") || referer.includes("x.com")) detectedPlatform = "Twitter 🐦";
+      else if (/mobile|iphone|ipad|android/i.test(userAgent)) {
+        if (userAgent.includes("Android")) detectedPlatform = "Android Web 📱";
+        else if (userAgent.includes("iPhone") || userAgent.includes("iPad")) detectedPlatform = "iOS Web 📱";
+        else detectedPlatform = "Mobile Web 📱";
+      } else if (userAgent.includes("Windows")) {
+        detectedPlatform = "Windows Web 💻";
+      } else if (userAgent.includes("Macintosh")) {
+        detectedPlatform = "Mac Web 💻";
+      } else {
+        detectedPlatform = "Web 💻";
+      }
+    }
+
     // Hash password & create user
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await prisma.user.create({
@@ -73,8 +100,9 @@ export async function POST(req: Request) {
         password: hashedPassword,
         name: name?.trim() || cleanEmail.split("@")[0],
         plan: "FREE",
+        platform: detectedPlatform,
         ...(referredById ? { referredById } : {}),
-      },
+      } as any,
     });
 
     // Delete used verification token

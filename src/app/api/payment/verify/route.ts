@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
+import { creditReferrer } from "@/lib/referral";
 
 export async function POST(req: Request) {
   try {
-    const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = await req.json();
+    const { razorpayOrderId, razorpayPaymentId, razorpaySignature, demoId, couponCode } = await req.json();
 
     if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
       return NextResponse.json({ success: false, message: "Missing payment details" }, { status: 400 });
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // Payment is successful
+    // Mark payment as successful
     const payment = await prisma.payment.update({
       where: { razorpayOrderId },
       data: {
@@ -48,6 +49,16 @@ export async function POST(req: Request) {
         data: { usedCount: { increment: 1 } }
       });
     }
+
+    // ─── INSTANT REFERRAL CREDIT ENGINE ──────────────────────────────────────
+    // Credit the referrer's wallet immediately when a referred user pays.
+    // Idempotent: checks if a credit already exists for this payment or buyer.
+    try {
+      await creditReferrer(payment as any);
+    } catch (err) {
+      console.error("[referral-credit] Failed to credit referrer:", err);
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     return NextResponse.json({ success: true });
 

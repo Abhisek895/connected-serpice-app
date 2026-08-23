@@ -19,6 +19,7 @@ model User {
   password      String?   // Hashed password for credentials auth
   role          String    @default("USER") // "USER", "admin", "super_admin"
   plan          String    @default("FREE") // "FREE", "PREMIUM", "LIFETIME"
+  platform      String?   @default("Web")  // "WhatsApp", "Instagram", "Google", "Direct", "Mobile Web", "Web"
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -94,11 +95,13 @@ model Payment {
   coupon            Coupon?   @relation(fields: [couponId], references: [id])
   demoId            String?
   finalAmount       Int?
+  referredByCode    String?   // Referral code that brought this buyer — used to credit referrer on payment success
 
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
   @@index([userId])
+  @@index([referredByCode])
 }
 
 // Interaction tracking

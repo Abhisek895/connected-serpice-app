@@ -11,7 +11,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    const { demoId, themeId, couponCode, useWallet } = await req.json();
+    const { demoId, themeId, couponCode, useWallet, referredByCode } = await req.json();
     const targetDemoId = demoId || themeId;
 
     if (!targetDemoId) {
@@ -32,7 +32,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: "Template not found" }, { status: 404 });
     }
 
-    let finalAmount = theme.price;
+    // Payment requirement commented out for now — all templates are 100% free
+    let finalAmount = 0;
     let couponId = null;
     const cleanCode = couponCode ? couponCode.trim().toUpperCase() : "";
 
@@ -112,7 +113,8 @@ export async function POST(req: Request) {
           plan: planName,
           demoId: theme.name,
           couponId,
-        }
+          referredByCode: referredByCode || null,
+        } as any
       });
 
       if (couponId) {
@@ -172,7 +174,8 @@ export async function POST(req: Request) {
         plan: "TEMPLATE_PURCHASE",
         demoId: theme.name,
         couponId,
-      }
+        referredByCode: referredByCode || null,
+      } as any
     });
 
     return NextResponse.json({

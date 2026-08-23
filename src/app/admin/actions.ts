@@ -19,7 +19,7 @@ export async function getAdminUserById(id: string) {
   const user = await prisma.user.findUnique({
     where: { id },
     select: {
-      id: true, name: true, email: true, role: true, plan: true,
+      id: true, name: true, email: true, role: true, plan: true, platform: true,
       createdAt: true, updatedAt: true, image: true,
       referralCode: true, walletBalance: true,
       referredBy: {
@@ -207,9 +207,18 @@ export async function getLocalAdminGrowth() {
 }
 
 // ─── Users ───────────────────────────────────────────────────────────────────
+export async function updateUserPlatformAdminAction(id: string, platform: string) {
+  await checkAuth();
+  const updated = await prisma.user.update({
+    where: { id },
+    data: { platform },
+  });
+  return { success: true, user: updated };
+}
+
 export async function getAdminUsers(search = "", role = "") {
   await checkAuth();
-  const users = await prisma.user.findMany({
+  const rawUsers = await prisma.user.findMany({
     where: {
       AND: [
         search ? { OR: [{ name: { contains: search } }, { email: { contains: search } }] } : {},
@@ -224,9 +233,13 @@ export async function getAdminUsers(search = "", role = "") {
       email: true,
       role: true,
       plan: true,
+      platform: true,
       createdAt: true,
       referralCode: true,
       walletBalance: true,
+      accounts: {
+        select: { provider: true }
+      },
       referredBy: {
         select: {
           name: true,
@@ -244,6 +257,26 @@ export async function getAdminUsers(search = "", role = "") {
       },
     },
   });
+
+  const users = rawUsers.map((u) => {
+    let resolvedPlatform = u.platform;
+    if (!resolvedPlatform || resolvedPlatform === "Web") {
+      if (u.accounts?.some((a) => a.provider === "google")) {
+        resolvedPlatform = "Google 🌐";
+      } else if (u.referredBy) {
+        resolvedPlatform = "WhatsApp 💬";
+      } else if (u.email?.includes("guest@ourstory.internal")) {
+        resolvedPlatform = "Guest Portal 🚀";
+      } else {
+        resolvedPlatform = "Direct / Web 💻";
+      }
+    }
+    return {
+      ...u,
+      platform: resolvedPlatform,
+    };
+  });
+
   return { users, total: users.length };
 }
 

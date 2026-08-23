@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Eye, Globe, Edit3, QrCode } from "lucide-react";
+import { Sparkles, Eye, Globe, Edit3, QrCode, Link2 } from "lucide-react";
 import EventCardActions from "./EventCardActions";
 import EventCardMenu from "./EventCardMenu";
 import CustomizeModal from "./CustomizeModal";
 import QRCodeModal from "@/components/ui/QRCodeModal";
+import ClaimGuestPageModal from "./ClaimGuestPageModal";
 import { AnimatePresence } from "framer-motion";
 
 type EventItem = {
@@ -37,8 +38,20 @@ export default function EventCardContainer({ events, isPremiumUser }: { events: 
     title: string;
   } | null>(null);
 
+  const [showClaimModal, setShowClaimModal] = useState(false);
+
   return (
     <>
+      <div className="flex justify-end mb-3">
+        <button
+          onClick={() => setShowClaimModal(true)}
+          className="text-xs font-bold text-slate-500 hover:text-rose-600 flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-rose-200 hover:bg-rose-50/50 transition cursor-pointer"
+        >
+          <Link2 className="w-3.5 h-3.5 text-rose-500" />
+          Link Guest Page
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {events.map((event) => {
           let customData: any = { title: "", question: "", isInstant: false };
@@ -231,6 +244,12 @@ export default function EventCardContainer({ events, isPremiumUser }: { events: 
             title={qrModal.title}
             onClose={() => setQrModal(null)}
           />
+        )}
+      </AnimatePresence>
+      {/* Claim Guest Page Modal */}
+      <AnimatePresence>
+        {showClaimModal && (
+          <ClaimGuestPageModal onClose={() => setShowClaimModal(false)} />
         )}
       </AnimatePresence>
     </>

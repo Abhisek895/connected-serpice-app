@@ -16,6 +16,13 @@ type CheckoutModalProps = {
   onSuccess: (usedCouponCode?: string) => void;
 };
 
+/** Read a cookie value by name (client-side only) */
+function getCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
 export default function CheckoutModal({
   demoId,
   templateName,
@@ -34,13 +41,19 @@ export default function CheckoutModal({
   const [couponCode, setCouponCode] = useState(isPremiumAccount ? "PREMIUM_FREE" : "");
   const [couponStatus, setCouponStatus] = useState<"idle" | "validating" | "valid" | "invalid">(isPremiumAccount ? "valid" : "idle");
   const [couponMessage, setCouponMessage] = useState(isPremiumAccount ? "👑 Premium Member: 100% FREE Access Granted!" : "");
-  const [finalPrice, setFinalPrice] = useState(isPremiumAccount ? 0 : originalPrice);
+  const [finalPrice, setFinalPrice] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
   const [isFree1Eligible, setIsFree1Eligible] = useState<boolean | null>(null);
+  // Referral attribution — read from cookie set by ReferralTracker
+  const [referredByCode, setReferredByCode] = useState<string | null>(null);
 
-  // Fetch available wallet balance on mount
+  // Fetch wallet balance + read referral cookie on mount
   useEffect(() => {
+    // Read referral code from cookie (set by ReferralTracker when user landed via ref link)
+    const refCookie = getCookie("ourstory_ref_code") || localStorage.getItem("ourstory_ref_code");
+    if (refCookie) setReferredByCode(refCookie);
+
     if (isPremiumAccount) return;
     fetch("/api/referral/stats")
       .then((res) => res.json())
@@ -155,7 +168,7 @@ export default function CheckoutModal({
     try {
       const activeCoupon = couponStatus === "valid" ? couponCode : undefined;
 
-      // 1. Create order
+      // 1. Create order (pass referredByCode so the server can credit referrer on payment success)
       const res = await fetch("/api/payment/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -163,6 +176,7 @@ export default function CheckoutModal({
           demoId,
           couponCode: activeCoupon,
           useWallet: Boolean(useWallet && walletBalance > 0),
+          referredByCode: referredByCode || undefined,
         }),
       });
 

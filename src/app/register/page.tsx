@@ -30,6 +30,12 @@ export default function RegisterPage() {
       const emailParam = params.get("email");
       if (emailParam) setEmail(emailParam);
 
+      const claim = params.get("claimSlug");
+      if (claim) {
+        document.cookie = `ourstory_guest_claim_slug=${claim}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax`;
+        localStorage.setItem("ourstory_guest_claim_slug", claim);
+      }
+
       const ref = params.get("ref");
       if (ref) {
         setRefCode(ref);
@@ -87,10 +93,11 @@ export default function RegisterPage() {
 
     try {
       const activeRef = refCode || (typeof window !== "undefined" ? localStorage.getItem("ourstory_ref_code") : null);
+      const activePlatform = typeof window !== "undefined" ? localStorage.getItem("ourstory_platform") : null;
       const res = await fetch("/api/auth/register/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, otp, refCode: activeRef }),
+        body: JSON.stringify({ name, email, password, otp, refCode: activeRef, platform: activePlatform }),
       });
 
       const data = await res.json();
@@ -111,7 +118,8 @@ export default function RegisterPage() {
       if (signInRes?.error) {
         router.push("/login?registered=true");
       } else {
-        router.push("/dashboard");
+        const redirectTarget = (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null) || "/dashboard";
+        router.push(redirectTarget);
         router.refresh();
       }
     } catch (err) {
