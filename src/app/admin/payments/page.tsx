@@ -62,8 +62,8 @@ export default function PaymentsPage() {
               <tr>
                 <th className="px-6 py-4 font-semibold">Transaction ID</th>
                 <th className="px-6 py-4 font-semibold">User</th>
-                <th className="px-6 py-4 font-semibold">Amount</th>
-                <th className="px-6 py-4 font-semibold">Final Amount</th>
+                <th className="px-6 py-4 font-semibold">Retail Price</th>
+                <th className="px-6 py-4 font-semibold text-emerald-400">Real Paid (Cash)</th>
                 <th className="px-6 py-4 font-semibold">Coupon Used</th>
                 <th className="px-6 py-4 font-semibold">Template</th>
                 <th className="px-6 py-4 font-semibold">Status</th>
@@ -73,26 +73,34 @@ export default function PaymentsPage() {
             <tbody className="divide-y divide-slate-800">
               {payments.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
+                  <td colSpan={8} className="px-6 py-8 text-center text-slate-500">
                     No payments found.
                   </td>
                 </tr>
               ) : (
-                payments.map((payment) => (
-                  <tr key={payment.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="px-6 py-4 font-mono text-xs text-slate-400">
-                      {payment.razorpayPaymentId || payment.id}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-slate-200">{payment.user?.name || "Unknown"}</div>
-                      <div className="text-xs text-slate-500">{payment.user?.email || "-"}</div>
-                    </td>
-                    <td className="px-6 py-4 font-medium text-emerald-400">
-                      ₹{(payment.amount / 100).toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 font-medium text-indigo-400">
-                      {payment.finalAmount !== null ? `₹${(payment.finalAmount / 100).toFixed(2)}` : "-"}
-                    </td>
+                payments.map((payment) => {
+                  const actualPaid = payment.finalAmount !== null && payment.finalAmount !== undefined ? payment.finalAmount : payment.amount;
+                  const isDiscounted = payment.finalAmount !== null && payment.finalAmount < payment.amount;
+
+                  return (
+                    <tr key={payment.id} className="hover:bg-slate-800/30 transition-colors">
+                      <td className="px-6 py-4 font-mono text-xs text-slate-400">
+                        {payment.razorpayPaymentId || payment.id}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-slate-200">{payment.user?.name || "Unknown"}</div>
+                        <div className="text-xs text-slate-500">{payment.user?.email || "-"}</div>
+                      </td>
+                      <td className="px-6 py-4 font-medium text-slate-400 text-xs">
+                        {isDiscounted ? (
+                          <span className="line-through text-slate-500">₹{(payment.amount / 100).toFixed(2)}</span>
+                        ) : (
+                          `₹${(payment.amount / 100).toFixed(2)}`
+                        )}
+                      </td>
+                      <td className="px-6 py-4 font-bold text-emerald-400">
+                        ₹{(actualPaid / 100).toFixed(2)}
+                      </td>
                     <td className="px-6 py-4 text-xs font-medium text-slate-300">
                       {payment.couponId && payment.coupon ? (
                         <span className="bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded uppercase tracking-wider">{payment.coupon.code}</span>
@@ -117,8 +125,9 @@ export default function PaymentsPage() {
                     <td className="px-6 py-4 text-slate-400 text-xs whitespace-nowrap">
                       {new Date(payment.createdAt).toLocaleDateString()}
                     </td>
-                  </tr>
-                ))
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

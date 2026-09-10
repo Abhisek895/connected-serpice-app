@@ -203,8 +203,13 @@ export async function getLocalAdminStats() {
     const actualPaid = p.finalAmount !== null && p.finalAmount !== undefined ? p.finalAmount : p.amount;
     return sum + actualPaid;
   }, 0);
+  const grossRevenuePaise = successfulPayments.reduce((sum, p) => sum + p.amount, 0);
+
   const totalRevenue = totalRevenuePaise / 100;
-  return { totalUsers, newThisWeek, activePages, linkViews, totalRevenue };
+  const grossRevenue = grossRevenuePaise / 100;
+  const totalDiscounts = (grossRevenuePaise - totalRevenuePaise) / 100;
+
+  return { totalUsers, newThisWeek, activePages, linkViews, totalRevenue, grossRevenue, totalDiscounts };
 }
 
 export async function getLocalAdminGrowth() {

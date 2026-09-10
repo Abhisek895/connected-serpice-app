@@ -63,11 +63,12 @@ export default function AdminOverviewPage() {
           <KpiCard title="Memory Pages" value={stats.activePages.toLocaleString()} icon={FileHeart} trend="up" trendLabel="draft & published" />
           <KpiCard title="Total Link Views" value={stats.linkViews.toLocaleString()} icon={MousePointerClick} trend="up" trendLabel="visitor interactions" />
           <KpiCard
-            title="Total Revenue"
+            title="Total Revenue (Real Cash)"
             value={`₹${stats.totalRevenue.toLocaleString()}`}
+            secondaryValue={stats.grossRevenue > stats.totalRevenue ? `Retail: ₹${stats.grossRevenue.toLocaleString()}` : "Real Net Cash"}
             icon={DollarSign}
             trend={stats.totalRevenue > 0 ? "up" : "neutral"}
-            trendLabel="all time"
+            trendLabel="all time real cash"
           />
         </div>
       )}
