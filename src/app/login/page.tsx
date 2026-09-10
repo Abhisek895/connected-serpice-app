@@ -4,13 +4,14 @@ import { useState, useEffect, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Heart, Lock, Mail, ArrowRight, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
+import { Heart, Lock, Mail, ArrowRight, Eye, EyeOff, Loader2, AlertCircle, ShieldCheck } from "lucide-react";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -23,6 +24,16 @@ function LoginForm() {
       setError("Authentication failed. Please check your credentials and try again.");
     }
 
+    const emailParam = searchParams.get("email");
+    if (emailParam) {
+      setEmail(emailParam);
+    }
+
+    const resetParam = searchParams.get("reset");
+    if (resetParam === "success") {
+      setSuccessMsg("Password reset successfully! Please sign in with your new password.");
+    }
+
     const claim = searchParams.get("claimSlug");
     if (claim) {
       document.cookie = `ourstory_guest_claim_slug=${claim}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax`;
@@ -33,6 +44,7 @@ function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuccessMsg(null);
     setLoading(true);
 
     try {
@@ -72,6 +84,14 @@ function LoginForm() {
           <p className="text-sm text-slate-500 mt-1">Sign in to manage your digital memory pages</p>
         </div>
 
+        {/* Success Alert */}
+        {successMsg && (
+          <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3 text-emerald-800 text-xs font-medium">
+            <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+            <span>{successMsg}</span>
+          </div>
+        )}
+
         {/* Error Alert */}
         {error && (
           <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-2xl space-y-3">
@@ -87,6 +107,17 @@ function LoginForm() {
                   className="px-3.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm"
                 >
                   Create Account <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            )}
+            {(error.toLowerCase().includes("credentials") || error.toLowerCase().includes("password") || error.toLowerCase().includes("failed")) && (
+              <div className="pt-2.5 border-t border-rose-200/80 flex items-center justify-between">
+                <span className="text-xs text-rose-800 font-bold">Forgot your password?</span>
+                <Link
+                  href={`/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ""}`}
+                  className="px-3.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm"
+                >
+                  Reset with OTP <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
             )}
@@ -133,6 +164,14 @@ function LoginForm() {
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
+            </div>
+            <div className="flex justify-end mt-2">
+              <Link
+                href={`/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ""}`}
+                className="text-xs font-semibold text-rose-600 hover:text-rose-700 hover:underline transition"
+              >
+                Forgot Password?
+              </Link>
             </div>
           </div>
 
