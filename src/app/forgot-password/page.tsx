@@ -188,8 +188,8 @@ function ForgotPasswordForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-pink-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-3xl border border-rose-100 shadow-xl p-8 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-pink-50 flex items-start sm:items-center justify-center p-4 pt-8 sm:pt-4">
+      <div className="w-full max-w-md bg-white rounded-3xl border border-rose-100 shadow-xl p-6 sm:p-8 relative overflow-hidden -mt-2 sm:mt-0">
         {/* Top Decorative Line */}
         <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-rose-400 via-pink-500 to-rose-600" />
 
