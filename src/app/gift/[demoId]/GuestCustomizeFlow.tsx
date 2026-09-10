@@ -586,22 +586,34 @@ export default function GuestCustomizeFlow({
             animate={{ opacity: 1, y: 0 }}
             className="max-w-md w-full relative z-10"
           >
-            <div className="text-center mb-4">
-              <span className="text-rose-400 text-xs font-bold tracking-widest uppercase">💖 Made with OurStory</span>
-            </div>
-
             <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-white/10">
               {/* Thumbnail */}
-              <div className="relative h-52 w-full overflow-hidden bg-slate-900">
-                <img src={demo.image} alt={demo.title} className="w-full h-full object-cover object-[center_25%]" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
-                <div className="absolute top-3 left-3 flex gap-1.5">
-                  <span className={`${demo.badgeColor} px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm flex items-center gap-1`}>
-                    <Icon className="w-3 h-3" /> {demo.badge}
+              <div className="relative h-56 w-full overflow-hidden bg-slate-100 group">
+                <img
+                  src={demo.image}
+                  alt={demo.title}
+                  className="w-full h-full object-cover object-[center_25%] group-hover:scale-105 transition-transform duration-500"
+                />
+                {/* Light gradient just for text readability at the bottom, no dark overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent" />
+
+                {/* OurStory brand watermark on card thumbnail */}
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-sm border border-white/15 text-white text-[9px] font-bold tracking-wide whitespace-nowrap shadow-sm pointer-events-none">
+                  💖 Made with OurStory
+                </div>
+
+                {/* Badges container */}
+                <div className="absolute top-3 left-3 z-10 flex flex-wrap gap-1.5 items-center pr-3">
+                  <span className={`text-[9px] leading-[12px] px-2 py-1 rounded-full uppercase font-bold tracking-wider shadow-sm flex items-center gap-1 ${demo.badgeColor}`}>
+                    <Icon className="w-2.5 h-2.5" /> {demo.badge}
                   </span>
-                  {(demo.price ?? 0) > 0 && (
-                    <span className="bg-amber-400 text-amber-950 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm border border-amber-300">
+                  {(demo.price ?? 0) > 0 ? (
+                    <span className="text-[9px] leading-[12px] px-2 py-1 rounded-full uppercase font-bold tracking-wider shadow-sm bg-amber-400 text-amber-900 border border-amber-300">
                       ₹{((demo.price ?? 0) / 100).toFixed(0)} / {demo.durationDays ?? 14}d
+                    </span>
+                  ) : (
+                    <span className="text-[9px] leading-[12px] px-2 py-1 rounded-full uppercase font-bold tracking-wider shadow-sm bg-emerald-500/90 text-white border border-emerald-400/50">
+                      Free
                     </span>
                   )}
                 </div>

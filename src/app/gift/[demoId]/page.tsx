@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { demos } from "@/app/dashboard/demoConfig";
 import { TEMPLATE_CLASSES } from "@/app/dashboard/templateConfig";
 import GuestCustomizeFlow from "./GuestCustomizeFlow";
+import { prisma } from "@/lib/prisma";
 import type { Metadata } from "next";
 
 type Params = { demoId: string };
@@ -14,13 +15,19 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const { demoId } = await params;
   const demo = demos.find((d) => d.id === demoId);
   if (!demo) return { title: "OurStory" };
+
+  const theme = await prisma.theme.findUnique({ where: { name: demoId } }).catch(() => null);
+  const title = theme?.title || demo.title;
+  const description = theme?.description || demo.description;
+  const image = theme?.thumbnailUrl || demo.image;
+
   return {
-    title: `${demo.title} — Made with OurStory 💖`,
-    description: demo.description,
+    title: `${title} — Made with OurStory 💖`,
+    description,
     openGraph: {
-      title: `${demo.title} — Made with OurStory 💖`,
-      description: demo.description,
-      images: [demo.image],
+      title: `${title} — Made with OurStory 💖`,
+      description,
+      images: [image],
     },
   };
 }
@@ -32,9 +39,20 @@ export default async function GiftLandingPage({ params }: { params: Promise<Para
 
   if (!demo || !tmpl) notFound();
 
+  const theme = await prisma.theme.findUnique({ where: { name: demoId } }).catch(() => null);
+
   // Strip the `icon` (React component/function) — cannot be serialized
   // from Server Component to Client Component. Looked up by id client-side.
   const { icon: _icon, ...demoData } = demo;
 
-  return <GuestCustomizeFlow demo={demoData} tmpl={tmpl} />;
+  const mergedDemo = {
+    ...demoData,
+    title: theme?.title || demoData.title,
+    description: theme?.description || demoData.description,
+    image: theme?.thumbnailUrl || demoData.image,
+    price: theme?.price !== undefined && theme.price !== null ? theme.price : demoData.price,
+    durationDays: theme?.durationDays !== undefined && theme.durationDays !== null ? theme.durationDays : demoData.durationDays,
+  };
+
+  return <GuestCustomizeFlow demo={mergedDemo} tmpl={tmpl} />;
 }
