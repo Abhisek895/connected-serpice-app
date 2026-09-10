@@ -43,8 +43,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: "Template not found" }, { status: 404 });
     }
 
-    // Payment requirement commented out for now — all templates are 100% free
-    let finalAmount = 0;
+    let finalAmount = theme.price;
     let couponId: string | null = null;
     const cleanCode = couponCode ? couponCode.trim().toUpperCase() : "";
 
@@ -115,7 +114,11 @@ export async function POST(req: Request) {
         const order = await razorpay.orders.create({
           amount: finalAmount,
           currency: "INR",
-          receipt: `guest_${demoId}_${Date.now()}`,
+          receipt: `g_${Date.now().toString().slice(-8)}_${Math.random().toString(36).substring(2, 7)}`,
+          notes: {
+            demoId,
+            buyerEmail: buyerEmail || "",
+          },
         });
         if (order?.id) {
           orderId = order.id;

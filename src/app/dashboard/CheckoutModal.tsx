@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, CreditCard, Tag, Loader2, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
 import Script from "next/script";
 import { useSession } from "next-auth/react";
+import { loadRazorpayScript } from "@/hooks/useRazorpay";
 
 type CheckoutModalProps = {
   demoId: string;
@@ -41,7 +42,7 @@ export default function CheckoutModal({
   const [couponCode, setCouponCode] = useState(isPremiumAccount ? "PREMIUM_FREE" : "");
   const [couponStatus, setCouponStatus] = useState<"idle" | "validating" | "valid" | "invalid">(isPremiumAccount ? "valid" : "idle");
   const [couponMessage, setCouponMessage] = useState(isPremiumAccount ? "👑 Premium Member: 100% FREE Access Granted!" : "");
-  const [finalPrice, setFinalPrice] = useState(0);
+  const [finalPrice, setFinalPrice] = useState(isPremiumAccount ? 0 : originalPrice);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPolling, setIsPolling] = useState(false);
   const [error, setError] = useState("");
@@ -218,13 +219,22 @@ export default function CheckoutModal({
       }
 
       // 2. Open Razorpay
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        throw new Error("Unable to load Razorpay payment gateway. Please check your internet connection.");
+      }
+
       const options = {
-        key: data.keyId,
+        key: data.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: data.amount,
         currency: data.currency,
-        name: "OurStory",
+        name: "OurStory 💖",
         description: `Purchase ${templateName}`,
         order_id: data.orderId,
+        prefill: {
+          name: session?.user?.name || undefined,
+          email: session?.user?.email || undefined,
+        },
         handler: async function (response: any) {
           try {
             const verifyRes = await fetch("/api/payment/verify", {

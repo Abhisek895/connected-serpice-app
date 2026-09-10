@@ -32,8 +32,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: "Template not found" }, { status: 404 });
     }
 
-    // Payment requirement commented out for now — all templates are 100% free
-    let finalAmount = 0;
+    let finalAmount = theme.price;
     let couponId = null;
     const cleanCode = couponCode ? couponCode.trim().toUpperCase() : "";
 
@@ -146,7 +145,12 @@ export async function POST(req: Request) {
         const orderOptions = {
           amount: finalAmount, // in paise
           currency: "INR",
-          receipt: `rcpt_${userId}_${Date.now()}`,
+          receipt: `rcpt_${Date.now().toString().slice(-8)}_${Math.random().toString(36).substring(2, 7)}`,
+          notes: {
+            userId,
+            demoId: theme.name,
+            themeId: theme.id,
+          },
         };
 
         const razorpay = getRazorpay();

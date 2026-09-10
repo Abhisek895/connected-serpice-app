@@ -31,7 +31,10 @@ export function verifyRazorpaySignature(
   signature: string,
   secret: string = process.env.RAZORPAY_KEY_SECRET || ""
 ): boolean {
-  if (!secret) return false;
+  if (!secret) {
+    console.error("[Razorpay] Missing RAZORPAY_KEY_SECRET for signature verification");
+    return false;
+  }
   const generatedSignature = crypto
     .createHmac("sha256", secret)
     .update(orderId + "|" + paymentId)

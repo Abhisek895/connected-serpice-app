@@ -67,6 +67,11 @@ export default function RootLayout({
             alt=""
           />
         </noscript>
+        {/* ── Razorpay Checkout SDK ── */}
+        <Script
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          strategy="lazyOnload"
+        />
       </head>
       <body className={`${inter.variable} ${pacifico.variable} font-sans antialiased`} suppressHydrationWarning>
         <Providers>

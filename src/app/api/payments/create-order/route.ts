@@ -53,21 +53,21 @@ export async function POST(req: NextRequest) {
     }
 
     // Razorpay expects amount in subunits (paise for INR)
-    // If the DB price is already in paise, skip this. Assuming DB stores Rs.
-    const amountInPaise = finalAmount * 100;
+    // In our DB, theme.price is already in paise (e.g. 2100 = ₹21, 2500 = ₹25)
+    const amountInPaise = finalAmount >= 100 ? finalAmount : finalAmount * 100;
 
     // 3. Create Razorpay Order or Mock Order
     let orderId = `mock_order_${Date.now()}`;
     let isMock = false;
 
-    // Check if we have valid Razorpay keys (not the placeholder spaces)
+    // Check if we have valid Razorpay keys
     const hasValidKeys = process.env.RAZORPAY_KEY_SECRET && !process.env.RAZORPAY_KEY_SECRET.includes(" ");
 
     if (hasValidKeys) {
       const options = {
         amount: amountInPaise,
         currency: "INR",
-        receipt: `receipt_${Date.now()}`,
+        receipt: `rcpt_${Date.now().toString().slice(-8)}_${Math.random().toString(36).substring(2, 7)}`,
         notes: {
           themeId: theme.id,
           userId: session.user.id,

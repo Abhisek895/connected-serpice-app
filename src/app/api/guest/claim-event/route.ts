@@ -45,12 +45,31 @@ export async function POST(req: Request) {
         data: { userId },
       });
 
-      // 2. Transfer payment record if razorpayOrderId is present in customData
+      // 2. Transfer payment record if razorpayOrderId is present in customData or via PaymentFulfillment
       try {
-        const customData = JSON.parse(event.customData || "{}");
-        if (customData.razorpayOrderId) {
+        let orderIdToLink: string | null = null;
+        try {
+          const customData = JSON.parse(event.customData || "{}");
+          if (customData.razorpayOrderId) {
+            orderIdToLink = customData.razorpayOrderId;
+          }
+        } catch {}
+
+        if (orderIdToLink) {
           await prisma.payment.updateMany({
-            where: { razorpayOrderId: customData.razorpayOrderId },
+            where: { razorpayOrderId: orderIdToLink },
+            data: { userId },
+          });
+        }
+
+        const fulfillment = await prisma.paymentFulfillment.findUnique({
+          where: { eventId: event.id },
+          select: { paymentId: true },
+        });
+
+        if (fulfillment?.paymentId) {
+          await prisma.payment.update({
+            where: { id: fulfillment.paymentId },
             data: { userId },
           });
         }

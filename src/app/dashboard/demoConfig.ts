@@ -43,7 +43,9 @@ export const demos: DemoItem[] = [
     image: "/demos/birthday-wish/thumb_birthday-wish_1786297523075.jpg",
     icon: Gift,
     borderColor: "border-amber-200",
-    hasInstantUse: false
+    hasInstantUse: false,
+    price: 2100,
+    durationDays: 7,
   },
   {
     id: "im-sorry",

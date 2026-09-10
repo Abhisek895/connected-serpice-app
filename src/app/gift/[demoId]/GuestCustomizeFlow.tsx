@@ -14,6 +14,7 @@ import type { DemoItem } from "@/app/dashboard/demoConfig";
 import type { TemplateClass, TemplateField } from "@/app/dashboard/templateConfig";
 import LivePhonePreview from "@/components/ui/LivePhonePreview";
 import AutoClickSimulatedPreview from "@/components/ui/AutoClickSimulatedPreview";
+import { loadRazorpayScript } from "@/hooks/useRazorpay";
 
 // Map demoId → icon client-side (icons are functions, can't be serialized server→client)
 const DEMO_ICONS: Record<string, LucideIcon> = {
@@ -341,12 +342,6 @@ export default function GuestCustomizeFlow({
   const [showLoginRequiredModal, setShowLoginRequiredModal] = useState(false);
 
   async function handlePayment() {
-    // Mandatory login enforcement: User must be signed in to publish/get their link
-    if (!isLoggedIn) {
-      setShowLoginRequiredModal(true);
-      return;
-    }
-
     setIsProcessing(true);
     setError(null);
     const { source, campaign } = getUtmParams();
@@ -402,8 +397,13 @@ export default function GuestCustomizeFlow({
         return;
       }
 
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        throw new Error("Unable to load Razorpay payment gateway. Please check your internet connection.");
+      }
+
       const options = {
-        key: data.keyId,
+        key: data.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: data.amount,
         currency: data.currency,
         name: "OurStory 💖",
