@@ -115,8 +115,28 @@ async function main() {
     },
   });
 
+  // Seed the Super Admin user
+  await prisma.user.upsert({
+    where: { email: "sarkarabhisek50@gmail.com" },
+    update: {
+      role: "super_admin",
+      plan: "PREMIUM",
+    },
+    create: {
+      id: "cmsiutuvm00015xmw9kmejzbo",
+      name: "Abhisek",
+      email: "sarkarabhisek50@gmail.com",
+      password: "$2b$10$75CEv6/PK16jGX9YY1oRze7KQJL3udhuzXn5BSltffL/uWyWGybgG",
+      role: "super_admin",
+      plan: "PREMIUM",
+      platform: "Web",
+      referralCode: "VBMC5A",
+      walletBalance: 4100,
+    },
+  });
+
   console.log("Database has been seeded with FREE100% and FREE1 trial coupons! 🚀");
-  console.log("GUEST system user seeded! 👤");
+  console.log("GUEST system user and Super Admin (sarkarabhisek50@gmail.com) seeded! 👤");
 }
 
 main()
