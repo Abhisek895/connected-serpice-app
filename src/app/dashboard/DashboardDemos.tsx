@@ -192,7 +192,7 @@ export default function DashboardDemos({
 
   return (
     <>
-      <div className="bg-gradient-to-r from-rose-50/60 via-purple-50/40 to-slate-50 border border-rose-100/80 rounded-3xl p-6 md:p-8 shadow-sm relative overflow-hidden mb-8 w-full">
+      <div className="bg-gradient-to-r from-rose-50/60 via-purple-50/40 to-slate-50 border border-rose-100/80 -mx-4 sm:mx-0 w-[calc(100%+2rem)] sm:w-full rounded-none sm:rounded-3xl border-x-0 sm:border p-4 sm:p-6 md:p-8 shadow-sm relative overflow-hidden mb-8">
 
         {/* Toast Notification */}
         <AnimatePresence>
