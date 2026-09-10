@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Ticket, Loader2, ShieldAlert, Check, X } from "lucide-react";
+import { Plus, Trash2, Ticket, Loader2, ShieldAlert, Check, X, Pencil } from "lucide-react";
 import { getAdminCoupons, createCoupon, updateCoupon, toggleCoupon, deleteCoupon } from "../actions";
 
 export default function AdminCouponsPage() {
@@ -9,7 +9,7 @@ export default function AdminCouponsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Form State
+  // Create Form State
   const [isCreating, setIsCreating] = useState(false);
   const [newCode, setNewCode] = useState("");
   const [newType, setNewType] = useState("FIXED");
@@ -20,6 +20,19 @@ export default function AdminCouponsPage() {
   const [isUnlimitedPerUser, setIsUnlimitedPerUser] = useState<boolean>(false);
   const [newExpiry, setNewExpiry] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Edit Form State
+  const [editingCoupon, setEditingCoupon] = useState<any | null>(null);
+  const [editCode, setEditCode] = useState("");
+  const [editType, setEditType] = useState("FIXED");
+  const [editValue, setEditValue] = useState(0);
+  const [editMaxUses, setEditMaxUses] = useState<number | "">("");
+  const [editIsUnlimitedTotalUses, setEditIsUnlimitedTotalUses] = useState(false);
+  const [editMaxUsesPerUser, setEditMaxUsesPerUser] = useState<number | "">("");
+  const [editIsUnlimitedPerUser, setEditIsUnlimitedPerUser] = useState(false);
+  const [editExpiry, setEditExpiry] = useState("");
+  const [editIsActive, setEditIsActive] = useState(true);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   useEffect(() => {
     fetchCoupons();
@@ -47,7 +60,7 @@ export default function AdminCouponsPage() {
       const data: any = {
         code: newCode.toUpperCase().trim(),
         discountType: newType,
-        discountValue: newType === "FIXED" ? newValue * 100 : newValue, // FIXED in paise, PERCENT inside 0-100
+        discountValue: newType === "FIXED" ? Math.round(newValue * 100) : Number(newValue), // FIXED in paise, PERCENT inside 0-100
         isActive: true,
       };
 
@@ -65,18 +78,83 @@ export default function AdminCouponsPage() {
 
       if (newExpiry) data.expiresAt = new Date(newExpiry).toISOString();
 
-      await createCoupon(data);
-      setIsCreating(false);
-      setNewCode("");
-      setNewValue(0);
-      setNewMaxUses(1000);
-      setIsUnlimitedTotalUses(false);
-      setNewMaxUsesPerUser(1);
-      setIsUnlimitedPerUser(false);
-      setNewExpiry("");
-      fetchCoupons();
-    } catch (err) {
-      alert("Failed to create coupon. Code might already exist.");
+      const res = await createCoupon(data);
+      if (res && res.success) {
+        setIsCreating(false);
+        setNewCode("");
+        setNewValue(0);
+        setNewMaxUses(1000);
+        setIsUnlimitedTotalUses(false);
+        setNewMaxUsesPerUser(1);
+        setIsUnlimitedPerUser(false);
+        setNewExpiry("");
+        fetchCoupons();
+      } else {
+        alert(res?.error || "Failed to create coupon. Code might already exist.");
+      }
+    } catch (err: any) {
+      alert(err?.message || "Failed to create coupon. Code might already exist.");
+    }
+  }
+
+  function openEditModal(coupon: any) {
+    setEditingCoupon(coupon);
+    setEditCode(coupon.code || "");
+    setEditType(coupon.discountType || "FIXED");
+    setEditValue(coupon.discountType === "FIXED" ? (coupon.discountValue || 0) / 100 : coupon.discountValue || 0);
+
+    if (coupon.maxUses === null || coupon.maxUses === undefined) {
+      setEditIsUnlimitedTotalUses(true);
+      setEditMaxUses("");
+    } else {
+      setEditIsUnlimitedTotalUses(false);
+      setEditMaxUses(coupon.maxUses);
+    }
+
+    if (coupon.maxUsesPerUser === null || coupon.maxUsesPerUser === undefined) {
+      setEditIsUnlimitedPerUser(true);
+      setEditMaxUsesPerUser("");
+    } else {
+      setEditIsUnlimitedPerUser(false);
+      setEditMaxUsesPerUser(coupon.maxUsesPerUser);
+    }
+
+    if (coupon.expiresAt) {
+      setEditExpiry(new Date(coupon.expiresAt).toISOString().split("T")[0]);
+    } else {
+      setEditExpiry("");
+    }
+
+    setEditIsActive(coupon.isActive ?? true);
+  }
+
+  async function handleUpdate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingCoupon) return;
+    setIsSavingEdit(true);
+
+    try {
+      const data: any = {
+        code: editCode.toUpperCase().trim(),
+        discountType: editType,
+        discountValue: editType === "FIXED" ? Math.round(editValue * 100) : Number(editValue),
+        isActive: editIsActive,
+        maxUses: editIsUnlimitedTotalUses || editMaxUses === "" ? null : Number(editMaxUses),
+        maxUsesPerUser: editIsUnlimitedPerUser || editMaxUsesPerUser === "" ? null : Number(editMaxUsesPerUser),
+        expiresAt: editExpiry ? new Date(editExpiry).toISOString() : null,
+      };
+
+      const res = await updateCoupon(editingCoupon.id, data);
+      if (res && res.success) {
+        setEditingCoupon(null);
+        fetchCoupons();
+      } else {
+        alert(res?.error || "Failed to update coupon.");
+      }
+    } catch (err: any) {
+      alert(err?.message || "Failed to update coupon.");
+    } finally {
+      setIsSavingEdit(false);
     }
   }
 
@@ -130,7 +208,7 @@ export default function AdminCouponsPage() {
         </div>
         <button
           onClick={() => setIsCreating(!isCreating)}
-          className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition"
+          className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition shadow-sm"
         >
           {isCreating ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
           {isCreating ? "Cancel" : "New Coupon"}
@@ -146,8 +224,12 @@ export default function AdminCouponsPage() {
         </div>
       )}
 
+      {/* Create Coupon Form */}
       {isCreating && (
         <form onSubmit={handleCreate} className="bg-[#111827] border border-indigo-500/30 p-6 rounded-xl space-y-4 shadow-xl">
+          <h3 className="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
+            <Plus className="w-4 h-4 text-indigo-400" /> Create New Coupon
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {/* Coupon Code */}
             <div>
@@ -224,7 +306,7 @@ export default function AdminCouponsPage() {
                 value={isUnlimitedPerUser ? "" : newMaxUsesPerUser}
                 onChange={(e) => setNewMaxUsesPerUser(e.target.value ? Number(e.target.value) : "")}
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
-                placeholder={isUnlimitedPerUser ? "Unlimited per account" : "e.g. 1 (1 use per account)"}
+                placeholder={isUnlimitedPerUser ? "Unlimited per account" : "e.g. 1"}
               />
             </div>
 
@@ -235,8 +317,194 @@ export default function AdminCouponsPage() {
             </div>
           </div>
 
-          <button type="submit" className="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-bold transition shadow-md">Create Coupon</button>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={() => setIsCreating(false)} className="px-4 py-2 rounded-lg text-slate-400 hover:text-white font-medium text-sm transition">
+              Cancel
+            </button>
+            <button type="submit" className="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-bold transition shadow-md">
+              Create Coupon
+            </button>
+          </div>
         </form>
+      )}
+
+      {/* Edit Coupon Modal */}
+      {editingCoupon && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-[#111827] border border-slate-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/60">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center">
+                  <Pencil className="w-4 h-4 text-indigo-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Edit Coupon</h3>
+                  <p className="text-xs text-slate-400">Updating code <span className="font-mono text-indigo-400 font-bold">{editingCoupon.code}</span></p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEditingCoupon(null)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdate} className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Coupon Code */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Coupon Code *</label>
+                  <input
+                    required
+                    type="text"
+                    value={editCode}
+                    onChange={e => setEditCode(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-bold uppercase"
+                  />
+                </div>
+
+                {/* Status */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Coupon Status *</label>
+                  <select
+                    value={editIsActive ? "ACTIVE" : "INACTIVE"}
+                    onChange={e => setEditIsActive(e.target.value === "ACTIVE")}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-semibold"
+                  >
+                    <option value="ACTIVE">Active (Can be redeemed)</option>
+                    <option value="INACTIVE">Disabled / Inactive</option>
+                  </select>
+                </div>
+
+                {/* Discount Type */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Discount Type *</label>
+                  <select
+                    value={editType}
+                    onChange={e => setEditType(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-semibold"
+                  >
+                    <option value="FIXED">Fixed Amount (₹)</option>
+                    <option value="PERCENTAGE">Percentage (%)</option>
+                  </select>
+                </div>
+
+                {/* Discount Value */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Discount Value *</label>
+                  <input
+                    required
+                    type="number"
+                    min="0"
+                    value={editValue}
+                    onChange={e => setEditValue(Number(e.target.value))}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-bold"
+                  />
+                </div>
+
+                {/* Max Total Uses */}
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-xs font-bold text-slate-300">Max Total Uses</label>
+                    <label className="flex items-center gap-1.5 text-xs text-indigo-400 font-bold cursor-pointer hover:text-indigo-300">
+                      <input
+                        type="checkbox"
+                        checked={editIsUnlimitedTotalUses}
+                        onChange={(e) => {
+                          setEditIsUnlimitedTotalUses(e.target.checked);
+                          if (e.target.checked) setEditMaxUses("");
+                          else setEditMaxUses(500);
+                        }}
+                        className="rounded border-slate-700 bg-slate-900 text-indigo-500 focus:ring-indigo-500 accent-indigo-500"
+                      />
+                      <span>Unlimited</span>
+                    </label>
+                  </div>
+                  <input
+                    type="number"
+                    min="1"
+                    disabled={editIsUnlimitedTotalUses}
+                    value={editIsUnlimitedTotalUses ? "" : editMaxUses}
+                    onChange={(e) => setEditMaxUses(e.target.value ? Number(e.target.value) : "")}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+                    placeholder={editIsUnlimitedTotalUses ? "Unlimited total uses" : "e.g. 500"}
+                  />
+                </div>
+
+                {/* Max Uses Per User */}
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-xs font-bold text-slate-300">Max Uses Per User</label>
+                    <label className="flex items-center gap-1.5 text-xs text-indigo-400 font-bold cursor-pointer hover:text-indigo-300">
+                      <input
+                        type="checkbox"
+                        checked={editIsUnlimitedPerUser}
+                        onChange={(e) => {
+                          setEditIsUnlimitedPerUser(e.target.checked);
+                          if (e.target.checked) setEditMaxUsesPerUser("");
+                          else setEditMaxUsesPerUser(1);
+                        }}
+                        className="rounded border-slate-700 bg-slate-900 text-indigo-500 focus:ring-indigo-500 accent-indigo-500"
+                      />
+                      <span>Unlimited</span>
+                    </label>
+                  </div>
+                  <input
+                    type="number"
+                    min="1"
+                    disabled={editIsUnlimitedPerUser}
+                    value={editIsUnlimitedPerUser ? "" : editMaxUsesPerUser}
+                    onChange={(e) => setEditMaxUsesPerUser(e.target.value ? Number(e.target.value) : "")}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+                    placeholder={editIsUnlimitedPerUser ? "Unlimited per account" : "e.g. 1"}
+                  />
+                </div>
+
+                {/* Expiry Date */}
+                <div className="md:col-span-2">
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-xs font-bold text-slate-300">Expiry Date</label>
+                    {editExpiry && (
+                      <button
+                        type="button"
+                        onClick={() => setEditExpiry("")}
+                        className="text-xs text-rose-400 hover:text-rose-300 font-semibold"
+                      >
+                        Clear Expiry (Never Expires)
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="date"
+                    value={editExpiry}
+                    onChange={e => setEditExpiry(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setEditingCoupon(null)}
+                  disabled={isSavingEdit}
+                  className="px-4 py-2 rounded-lg text-slate-400 hover:text-white font-medium text-sm transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingEdit}
+                  className="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-bold transition shadow-md flex items-center gap-2 disabled:opacity-50"
+                >
+                  {isSavingEdit && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {isSavingEdit ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* Coupons Table */}
@@ -259,7 +527,7 @@ export default function AdminCouponsPage() {
                 <tr><td colSpan={7} className="px-6 py-8 text-center text-slate-500">No coupons found.</td></tr>
               ) : coupons.map((coupon) => (
                 <tr key={coupon.id} className="hover:bg-slate-800/30 transition-colors">
-                  <td className="px-6 py-4 font-bold text-indigo-400">{coupon.code}</td>
+                  <td className="px-6 py-4 font-bold text-indigo-400 tracking-wider">{coupon.code}</td>
                   <td className="px-6 py-4 text-slate-200 font-medium">
                     {coupon.discountType === "FIXED" ? `₹${(coupon.discountValue / 100).toFixed(2)}` : `${coupon.discountValue}%`}
                   </td>
@@ -277,7 +545,15 @@ export default function AdminCouponsPage() {
                       {coupon.isActive ? "Active" : "Inactive"}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right space-x-2">
+                  <td className="px-6 py-4 text-right space-x-2 whitespace-nowrap">
+                    <button
+                      onClick={() => openEditModal(coupon)}
+                      className="text-xs px-2.5 py-1 rounded font-medium transition bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/30 inline-flex items-center gap-1.5"
+                      title="Edit Coupon"
+                    >
+                      <Pencil className="w-3 h-3" /> Edit
+                    </button>
+
                     <button
                       onClick={() => handleToggle(coupon.id)}
                       className={`text-xs px-3 py-1 rounded font-medium transition ${coupon.isActive ? "bg-slate-800 text-slate-300 hover:bg-slate-700" : "bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30"}`}
