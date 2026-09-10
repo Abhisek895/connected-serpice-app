@@ -229,7 +229,7 @@ export default function DashboardDemos({
             {/* Category Filter Tabs */}
             <div className="flex flex-wrap gap-2 mt-4">
               {[
-                { id: "all", label: "✨ All Templates" },
+                { id: "all", label: "🎨 All Templates" },
                 { id: "romantic", label: "❤️ Romantic Proposals" },
                 { id: "birthday", label: "🎂 Birthday Cards" },
                 { id: "planner", label: "🌸 Date Planners" },

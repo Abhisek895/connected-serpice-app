@@ -33,7 +33,7 @@ export default function DashboardSidebar() {
 
   const planConfig: Record<string, { label: string; color: string }> = {
     FREE:     { label: "Free",         color: "bg-slate-700/60 text-slate-400 border-slate-600/40" },
-    PREMIUM:  { label: "✨ Premium",   color: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
+    PREMIUM:  { label: "👑 Premium",   color: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
     LIFETIME: { label: "💎 Lifetime",  color: "bg-purple-500/20 text-purple-300 border-purple-500/30" },
   };
   const planBadge = planConfig[plan] ?? planConfig.FREE;

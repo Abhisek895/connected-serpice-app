@@ -108,7 +108,7 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
                   </button>
                 )}
                 <span className="w-full py-0.5 rounded-full bg-rose-500 text-white text-[8.5px] font-bold shadow-md shadow-rose-950/60 text-center whitespace-nowrap">
-                  ✨ Continue
+                  💌 Continue
                 </span>
               </div>
             </div>
@@ -199,7 +199,7 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
                   <div className="flex justify-between items-center pt-1 text-[8.5px]">
                     <span className="text-rose-300 font-bold">Forever Yours 💖</span>
                     <span className="px-2.5 py-1 bg-gradient-to-r from-rose-600 to-pink-600 text-white font-bold rounded-lg shadow-md">
-                      Close Letter & Continue ✨
+                      Close Letter & Continue 💌
                     </span>
                   </div>
                 </div>
@@ -217,7 +217,7 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
 
                 <div className="flex justify-center pt-1">
                   <span className="px-4 py-1.5 text-[9.5px] rounded-full font-bold bg-gradient-to-r from-rose-500 to-purple-600 text-white shadow-md tracking-wider uppercase">
-                    Tap Here ✨
+                    Tap Here 💖
                   </span>
                 </div>
               </div>

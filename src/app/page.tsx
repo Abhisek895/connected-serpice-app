@@ -163,7 +163,7 @@ export default async function Home({
                 <div className="px-5 pt-3 pb-6 text-center">
                   <div className="text-3xl mb-2">💖</div>
                   <h3 className="text-sm font-pacifico text-rose-500 mb-1">OurStory</h3>
-                  <p className="text-[11px] text-slate-600 font-semibold mb-3">A surprise for you, Priya ✨</p>
+                  <p className="text-[11px] text-slate-600 font-semibold mb-3">A surprise for you, Priya 💖</p>
                   <div className="bg-white/80 rounded-2xl p-3 mb-3 border border-rose-100 shadow-xs">
                     <p className="text-[10px] text-slate-700 leading-relaxed italic">&ldquo;Every moment with you is a memory I want to keep forever. Will you be mine? 💕&rdquo;</p>
                   </div>
@@ -194,7 +194,7 @@ export default async function Home({
         <div className="w-full mt-14 sm:mt-20 rounded-3xl bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 p-px">
           <div className="bg-white rounded-3xl px-6 sm:px-10 py-6 sm:py-8">
             <p className="text-xs sm:text-sm font-semibold text-rose-500 uppercase tracking-widest mb-4 text-center">
-              ✨ 8 Ready-To-Use Templates — More Added Every Week
+              🎨 8 Ready-To-Use Templates — More Added Every Week
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
               {[
