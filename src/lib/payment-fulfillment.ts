@@ -1,0 +1,304 @@
+/**
+ * /src/lib/payment-fulfillment.ts
+ *
+ * ─── The heart of guaranteed link delivery ────────────────────────────────────
+ *
+ * fulfillPayment() is called by:
+ *   1. /api/razorpay/webhook  — Razorpay server-push (PRIMARY)
+ *   2. /api/payment/verify    — Client fast-path (SECONDARY)
+ *   3. /api/guest/create-event — Guest flow (SECONDARY)
+ *
+ * It is fully IDEMPOTENT: calling it twice for the same orderId returns the
+ * same result without creating duplicate events or sending duplicate emails.
+ *
+ * Locking strategy: We use a Prisma unique constraint on PaymentFulfillment.paymentId
+ * to race-safe guard against concurrent fulfillment attempts.
+ */
+
+import { prisma } from "@/lib/prisma";
+import crypto from "crypto";
+import { sendPaymentSuccessEmail } from "@/lib/email";
+import { creditReferrer } from "@/lib/referral";
+
+// ─── Slug Prefix Map ─────────────────────────────────────────────────────────
+
+const GUEST_SLUG_PREFIX_MAP: Record<string, string> = {
+  "surprise": "surprise",
+  "birthday-wish": "birthday",
+  "im-sorry": "sorry",
+  "she-cant-say-no": "proposal",
+  "nasamajh-lakri": "nasamajh",
+  "date-planner": "dateplan",
+  "jalpaiguri-planner": "dateplan",
+};
+
+const CLASS_DEFAULTS: Record<string, any> = {
+  "surprise": {
+    title: "A Surprise For You... 😊",
+    question: "Will you be mine? 💖",
+    acceptBtn: "Yes! 😍",
+    rejectBtn: "No 🙈",
+    loveMessage: "A little surprise from someone who truly cares…",
+    hasDefaultMusic: true,
+    patternText: "love you",
+  },
+  "birthday-wish": {
+    title: "Happy Birthday! 🎂",
+    question: "Wishing you the happiest birthday! 🎂",
+    acceptBtn: "Love ❤️",
+    rejectBtn: "Hate 💔",
+    loveMessage: "May all your dreams come true. You deserve all the happiness in the world! 🎉",
+    hasDefaultMusic: true,
+  },
+  "im-sorry": {
+    title: "I'm Really Sorry... 🥺",
+    question: "Will you please forgive me? 🥺❤️",
+    acceptBtn: "Yes, I Forgive You 🥰",
+    rejectBtn: "No 😤",
+    loveMessage: "I am so deeply sorry for making you upset. You mean the entire world to me...",
+  },
+  "she-cant-say-no": {
+    title: "Do you love me? 🤗",
+    question: "Do you love me? 🤗",
+    acceptBtn: "Yes",
+    rejectBtn: "No",
+    recipientName: "Someone Special ✨",
+  },
+  "nasamajh-lakri": {
+    title: "Hi, Cute Mey 😊",
+    question: "Will you be mine? 💖",
+    acceptBtn: "Yes 😍",
+    rejectBtn: "No 🙈",
+  },
+  "date-planner": {
+    title: "Date Planner 🌸",
+    question: "Let's plan our perfect date! 🌸",
+    hasDefaultMusic: true,
+    hasSummaryCard: true,
+  },
+  "jalpaiguri-planner": {
+    title: "Date Planner 🌿",
+    question: "Let's plan our perfect date! 🌿",
+    hasDefaultMusic: true,
+    hasSummaryCard: true,
+  },
+};
+
+// ─── Slug generator ───────────────────────────────────────────────────────────
+
+async function generateUniqueSlug(demoId: string): Promise<string> {
+  const prefix = GUEST_SLUG_PREFIX_MAP[demoId] || "gift";
+
+  for (let attempt = 0; attempt < 15; attempt++) {
+    const hash = crypto.randomBytes(3).toString("hex"); // 6 random hex chars
+    const slug = `${prefix}-${hash}`;
+    const existing = await prisma.event.findUnique({ where: { slug } });
+    if (!existing) return slug;
+  }
+
+  // Fallback: timestamp-based (collision-safe)
+  return `${prefix}-${Date.now().toString(36)}`;
+}
+
+// ─── Result type ──────────────────────────────────────────────────────────────
+
+export interface FulfillmentResult {
+  /** Whether this call created the event (true) or found an existing one (false = idempotent hit) */
+  isNew: boolean;
+  shareUrl: string;
+  slug: string;
+  eventId: string;
+}
+
+// ─── Core: fulfillPayment ─────────────────────────────────────────────────────
+
+/**
+ * Given a Razorpay orderId + paymentId, provision the event and return the
+ * share URL. Idempotent — safe to call multiple times.
+ *
+ * @param razorpayOrderId  The order ID from Razorpay (or "FREE" / "guest_free_*" / "guest_mock_*")
+ * @param razorpayPaymentId  The payment ID from Razorpay (can be empty for free orders)
+ * @param customData  Optional override form values (from client form submission)
+ */
+export async function fulfillPayment(
+  razorpayOrderId: string,
+  razorpayPaymentId: string | null,
+  customData?: Record<string, any>
+): Promise<FulfillmentResult> {
+
+  // ── 1. Fetch the Payment record ────────────────────────────────────────────
+  const payment = await prisma.payment.findUnique({
+    where: { razorpayOrderId },
+    include: { fulfillment: true },
+  });
+
+  if (!payment) {
+    throw new Error(`Payment record not found for orderId: ${razorpayOrderId}`);
+  }
+
+  // ── 2. Idempotency: already fulfilled? Return existing result ──────────────
+  if (payment.fulfillment) {
+    return {
+      isNew: false,
+      shareUrl: payment.fulfillment.shareUrl,
+      slug: payment.fulfillment.shareUrl.replace("/p/", ""),
+      eventId: payment.fulfillment.eventId,
+    };
+  }
+
+  // ── 3. Mark payment SUCCESS (if not already) ───────────────────────────────
+  if (payment.status !== "SUCCESS") {
+    await prisma.payment.update({
+      where: { id: payment.id },
+      data: {
+        status: "SUCCESS",
+        ...(razorpayPaymentId ? { razorpayPaymentId } : {}),
+      },
+    });
+  }
+
+  // ── 4. Resolve demoId + userId + theme ────────────────────────────────────
+  const demoId = payment.demoId || "surprise";
+
+  let theme = await prisma.theme.findUnique({ where: { name: demoId } });
+  if (!theme) {
+    theme = await prisma.theme.create({
+      data: { name: demoId, isPremium: false, durationDays: 14 },
+    });
+  }
+
+  // ── 5. Resolve user — fall back to guest user ──────────────────────────────
+  let targetUserId = payment.userId;
+
+  // If payment is on the guest user, we still use the guest account
+  const guestUser = await prisma.user.findUnique({
+    where: { email: "guest@ourstory.internal" },
+  });
+
+  // ── 6. Build customData ────────────────────────────────────────────────────
+  // Priority: provided customData > snapshot stored at order-creation > class defaults
+  let snapshotData: Record<string, any> = {};
+  if (payment.customDataSnapshot) {
+    try {
+      snapshotData = JSON.parse(payment.customDataSnapshot);
+    } catch {
+      // ignore parse errors
+    }
+  }
+
+  const classDefaults = CLASS_DEFAULTS[demoId] || {};
+  const finalCustomData = {
+    ...classDefaults,
+    ...snapshotData,
+    ...(customData || {}),
+    demoId,
+    isGuest: targetUserId === guestUser?.id,
+    razorpayOrderId: payment.razorpayOrderId || null,
+  };
+
+  // ── 7. Generate unique slug ────────────────────────────────────────────────
+  const slug = await generateUniqueSlug(demoId);
+  const shareUrl = `/p/${slug}`;
+
+  // ── 8. Set expiry ──────────────────────────────────────────────────────────
+  const durationDays = theme.durationDays ?? 14;
+  const expiresAt =
+    durationDays < 3650
+      ? new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000)
+      : null;
+
+  // ── 9. Create event + fulfillment record in a transaction ─────────────────
+  const [event, fulfillment] = await prisma.$transaction(async (tx) => {
+    const newEvent = await tx.event.create({
+      data: {
+        userId: targetUserId,
+        themeId: theme!.id,
+        slug,
+        status: "PUBLISHED",
+        customData: JSON.stringify(finalCustomData),
+        expiresAt,
+      },
+    });
+
+    const newFulfillment = await tx.paymentFulfillment.create({
+      data: {
+        paymentId: payment.id,
+        eventId: newEvent.id,
+        shareUrl,
+      },
+    });
+
+    return [newEvent, newFulfillment];
+  });
+
+  // ── 10. Credit referrer (idempotent) ───────────────────────────────────────
+  try {
+    // Refresh payment with latest status for referral engine
+    const freshPayment = await prisma.payment.findUnique({ where: { id: payment.id } });
+    if (freshPayment) {
+      await creditReferrer(freshPayment as any);
+    }
+  } catch (err) {
+    console.error("[fulfillPayment] referral credit error:", err);
+  }
+
+  // ── 11. Increment coupon usage ─────────────────────────────────────────────
+  if (payment.couponId) {
+    try {
+      await prisma.coupon.update({
+        where: { id: payment.couponId },
+        data: { usedCount: { increment: 1 } },
+      });
+    } catch {
+      // ignore — coupon may have been incremented already
+    }
+  }
+
+  // ── 12. Send confirmation email ────────────────────────────────────────────
+  const buyerEmail = payment.buyerEmail;
+  if (buyerEmail) {
+    const appUrl =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      process.env.NEXTAUTH_URL ||
+      "https://ourstory.app";
+
+    try {
+      await sendPaymentSuccessEmail({
+        to: buyerEmail,
+        templateTitle: theme.title || demoId,
+        shareUrl: `${appUrl}${shareUrl}`,
+        expiresAt,
+      });
+
+      // Mark email sent
+      await prisma.paymentFulfillment.update({
+        where: { id: fulfillment.id },
+        data: { emailSentAt: new Date() },
+      });
+    } catch (mailErr) {
+      console.error("[fulfillPayment] email send error:", mailErr);
+      // Non-fatal — link is still created, user can recover from dashboard
+    }
+  }
+
+  return {
+    isNew: true,
+    shareUrl,
+    slug,
+    eventId: event.id,
+  };
+}
+
+// ─── Verify Razorpay signature ────────────────────────────────────────────────
+
+export function verifyRazorpayWebhookSignature(
+  rawBody: string,
+  receivedSignature: string,
+  webhookSecret: string
+): boolean {
+  const expected = crypto
+    .createHmac("sha256", webhookSecret)
+    .update(rawBody)
+    .digest("hex");
+  return expected === receivedSignature;
+}

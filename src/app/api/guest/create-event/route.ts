@@ -1,102 +1,19 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import crypto from "crypto";
-import { creditReferrer } from "@/lib/referral";
-import { getCurrentUser } from "@/lib/session";
-
 /**
  * POST /api/guest/create-event
  *
- * No authentication required — for ad-landing guest flows.
- * Called AFTER a successful payment to actually create the event.
- * Verifies payment was SUCCESS before creating event.
+ * Called AFTER a successful payment in the guest flow.
+ * Now delegates all event creation + email sending to the shared
+ * fulfillPayment() utility, keeping logic in one place.
+ *
+ * This route remains as a compatibility shim — the fulfillment is now
+ * idempotent, so calling it after verify/webhook is a no-op.
  */
 
-const GUEST_SLUG_PREFIX_MAP: Record<string, string> = {
-  "surprise": "surprise",
-  "birthday-wish": "birthday",
-  "im-sorry": "sorry",
-  "she-cant-say-no": "proposal",
-  "nasamajh-lakri": "nasamajh",
-  "date-planner": "dateplan",
-  "jalpaiguri-planner": "dateplan",
-};
-
-async function generateGuestSlug(demoId: string): Promise<string> {
-  const prefix = GUEST_SLUG_PREFIX_MAP[demoId] || "gift";
-
-  let uniqueSlug = "";
-  let isUnique = false;
-  let attempts = 0;
-
-  while (!isUnique && attempts < 15) {
-    attempts++;
-    const randomHash = Math.random().toString(36).substring(2, 8);
-    uniqueSlug = `${prefix}-${randomHash}`;
-    const check = await prisma.event.findUnique({ where: { slug: uniqueSlug } });
-    if (!check) {
-      isUnique = true;
-    }
-  }
-
-  if (!isUnique) {
-    uniqueSlug = `${prefix}-${Date.now()}`;
-  }
-
-  return uniqueSlug;
-}
-
-const CLASS_DEFAULTS: Record<string, any> = {
-  "surprise": {
-    title: "A Surprise For You... 😊",
-    question: "Will you be mine? 💖",
-    acceptBtn: "Yes! 😍",
-    rejectBtn: "No 🙈",
-    loveMessage: "A little surprise from someone who truly cares…",
-    hasDefaultMusic: true,
-    patternText: "love you",
-  },
-  "birthday-wish": {
-    title: "Happy Birthday! 🎂",
-    question: "Wishing you the happiest birthday! 🎂",
-    acceptBtn: "Love ❤️",
-    rejectBtn: "Hate 💔",
-    loveMessage: "May all your dreams come true. You deserve all the happiness in the world! 🎉",
-    hasDefaultMusic: true,
-  },
-  "im-sorry": {
-    title: "I'm Really Sorry... 🥺",
-    question: "Will you please forgive me? 🥺❤️",
-    acceptBtn: "Yes, I Forgive You 🥰",
-    rejectBtn: "No 😤",
-    loveMessage: "I am so deeply sorry for making you upset. You mean the entire world to me...",
-  },
-  "she-cant-say-no": {
-    title: "Do you love me? 🤗",
-    question: "Do you love me? 🤗",
-    acceptBtn: "Yes",
-    rejectBtn: "No",
-    recipientName: "Someone Special ✨",
-  },
-  "nasamajh-lakri": {
-    title: "Hi, Cute Mey 😊",
-    question: "Will you be mine? 💖",
-    acceptBtn: "Yes 😍",
-    rejectBtn: "No 🙈",
-  },
-  "date-planner": {
-    title: "Date Planner 🌸",
-    question: "Let's plan our perfect date! 🌸",
-    hasDefaultMusic: true,
-    hasSummaryCard: true,
-  },
-  "jalpaiguri-planner": {
-    title: "Date Planner 🌿",
-    question: "Let's plan our perfect date! 🌿",
-    hasDefaultMusic: true,
-    hasSummaryCard: true,
-  },
-};
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import crypto from "crypto";
+import { fulfillPayment } from "@/lib/payment-fulfillment";
+import { getCurrentUser } from "@/lib/session";
 
 export async function POST(req: Request) {
   try {
@@ -111,7 +28,10 @@ export async function POST(req: Request) {
     } = await req.json();
 
     if (!demoId) {
-      return NextResponse.json({ success: false, message: "Missing demoId" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "Missing demoId" },
+        { status: 400 }
+      );
     }
 
     // ── Verify payment ──────────────────────────────────────────────────────────
@@ -124,13 +44,18 @@ export async function POST(req: Request) {
         orderBy: { createdAt: "desc" },
       });
       paymentVerified = !!freePayment;
-    } else if (razorpayOrderId?.startsWith("guest_mock_")) {
+
+    } else if (razorpayOrderId?.startsWith("guest_mock_") || razorpayOrderId?.startsWith("free_order_")) {
       // Mock payment in dev mode — auto-verify
       paymentVerified = true;
       await prisma.payment.updateMany({
         where: { razorpayOrderId },
-        data: { status: "SUCCESS", razorpayPaymentId: razorpayPaymentId || `mock_pay_${Date.now()}` },
+        data: {
+          status: "SUCCESS",
+          razorpayPaymentId: razorpayPaymentId || `mock_pay_${Date.now()}`,
+        },
       });
+
     } else if (razorpayOrderId && razorpayPaymentId && razorpaySignature) {
       // Real Razorpay — verify signature
       const secret = process.env.RAZORPAY_KEY_SECRET;
@@ -139,91 +64,62 @@ export async function POST(req: Request) {
         const expected = crypto.createHmac("sha256", secret).update(body).digest("hex");
         if (expected === razorpaySignature) {
           paymentVerified = true;
-          await prisma.payment.updateMany({
-            where: { razorpayOrderId },
-            data: { status: "SUCCESS", razorpayPaymentId },
-          });
         }
       }
     }
 
     if (!paymentVerified) {
-      return NextResponse.json({ success: false, message: "Payment not verified" }, { status: 402 });
+      return NextResponse.json(
+        { success: false, message: "Payment not verified" },
+        { status: 402 }
+      );
     }
 
-    // Trigger instant referral credit for guest payment if referredByCode is present
-    try {
-      const guestPayment = await prisma.payment.findFirst({
-        where: { razorpayOrderId },
-        orderBy: { createdAt: "desc" },
-      });
-      if (guestPayment) {
-        await creditReferrer(guestPayment as any);
-      }
-    } catch (refErr) {
-      console.error("[guest-referral-credit] Error:", refErr);
-    }
-
-    // ── Get GUEST user or logged-in user ────────────────────────────────────────
-    const { userId: sessionUserId } = await getCurrentUser();
-    const guestUser = await prisma.user.findUnique({
-      where: { email: "guest@ourstory.internal" },
-    });
-
-    const targetUserId = sessionUserId || guestUser?.id;
-
-    if (!targetUserId) {
-      return NextResponse.json({ success: false, message: "Guest system not configured" }, { status: 500 });
-    }
-
-    // ── Ensure theme exists ─────────────────────────────────────────────────────
-    let theme = await prisma.theme.findUnique({ where: { name: demoId } });
-    if (!theme) {
-      theme = await prisma.theme.create({
-        data: { name: demoId, isPremium: false, durationDays: 14 },
-      });
-    }
-
-    // ── Build customData ────────────────────────────────────────────────────────
-    const classDefaults = CLASS_DEFAULTS[demoId] || {};
-    const finalCustomData = {
-      ...classDefaults,
+    // ── Attach UTM data into customData ────────────────────────────────────────
+    const enrichedCustomData = {
       ...(userCustomData || {}),
-      demoId,
-      isGuest: !sessionUserId,
-      razorpayOrderId: razorpayOrderId || null,
-      source: utmSource || null,
-      campaign: utmCampaign || null,
+      ...(utmSource ? { source: utmSource } : {}),
+      ...(utmCampaign ? { campaign: utmCampaign } : {}),
     };
 
-    // ── Generate unique slug ────────────────────────────────────────────────────
-    const slug = await generateGuestSlug(demoId);
+    // ── Resolve which orderId to use for fulfillment ──────────────────────────
+    // For free orders, we need to find the actual free payment record
+    let targetOrderId = razorpayOrderId;
+    if (razorpayOrderId === "FREE") {
+      const freePayment = await prisma.payment.findFirst({
+        where: { razorpayOrderId: { startsWith: "guest_free_" }, demoId, status: "SUCCESS" },
+        orderBy: { createdAt: "desc" },
+      });
+      if (!freePayment) {
+        return NextResponse.json(
+          { success: false, message: "Free payment record not found" },
+          { status: 404 }
+        );
+      }
+      targetOrderId = freePayment.razorpayOrderId;
+    }
 
-    // ── Set expiry (use theme duration, default 14 days) ───────────────────────
-    const durationDays = theme.durationDays ?? 14;
-    const expiresAt = durationDays < 3650
-      ? new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000)
-      : null;
+    // ── Delegate to fulfillPayment (idempotent) ────────────────────────────────
+    const result = await fulfillPayment(
+      targetOrderId,
+      razorpayPaymentId || null,
+      enrichedCustomData
+    );
 
-    // ── Create the event ────────────────────────────────────────────────────────
-    await prisma.event.create({
-      data: {
-        userId: targetUserId,
-        themeId: theme.id,
-        slug,
-        status: "PUBLISHED",
-        customData: JSON.stringify(finalCustomData),
-        expiresAt,
-      },
-    });
+    // Set guest claim cookie for account linking after register
+    // (returned to client, client sets cookie)
 
     return NextResponse.json({
       success: true,
-      slug,
-      shareUrl: `/p/${slug}`,
+      slug: result.slug,
+      shareUrl: result.shareUrl,
     });
+
   } catch (error: any) {
-    console.error("Guest create-event error:", error);
-    return NextResponse.json({ success: false, message: error.message || "Internal error" }, { status: 500 });
+    console.error("[guest/create-event] Error:", error);
+    return NextResponse.json(
+      { success: false, message: error.message || "Internal error" },
+      { status: 500 }
+    );
   }
 }

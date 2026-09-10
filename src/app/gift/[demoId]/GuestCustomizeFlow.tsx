@@ -210,6 +210,8 @@ export default function GuestCustomizeFlow({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
+  const [buyerEmail, setBuyerEmail] = useState(""); // for link delivery email
+  const [pollingForLink, setPollingForLink] = useState(false); // recovery poller state
 
   const Icon = DEMO_ICONS[demo.id] ?? Sparkles;
   const totalSteps = tmpl.steps.length;
@@ -357,6 +359,19 @@ export default function GuestCustomizeFlow({
       refCode = match ? decodeURIComponent(match[1]) : (localStorage.getItem("ourstory_ref_code") || undefined);
     }
 
+    // Build form value snapshot for webhook-side fulfillment
+    const customDataSnapshot: Record<string, any> = {};
+    for (const stepItem of tmpl.steps) {
+      for (const field of stepItem.fields) {
+        const val = formValues[field.key];
+        if (val !== undefined && val !== "") {
+          customDataSnapshot[field.key] = val;
+          if (field.key === "_photo" || field.key === "_photo1") customDataSnapshot["photoUrl"] = val;
+          if (field.key === "_audio") customDataSnapshot["audioUrl"] = val;
+        }
+      }
+    }
+
     try {
       const res = await fetch("/api/guest/create-order", {
         method: "POST",
@@ -367,19 +382,21 @@ export default function GuestCustomizeFlow({
           utmSource: source,
           utmCampaign: campaign,
           referredByCode: refCode,
+          buyerEmail: buyerEmail.trim() || undefined,
+          customData: customDataSnapshot,
         }),
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.message || "Failed to create order");
 
       if (data.orderId === "FREE" || data.amount === 0) {
-        await createGuestEvent("FREE", "", "", source, campaign);
+        await createGuestEvent("FREE", "", "", source, campaign, customDataSnapshot);
         return;
       }
 
       if (data.isMock) {
         setTimeout(
-          () => createGuestEvent(data.orderId, `mock_pay_${Date.now()}`, "mock_signature_for_development", source, campaign),
+          () => createGuestEvent(data.orderId, `mock_pay_${Date.now()}`, "mock_signature_for_development", source, campaign, customDataSnapshot),
           1200
         );
         return;
@@ -392,13 +409,17 @@ export default function GuestCustomizeFlow({
         name: "OurStory 💖",
         description: demo.title,
         order_id: data.orderId,
+        prefill: {
+          email: buyerEmail.trim() || undefined,
+        },
         handler: async (response: any) => {
           await createGuestEvent(
             response.razorpay_order_id,
             response.razorpay_payment_id,
             response.razorpay_signature,
             source,
-            campaign
+            campaign,
+            customDataSnapshot
           );
         },
         modal: {
@@ -418,16 +439,26 @@ export default function GuestCustomizeFlow({
     }
   }
 
-  async function createGuestEvent(orderId: string, paymentId: string, sig: string, source: string, campaign: string) {
+  async function createGuestEvent(
+    orderId: string,
+    paymentId: string,
+    sig: string,
+    source: string,
+    campaign: string,
+    customDataOverrides?: Record<string, any>
+  ) {
     try {
-      const overrides: Record<string, any> = {};
-      for (const stepItem of tmpl.steps) {
-        for (const field of stepItem.fields) {
-          const val = formValues[field.key];
-          if (val !== undefined && val !== "") {
-            overrides[field.key] = val;
-            if (field.key === "_photo" || field.key === "_photo1") overrides["photoUrl"] = val;
-            if (field.key === "_audio") overrides["audioUrl"] = val;
+      // Build customData from form values (if not passed explicitly)
+      const overrides: Record<string, any> = customDataOverrides || {};
+      if (!customDataOverrides) {
+        for (const stepItem of tmpl.steps) {
+          for (const field of stepItem.fields) {
+            const val = formValues[field.key];
+            if (val !== undefined && val !== "") {
+              overrides[field.key] = val;
+              if (field.key === "_photo" || field.key === "_photo1") overrides["photoUrl"] = val;
+              if (field.key === "_audio") overrides["audioUrl"] = val;
+            }
           }
         }
       }
@@ -446,21 +477,95 @@ export default function GuestCustomizeFlow({
         }),
       });
       const data = await res.json();
-      if (!data.success) throw new Error(data.message || "Failed to create event");
 
-      if (data.slug) {
-        if (typeof document !== "undefined") {
+      if (data.success && data.shareUrl) {
+        // ✅ Fast path — server returned link directly
+        const fullUrl = `${window.location.origin}${data.shareUrl}`;
+        if (data.slug && typeof document !== "undefined") {
           document.cookie = `ourstory_guest_claim_slug=${data.slug}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax`;
           localStorage.setItem("ourstory_guest_claim_slug", data.slug);
         }
+        setPublishedUrl(fullUrl);
+        return;
       }
 
-      setPublishedUrl(`${window.location.origin}${data.shareUrl}`);
+      if (!data.success) {
+        // 🔄 Verify failed — start polling /api/payment/status as fallback
+        if (orderId !== "FREE" && !orderId.startsWith("guest_free_")) {
+          setPollingForLink(true);
+          await pollForFulfillment(orderId);
+          return;
+        }
+        throw new Error(data.message || "Failed to create event");
+      }
+
     } catch (err: any) {
+      // Last resort — start polling
+      if (orderId && orderId !== "FREE" && !orderId.startsWith("guest_free_")) {
+        setPollingForLink(true);
+        await pollForFulfillment(orderId);
+        return;
+      }
       setError(err.message || "Something went wrong creating your page");
     } finally {
       setIsProcessing(false);
     }
+  }
+
+  /**
+   * Recovery poller — polls /api/payment/status every 2s for up to 60s.
+   * Used when the client-side handler fires but create-event fails or times out.
+   * The webhook will fulfill the payment server-side, and this poll catches it.
+   */
+  async function pollForFulfillment(orderId: string) {
+    const MAX_ATTEMPTS = 30; // 30 × 2s = 60s
+    let attempts = 0;
+
+    const poll = async (): Promise<void> => {
+      attempts++;
+      try {
+        const res = await fetch(`/api/payment/status?orderId=${encodeURIComponent(orderId)}`);
+        const data = await res.json();
+
+        if (data.fulfilled && data.shareUrl) {
+          const fullUrl = `${window.location.origin}${data.shareUrl}`;
+          setPublishedUrl(fullUrl);
+          setPollingForLink(false);
+          setIsProcessing(false);
+          return;
+        }
+
+        if (data.failed) {
+          setError("Your payment was not successful. Please try again.");
+          setPollingForLink(false);
+          setIsProcessing(false);
+          return;
+        }
+
+        if (attempts < MAX_ATTEMPTS) {
+          await new Promise((r) => setTimeout(r, 2000));
+          return poll();
+        }
+
+        // Timed out — show email fallback message
+        setError(
+          buyerEmail.trim()
+            ? `We're still processing your payment. Your link will be emailed to ${buyerEmail.trim()} shortly.`
+            : "We're still processing your payment. Please wait a moment and refresh."
+        );
+        setPollingForLink(false);
+        setIsProcessing(false);
+      } catch {
+        if (attempts < MAX_ATTEMPTS) {
+          await new Promise((r) => setTimeout(r, 2000));
+          return poll();
+        }
+        setPollingForLink(false);
+        setIsProcessing(false);
+      }
+    };
+
+    return poll();
   }
 
   const origPriceINR = (demo.price ?? 0) / 100;
@@ -765,6 +870,24 @@ export default function GuestCustomizeFlow({
               )}
             </div>
 
+            {/* 📧 Email for guaranteed link delivery */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                Email your link (recommended)
+              </label>
+              <input
+                type="email"
+                value={buyerEmail}
+                onChange={(e) => setBuyerEmail(e.target.value)}
+                placeholder="your@email.com — we'll send the link here"
+                className="w-full px-4 py-2.5 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-900 text-sm font-medium placeholder:text-slate-400"
+              />
+              <p className="text-[10px] text-slate-400 font-medium">
+                Your link will be emailed instantly after payment — even if your browser closes 🔒
+              </p>
+            </div>
+
             {/* Total summary */}
             <div className="border-t border-slate-100 pt-4 space-y-3">
               <div className="flex justify-between items-center">
@@ -784,6 +907,20 @@ export default function GuestCustomizeFlow({
               </p>
             </div>
 
+            {/* Polling state */}
+            {pollingForLink && (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3">
+                <Loader2 className="w-5 h-5 text-amber-500 animate-spin flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-bold text-amber-800">Confirming your payment… 🔄</p>
+                  <p className="text-xs text-amber-600 font-medium mt-0.5">
+                    This usually takes a few seconds. Do not close this page.
+                    {buyerEmail.trim() && ` We'll also email the link to ${buyerEmail.trim()}.`}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {error && (
               <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-semibold text-center">
                 {error}
@@ -792,13 +929,13 @@ export default function GuestCustomizeFlow({
 
             <button
               onClick={handlePayment}
-              disabled={isProcessing}
+              disabled={isProcessing || pollingForLink}
               className="w-full py-4 px-4 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-rose-200 transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
             >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" /> Processing Payment...
-                </>
+              {pollingForLink ? (
+                <><Loader2 className="w-5 h-5 animate-spin" /> Confirming Payment…</>
+              ) : isProcessing ? (
+                <><Loader2 className="w-5 h-5 animate-spin" /> Processing Payment...</>
               ) : finalPriceINR === 0 ? (
                 "🚀 Activate 1-Day Free Pass (₹0)"
               ) : (

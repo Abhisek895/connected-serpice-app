@@ -97,11 +97,33 @@ model Payment {
   finalAmount       Int?
   referredByCode    String?   // Referral code that brought this buyer — used to credit referrer on payment success
 
+  // ─── Fulfillment tracking ──────────────────────────────────────────────────
+  buyerEmail        String?   // Stored at order-creation so webhook can email even without session
+  buyerPhone        String?   // Reserved for future WhatsApp notification
+  customDataSnapshot String?  // JSON blob of form values — lets webhook create event without client
+  fulfillment       PaymentFulfillment? // Created once event is provisioned
+
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
   @@index([userId])
   @@index([referredByCode])
+  @@index([status])
+}
+
+// ─── Idempotent fulfillment record — one per paid order ─────────────────────
+// Created by whichever path fires first (webhook OR client verify).
+// Acts as a unique guard so no duplicate events are ever created.
+model PaymentFulfillment {
+  id          String   @id @default(cuid())
+  paymentId   String   @unique        // FK → Payment.id
+  payment     Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  eventId     String   @unique        // FK → Event.id  (the created event)
+  shareUrl    String                  // e.g. /p/surprise-abc123
+  emailSentAt DateTime?              // null = email not yet sent / failed
+  createdAt   DateTime @default(now())
+
+  @@index([paymentId])
 }
 
 // Interaction tracking

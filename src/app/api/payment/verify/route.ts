@@ -1,69 +1,89 @@
+/**
+ * POST /api/payment/verify
+ *
+ * ─── CLIENT FAST-PATH FULFILLMENT ────────────────────────────────────────────
+ *
+ * Called immediately after the Razorpay modal's handler() fires on the client.
+ * Verifies the HMAC signature, then calls the shared fulfillPayment() utility.
+ *
+ * Returns { success: true, shareUrl, slug } so the client can show the link
+ * immediately without waiting for the webhook.
+ *
+ * Idempotent — safe to call multiple times for the same order.
+ */
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
-import { creditReferrer } from "@/lib/referral";
+import { fulfillPayment } from "@/lib/payment-fulfillment";
 
 export async function POST(req: Request) {
   try {
-    const { razorpayOrderId, razorpayPaymentId, razorpaySignature, demoId, couponCode } = await req.json();
+    const {
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature,
+      customData,  // Optional: client form values for fulfillment
+    } = await req.json();
 
     if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
-      return NextResponse.json({ success: false, message: "Missing payment details" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "Missing payment details" },
+        { status: 400 }
+      );
     }
 
+    // ── 1. Verify signature ────────────────────────────────────────────────────
     const secret = process.env.RAZORPAY_KEY_SECRET;
-    const isMock = razorpayOrderId.startsWith("mock_order_") && razorpaySignature === "mock_signature_for_development";
+    const isMock =
+      razorpayOrderId.startsWith("mock_order_") &&
+      razorpaySignature === "mock_signature_for_development";
 
     if (!isMock) {
       if (!secret) {
-        return NextResponse.json({ success: false, message: "Payment gateway not configured" }, { status: 500 });
+        return NextResponse.json(
+          { success: false, message: "Payment gateway not configured" },
+          { status: 500 }
+        );
       }
 
-      const body = razorpayOrderId + "|" + razorpayPaymentId;
-      const expectedSignature = crypto.createHmac("sha256", secret).update(body.toString()).digest("hex");
+      const body = `${razorpayOrderId}|${razorpayPaymentId}`;
+      const expectedSignature = crypto
+        .createHmac("sha256", secret)
+        .update(body)
+        .digest("hex");
 
       if (expectedSignature !== razorpaySignature) {
-        // Signature mismatch
-        await prisma.payment.update({
-          where: { razorpayOrderId },
-          data: { status: "FAILED" }
+        // Mark payment failed for audit
+        await prisma.payment.updateMany({
+          where: { razorpayOrderId, status: "PENDING" },
+          data: { status: "FAILED" },
         });
-        return NextResponse.json({ success: false, message: "Invalid signature" }, { status: 400 });
+        return NextResponse.json(
+          { success: false, message: "Invalid signature" },
+          { status: 400 }
+        );
       }
     }
 
-    // Mark payment as successful
-    const payment = await prisma.payment.update({
-      where: { razorpayOrderId },
-      data: {
-        razorpayPaymentId,
-        status: "SUCCESS"
-      },
-      include: { coupon: true }
+    // ── 2. Fulfill (idempotent) ────────────────────────────────────────────────
+    const result = await fulfillPayment(
+      razorpayOrderId,
+      razorpayPaymentId,
+      customData
+    );
+
+    return NextResponse.json({
+      success: true,
+      shareUrl: result.shareUrl,
+      slug: result.slug,
     });
 
-    // Increment coupon usage if a coupon was applied
-    if (payment.couponId) {
-      await prisma.coupon.update({
-        where: { id: payment.couponId },
-        data: { usedCount: { increment: 1 } }
-      });
-    }
-
-    // ─── INSTANT REFERRAL CREDIT ENGINE ──────────────────────────────────────
-    // Credit the referrer's wallet immediately when a referred user pays.
-    // Idempotent: checks if a credit already exists for this payment or buyer.
-    try {
-      await creditReferrer(payment as any);
-    } catch (err) {
-      console.error("[referral-credit] Failed to credit referrer:", err);
-    }
-    // ─────────────────────────────────────────────────────────────────────────
-
-    return NextResponse.json({ success: true });
-
   } catch (error: any) {
-    console.error("Payment verify error:", error);
-    return NextResponse.json({ success: false, message: error.message || "Internal error" }, { status: 500 });
+    console.error("[payment/verify] Error:", error);
+    return NextResponse.json(
+      { success: false, message: error.message || "Internal error" },
+      { status: 500 }
+    );
   }
 }

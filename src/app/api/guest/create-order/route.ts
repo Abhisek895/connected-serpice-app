@@ -17,6 +17,8 @@ export async function POST(req: Request) {
       utmSource,   // e.g. "instagram"
       utmCampaign, // e.g. "reel"
       referredByCode,
+      buyerEmail,  // optional: email entered during checkout for link delivery
+      customData,  // form values snapshot for webhook-side fulfillment
     } = await req.json();
 
     if (!demoId) {
@@ -90,6 +92,8 @@ export async function POST(req: Request) {
           demoId: theme.name,
           couponId,
           referredByCode: referredByCode || null,
+          buyerEmail: buyerEmail || null,
+          customDataSnapshot: customData ? JSON.stringify(customData) : null,
         } as any,
       });
 
@@ -139,6 +143,8 @@ export async function POST(req: Request) {
         demoId: theme.name,
         couponId,
         referredByCode: referredByCode || null,
+        buyerEmail: buyerEmail || null,
+        customDataSnapshot: customData ? JSON.stringify(customData) : null,
       } as any,
     });
 

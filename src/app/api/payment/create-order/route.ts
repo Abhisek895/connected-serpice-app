@@ -11,7 +11,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    const { demoId, themeId, couponCode, useWallet, referredByCode } = await req.json();
+    const { demoId, themeId, couponCode, useWallet, referredByCode, customData } = await req.json();
     const targetDemoId = demoId || themeId;
 
     if (!targetDemoId) {
@@ -59,6 +59,7 @@ export async function POST(req: Request) {
     }
 
     const isPremiumUser = existingUser.plan === "PREMIUM" || existingUser.role === "super_admin";
+    const buyerEmail = existingUser.email ?? undefined;
     if (isPremiumUser) {
       finalAmount = 0;
     }
@@ -114,6 +115,8 @@ export async function POST(req: Request) {
           demoId: theme.name,
           couponId,
           referredByCode: referredByCode || null,
+          buyerEmail: buyerEmail || null,
+          customDataSnapshot: customData ? JSON.stringify(customData) : null,
         } as any
       });
 
@@ -175,6 +178,8 @@ export async function POST(req: Request) {
         demoId: theme.name,
         couponId,
         referredByCode: referredByCode || null,
+        buyerEmail: buyerEmail || null,
+        customDataSnapshot: customData ? JSON.stringify(customData) : null,
       } as any
     });
 

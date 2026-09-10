@@ -43,6 +43,7 @@ export default function CheckoutModal({
   const [couponMessage, setCouponMessage] = useState(isPremiumAccount ? "👑 Premium Member: 100% FREE Access Granted!" : "");
   const [finalPrice, setFinalPrice] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isPolling, setIsPolling] = useState(false);
   const [error, setError] = useState("");
   const [isFree1Eligible, setIsFree1Eligible] = useState<boolean | null>(null);
   // Referral attribution — read from cookie set by ReferralTracker
@@ -201,16 +202,15 @@ export default function CheckoutModal({
               razorpayOrderId: data.orderId,
               razorpayPaymentId: `mock_payment_${Date.now()}`,
               razorpaySignature: "mock_signature_for_development",
-              demoId,
-              couponCode: activeCoupon,
             }),
           });
           const verifyData = await verifyRes.json();
           if (verifyData.success) {
             onSuccess(activeCoupon);
           } else {
-            setError(verifyData.message || "Mock payment verification failed");
-            setIsProcessing(false);
+            // Poll as fallback
+            setIsPolling(true);
+            await pollForFulfillment(data.orderId, activeCoupon);
           }
         }, 1200);
 
@@ -234,8 +234,6 @@ export default function CheckoutModal({
                 razorpayOrderId: response.razorpay_order_id,
                 razorpayPaymentId: response.razorpay_payment_id,
                 razorpaySignature: response.razorpay_signature,
-                demoId,
-                couponCode: activeCoupon,
               }),
             });
 
@@ -243,12 +241,14 @@ export default function CheckoutModal({
             if (verifyData.success) {
               onSuccess(activeCoupon);
             } else {
-              setError("Payment verification failed. Please contact support.");
-              setIsProcessing(false);
+              // 🔄 Poll as fallback
+              setIsPolling(true);
+              await pollForFulfillment(response.razorpay_order_id, activeCoupon);
             }
           } catch (err) {
-            setError("Error verifying payment");
-            setIsProcessing(false);
+            // 🔄 Network error — poll as fallback
+            setIsPolling(true);
+            await pollForFulfillment(data.orderId, activeCoupon);
           }
         },
         modal: {
@@ -267,6 +267,54 @@ export default function CheckoutModal({
       setError(err.message || "Failed to initiate payment");
       setIsProcessing(false);
     }
+  }
+
+  /**
+   * Recovery poller — polls /api/payment/status every 2s for up to 60s.
+   */
+  async function pollForFulfillment(orderId: string, couponUsed?: string) {
+    const MAX_ATTEMPTS = 30;
+    let attempts = 0;
+
+    const poll = async (): Promise<void> => {
+      attempts++;
+      try {
+        const res = await fetch(`/api/payment/status?orderId=${encodeURIComponent(orderId)}`);
+        const data = await res.json();
+
+        if (data.fulfilled) {
+          setIsPolling(false);
+          setIsProcessing(false);
+          onSuccess(couponUsed);
+          return;
+        }
+
+        if (data.failed) {
+          setError("Payment was not successful. Please try again.");
+          setIsPolling(false);
+          setIsProcessing(false);
+          return;
+        }
+
+        if (attempts < MAX_ATTEMPTS) {
+          await new Promise((r) => setTimeout(r, 2000));
+          return poll();
+        }
+
+        setError("Payment confirmation is taking longer than expected. Please refresh or contact support.");
+        setIsPolling(false);
+        setIsProcessing(false);
+      } catch {
+        if (attempts < MAX_ATTEMPTS) {
+          await new Promise((r) => setTimeout(r, 2000));
+          return poll();
+        }
+        setIsPolling(false);
+        setIsProcessing(false);
+      }
+    };
+
+    return poll();
   }
 
   return (
@@ -461,9 +509,22 @@ export default function CheckoutModal({
             )}
 
             {/* Submit Button */}
+            {isPolling && (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3">
+                <Loader2 className="w-5 h-5 text-amber-500 animate-spin flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-bold text-amber-800">Confirming your payment… 🔄</p>
+                  <p className="text-xs text-amber-600 font-medium mt-0.5">
+                    This usually takes a few seconds. Do not close this page.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Submit Button */}
             <button
               onClick={handlePayment}
-              disabled={isProcessing}
+              disabled={isProcessing || isPolling}
               className="w-full py-4 px-4 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-rose-200 transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
             >
               {isProcessing ? (
