@@ -9,7 +9,13 @@ type UserProps = {
   plan: string;
 };
 
-export default function SettingsClient({ user }: { user: UserProps }) {
+export default function SettingsClient({
+  user,
+  premiumUpgradePrice = 5000,
+}: {
+  user: UserProps;
+  premiumUpgradePrice?: number;
+}) {
   const [activeTab, setActiveTab] = useState("profile");
 
   // Profile Update State
@@ -247,8 +253,13 @@ export default function SettingsClient({ user }: { user: UserProps }) {
                     </h4>
                     <p className="text-sm text-slate-600 mt-1">Unlock custom domains, premium themes, and remove watermarks.</p>
                   </div>
-                  <button className="whitespace-nowrap px-6 py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl shadow-lg shadow-rose-200 transition">
-                    Upgrade (₹99)
+                  <button
+                    onClick={() => {
+                      window.location.href = "/dashboard#all-templates";
+                    }}
+                    className="whitespace-nowrap px-6 py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl shadow-lg shadow-rose-200 transition cursor-pointer active:scale-95"
+                  >
+                    Upgrade (₹{premiumUpgradePrice})
                   </button>
                 </div>
               ) : (

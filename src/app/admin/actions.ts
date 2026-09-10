@@ -600,10 +600,14 @@ export async function getAdminPricingSettings() {
     const originalPrice = await prisma.systemSetting.findUnique({ where: { key: "offer_original_price" } });
     const specialPrice = await prisma.systemSetting.findUnique({ where: { key: "offer_special_price" } });
     const cashbackAmount = await prisma.systemSetting.findUnique({ where: { key: "offer_cashback_amount" } });
+    const premiumUpgradePrice = await prisma.systemSetting.findUnique({ where: { key: "premium_upgrade_price" } });
+    const enabledSetting = await prisma.systemSetting.findUnique({ where: { key: "offer_pricing_enabled" } });
 
-    const orig = originalPrice?.value ? parseInt(originalPrice.value, 10) : 499;
-    const spec = specialPrice?.value ? parseInt(specialPrice.value, 10) : 199;
+    const orig = originalPrice?.value ? parseInt(originalPrice.value, 10) : 500;
+    const spec = specialPrice?.value ? parseInt(specialPrice.value, 10) : 200;
     const cb = cashbackAmount?.value ? parseInt(cashbackAmount.value, 10) : 50;
+    const prem = premiumUpgradePrice?.value ? parseInt(premiumUpgradePrice.value, 10) : 5000;
+    const isPricingEnabled = enabledSetting?.value !== "false";
     const discountPercent = orig > 0 ? Math.round(((orig - spec) / orig) * 100) : 60;
 
     return {
@@ -612,14 +616,16 @@ export async function getAdminPricingSettings() {
         originalPrice: orig,
         specialPrice: spec,
         cashbackAmount: cb,
+        premiumUpgradePrice: prem,
         discountPercent,
+        enabled: isPricingEnabled,
       },
     };
   } catch (error: any) {
     return {
       success: false,
       error: error.message,
-      settings: { originalPrice: 499, specialPrice: 199, cashbackAmount: 50, discountPercent: 60 },
+      settings: { originalPrice: 500, specialPrice: 200, cashbackAmount: 50, premiumUpgradePrice: 5000, discountPercent: 60, enabled: true },
     };
   }
 }
@@ -628,14 +634,18 @@ export async function updateAdminPricingSettings({
   originalPrice,
   specialPrice,
   cashbackAmount,
+  premiumUpgradePrice,
+  enabled,
 }: {
   originalPrice: number;
   specialPrice: number;
   cashbackAmount: number;
+  premiumUpgradePrice?: number;
+  enabled?: boolean;
 }) {
   await checkAuth();
   try {
-    await prisma.$transaction([
+    const operations = [
       prisma.systemSetting.upsert({
         where: { key: "offer_original_price" },
         update: { value: originalPrice.toString(), description: "Original strike-through offer price in INR" },
@@ -651,11 +661,29 @@ export async function updateAdminPricingSettings({
         update: { value: cashbackAmount.toString(), description: "Promotional cashback amount in INR" },
         create: { key: "offer_cashback_amount", value: cashbackAmount.toString(), description: "Promotional cashback amount in INR" },
       }),
-    ]);
+    ];
+
+    if (enabled !== undefined) {
+      operations.push(
+        prisma.systemSetting.upsert({
+          where: { key: "offer_pricing_enabled" },
+          update: { value: enabled ? "true" : "false", description: "Whether promotional template offer and cashback is enabled" },
+          create: { key: "offer_pricing_enabled", value: enabled ? "true" : "false", description: "Whether promotional template offer and cashback is enabled" },
+        })
+      );
+    }
+
+    if (premiumUpgradePrice !== undefined) {
+      operations.push(
+        prisma.systemSetting.upsert({
+          where: { key: "premium_upgrade_price" },
+          update: { value: premiumUpgradePrice.toString(), description: "Upgrade to Premium plan price in INR" },
+          create: { key: "premium_upgrade_price", value: premiumUpgradePrice.toString(), description: "Upgrade to Premium plan price in INR" },
+        })
+      );
+    }
+
+    await prisma.$transaction(operations);
     return { success: true };
   } catch (error: any) {
-    return { success: false, error: error.message || "Failed to update pricing settings" };
-  }
-}
-
-
+    return { success: false, 

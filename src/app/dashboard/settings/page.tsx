@@ -22,6 +22,12 @@ export default async function SettingsPage() {
     });
   }
 
+  // Fetch dynamic upgrade to premium price
+  const premiumSetting = await prisma.systemSetting.findUnique({
+    where: { key: "premium_upgrade_price" },
+  });
+  const premiumUpgradePrice = premiumSetting?.value ? parseInt(premiumSetting.value, 10) : 5000;
+
   // Mock data if user is missing
   const userProps = {
     displayName: user?.name || "Test User",
@@ -39,7 +45,7 @@ export default async function SettingsPage() {
         <p className="text-slate-500 mt-1">Manage your account preferences and billing.</p>
       </div>
 
-      <SettingsClient user={userProps} />
+      <SettingsClient user={userProps} premiumUpgradePrice={premiumUpgradePrice} />
     </div>
   );
 }

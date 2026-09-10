@@ -24,6 +24,18 @@ function BuilderWizard() {
   const [eventId, setEventId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [premiumUpgradePrice, setPremiumUpgradePrice] = useState(5000)
+
+  useEffect(() => {
+    fetch("/api/system/pricing")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.premiumUpgradePrice) {
+          setPremiumUpgradePrice(data.premiumUpgradePrice);
+        }
+      })
+      .catch(() => {});
+  }, [])
 
   useEffect(() => {
     async function verifyAccess() {
@@ -395,8 +407,15 @@ function BuilderWizard() {
                       {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
                       {isLoading ? 'Publishing...' : '🚀 Publish & Go Live'}
                     </motion.button>
-                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1 bg-rose-500 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-rose-600 transition-all shadow-rose-200 flex items-center justify-center gap-2">
-                      <Zap className="w-5 h-5 fill-amber-300 text-amber-300" /> Upgrade to Premium (₹99)
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        window.location.href = "/dashboard/settings";
+                      }}
+                      className="flex-1 bg-rose-500 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-rose-600 transition-all shadow-rose-200 flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Zap className="w-5 h-5 fill-amber-300 text-amber-300" /> Upgrade to Premium (₹{premiumUpgradePrice})
                     </motion.button>
                   </div>
                 </>

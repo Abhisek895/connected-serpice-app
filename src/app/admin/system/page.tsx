@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Activity, CheckCircle, Loader2, ShieldAlert, Gift, Save, CheckCircle2, AlertCircle, Tag } from "lucide-react";
-import { getAdminSystemHealth, getAdminReferralSettings, updateAdminReferralSettings, getAdminPricingSettings, updateAdminPricingSettings } from "@/app/admin/actions";
+import { Activity, CheckCircle, Loader2, ShieldAlert, Gift, Save, CheckCircle2, AlertCircle, Tag, Crown, Zap } from "lucide-react";
+import { getAdminSystemHealth, getAdminReferralSettings, updateAdminReferralSettings, getAdminPricingSettings, updateAdminPricingSettings, updateAdminPremiumUpgradePrice } from "@/app/admin/actions";
 
 export default function SystemHealthPage() {
   const [health, setHealth] = useState<any>(null);
@@ -18,12 +18,17 @@ export default function SystemHealthPage() {
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  // Pricing & Cashback Settings State
-  const [originalPrice, setOriginalPrice] = useState<number>(499);
-  const [specialPrice, setSpecialPrice] = useState<number>(199);
+  // Template Pricing & Cashback Settings State (Defaults: 500, 200, 50)
+  const [originalPrice, setOriginalPrice] = useState<number>(500);
+  const [specialPrice, setSpecialPrice] = useState<number>(200);
   const [cashbackAmount, setCashbackAmount] = useState<number>(50);
   const [isSavingPricing, setIsSavingPricing] = useState(false);
   const [pricingSaveMessage, setPricingSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // Upgrade to Premium Price State (Default: 5000)
+  const [premiumUpgradePrice, setPremiumUpgradePrice] = useState<number>(5000);
+  const [isSavingUpgradePrice, setIsSavingUpgradePrice] = useState(false);
+  const [upgradePriceSaveMessage, setUpgradePriceSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -41,9 +46,10 @@ export default function SystemHealthPage() {
           setReferralEnabled(settingsData.settings.enabled ?? true);
         }
         if (pricingData.success && pricingData.settings) {
-          setOriginalPrice(pricingData.settings.originalPrice);
-          setSpecialPrice(pricingData.settings.specialPrice);
-          setCashbackAmount(pricingData.settings.cashbackAmount);
+          setOriginalPrice(pricingData.settings.originalPrice ?? 500);
+          setSpecialPrice(pricingData.settings.specialPrice ?? 200);
+          setCashbackAmount(pricingData.settings.cashbackAmount ?? 50);
+          setPremiumUpgradePrice(pricingData.settings.premiumUpgradePrice ?? 5000);
         }
       })
       .catch((e) => setError(e.message))
@@ -66,7 +72,7 @@ export default function SystemHealthPage() {
         const discount = originalPrice > 0 ? Math.round(((originalPrice - specialPrice) / originalPrice) * 100) : 60;
         setPricingSaveMessage({
           type: "success",
-          text: `Pricing updated live! Strike Price: ₹${originalPrice}, Special Price: ₹${specialPrice} (${discount}% OFF), Cashback: ₹${cashbackAmount}.`,
+          text: `Template pricing updated live! Strike: ₹${originalPrice}, Special: ₹${specialPrice} (${discount}% OFF), Cashback: ₹${cashbackAmount}.`,
         });
       } else {
         setPricingSaveMessage({ type: "error", text: res.error || "Failed to save pricing settings." });
@@ -75,6 +81,31 @@ export default function SystemHealthPage() {
       setPricingSaveMessage({ type: "error", text: err.message || "An error occurred." });
     } finally {
       setIsSavingPricing(false);
+    }
+  };
+
+  const handleSaveUpgradePrice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingUpgradePrice(true);
+    setUpgradePriceSaveMessage(null);
+
+    try {
+      const res = await updateAdminPremiumUpgradePrice({
+        premiumUpgradePrice: Number(premiumUpgradePrice),
+      });
+
+      if (res.success) {
+        setUpgradePriceSaveMessage({
+          type: "success",
+          text: `Upgrade to Premium price updated to ₹${Number(premiumUpgradePrice).toLocaleString("en-IN")} live across User Settings & Builder!`,
+        });
+      } else {
+        setUpgradePriceSaveMessage({ type: "error", text: res.error || "Failed to save upgrade price." });
+      }
+    } catch (err: any) {
+      setUpgradePriceSaveMessage({ type: "error", text: err.message || "An error occurred." });
+    } finally {
+      setIsSavingUpgradePrice(false);
     }
   };
 
@@ -295,15 +326,15 @@ export default function SystemHealthPage() {
         </form>
       </div>
 
-      {/* Promotional Pricing, Offers & Cashback Controls Card */}
+      {/* 1. Promotional Template Pricing & Cashback Controls Card */}
       <div className="bg-[#111827] border border-slate-800 rounded-2xl p-6 shadow-xl">
         <div className="flex items-center gap-3 mb-4 pb-4 border-b border-slate-800">
           <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
             <Tag className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white">Promotional Pricing &amp; Cashback Controls 🏷️</h3>
-            <p className="text-xs text-slate-400">Manage live strike-through pricing, special purchase offer price, and cashback amount across the app.</p>
+            <h3 className="text-lg font-bold text-white">Promotional Template Pricing &amp; Cashback 🏷️</h3>
+            <p className="text-xs text-slate-400">Manage live strike-through pricing, special purchase offer price, and post-payment cashback for template purchases.</p>
           </div>
         </div>
 
@@ -317,9 +348,9 @@ export default function SystemHealthPage() {
         )}
 
         {/* Live Admin Preview Badge */}
-        <div className="mb-6 bg-gradient-to-r from-rose-950/60 via-purple-950/60 to-slate-900 border border-rose-500/30 rounded-xl p-4 text-white">
-          <p className="text-xs font-bold text-rose-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-            <Tag className="w-3.5 h-3.5 text-rose-400" /> Live Customer Banner Preview
+        <div className="mb-6 bg-gradient-to-r from-rose-950/60 via-purple-950/60 to-slate-900 border border-rose-500/30 rounded-xl p-4 text-white space-y-3">
+          <p className="text-xs font-bold text-rose-300 uppercase tracking-wider flex items-center gap-1.5">
+            <Tag className="w-3.5 h-3.5 text-rose-400" /> Live Template Purchase Banner Preview
           </p>
           <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
             <span className="font-bold text-amber-300 bg-amber-500/20 border border-amber-500/30 px-2.5 py-1 rounded-lg">
@@ -335,7 +366,7 @@ export default function SystemHealthPage() {
           </div>
         </div>
 
-        <form onSubmit={handleSavePricingSettings} className="space-y-5 max-w-xl">
+        <form onSubmit={handleSavePricingSettings} className="space-y-5 max-w-2xl">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
@@ -347,10 +378,10 @@ export default function SystemHealthPage() {
                 step="10"
                 value={originalPrice}
                 onChange={(e) => setOriginalPrice(Number(e.target.value))}
-                placeholder="499"
+                placeholder="500"
                 className="w-full px-4 py-2.5 bg-[#0a0f1e] border border-slate-700 rounded-xl text-white font-bold text-sm focus:outline-none focus:border-rose-400 transition"
               />
-              <p className="text-[11px] text-slate-400 mt-1">Strike-through original price</p>
+              <p className="text-[11px] text-slate-400 mt-1">Strike-through price</p>
             </div>
 
             <div>
@@ -363,15 +394,15 @@ export default function SystemHealthPage() {
                 step="10"
                 value={specialPrice}
                 onChange={(e) => setSpecialPrice(Number(e.target.value))}
-                placeholder="199"
+                placeholder="200"
                 className="w-full px-4 py-2.5 bg-[#0a0f1e] border border-slate-700 rounded-xl text-white font-bold text-sm focus:outline-none focus:border-rose-400 transition"
               />
-              <p className="text-[11px] text-slate-400 mt-1">Actual customer purchase price</p>
+              <p className="text-[11px] text-slate-400 mt-1">Offer purchase price</p>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                Cashback Amount (₹)
+                Cashback (₹)
               </label>
               <input
                 type="number"
@@ -382,7 +413,7 @@ export default function SystemHealthPage() {
                 placeholder="50"
                 className="w-full px-4 py-2.5 bg-[#0a0f1e] border border-slate-700 rounded-xl text-white font-bold text-sm focus:outline-none focus:border-rose-400 transition"
               />
-              <p className="text-[11px] text-slate-400 mt-1">Post-payment cashback reward</p>
+              <p className="text-[11px] text-slate-400 mt-1">Post-payment reward</p>
             </div>
           </div>
 
@@ -392,7 +423,77 @@ export default function SystemHealthPage() {
             className="px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl shadow-lg shadow-rose-500/20 transition flex items-center justify-center gap-2 disabled:opacity-50 text-sm"
           >
             {isSavingPricing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            <span>Save Pricing &amp; Offers</span>
+            <span>Save Template Pricing</span>
+          </button>
+        </form>
+      </div>
+
+      {/* 2. Upgrade to Premium Membership Pricing Card */}
+      <div className="bg-[#111827] border border-slate-800 rounded-2xl p-6 shadow-xl">
+        <div className="flex items-center gap-3 mb-4 pb-4 border-b border-slate-800">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+            <Crown className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-white">Upgrade to Premium Membership Pricing 👑</h3>
+            <p className="text-xs text-slate-400">Configure the upgrade fee for users to unlock all premium templates, custom domains, and remove watermarks.</p>
+          </div>
+        </div>
+
+        {upgradePriceSaveMessage && (
+          <div className={`mb-6 p-4 rounded-xl border flex items-center gap-3 text-sm font-semibold ${
+            upgradePriceSaveMessage.type === "success" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border-rose-500/20 text-rose-400"
+          }`}>
+            {upgradePriceSaveMessage.type === "success" ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <AlertCircle className="w-5 h-5 shrink-0" />}
+            <span>{upgradePriceSaveMessage.text}</span>
+          </div>
+        )}
+
+        {/* Live Admin Preview of User Dashboard Banner */}
+        <div className="mb-6 bg-gradient-to-r from-amber-950/50 via-rose-950/40 to-slate-900 border border-amber-500/30 rounded-xl p-4 text-white">
+          <p className="text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5 mb-3">
+            <Crown className="w-3.5 h-3.5 text-amber-400" /> Live Customer Banner Preview (User Settings &amp; Builder)
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-900/90 border border-slate-800 p-4 rounded-xl">
+            <div>
+              <h4 className="font-bold text-white flex items-center gap-2 text-sm">
+                Upgrade to Premium <Zap className="w-4 h-4 text-rose-500 fill-rose-500" />
+              </h4>
+              <p className="text-xs text-slate-300 mt-1">Unlock custom domains, premium themes, and remove watermarks.</p>
+            </div>
+            <span className="whitespace-nowrap px-6 py-2.5 bg-rose-500 text-white font-bold text-sm rounded-xl shadow-lg shadow-rose-500/30">
+              Upgrade (₹{Number(premiumUpgradePrice).toLocaleString("en-IN")})
+            </span>
+          </div>
+        </div>
+
+        <form onSubmit={handleSaveUpgradePrice} className="space-y-5 max-w-xl">
+          <div>
+            <label className="block text-xs font-bold text-amber-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <Crown className="w-3.5 h-3.5 text-amber-400" />
+              Upgrade Price (₹)
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="50"
+              value={premiumUpgradePrice}
+              onChange={(e) => setPremiumUpgradePrice(Number(e.target.value))}
+              placeholder="5000"
+              className="w-full px-4 py-2.5 bg-[#0a0f1e] border border-amber-500/40 rounded-xl text-white font-bold text-sm focus:outline-none focus:border-amber-400 transition max-w-sm"
+            />
+            <p className="text-[11px] text-slate-400 mt-1">
+              Controls the price on <code>Upgrade (₹{Number(premiumUpgradePrice).toLocaleString("en-IN")})</code> buttons across user dashboard.
+            </p>
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSavingUpgradePrice}
+            className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2 disabled:opacity-50 text-sm"
+          >
+            {isSavingUpgradePrice ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            <span>Save Premium Upgrade Price</span>
           </button>
         </form>
       </div>

@@ -2,9 +2,39 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Search, Loader2, Ban, CheckCircle2, Trash2, AlertCircle, AlertTriangle, X, ExternalLink, Users as UsersIcon, Gift } from "lucide-react";
+import {
+  Search,
+  Loader2,
+  Ban,
+  CheckCircle2,
+  Trash2,
+  AlertCircle,
+  AlertTriangle,
+  X,
+  ExternalLink,
+  Users as UsersIcon,
+  Gift,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 import { getAdminUsers, deleteAdminUser, toggleSuspendAdminUser, toggleUserPlanAdminAction, updateUserPlatformAdminAction } from "@/app/admin/actions";
 import { motion, AnimatePresence } from "framer-motion";
+
+// Helper to calculate pagination page numbers with ellipsis
+function getPageNumbers(current: number, total: number): (number | string)[] {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  if (current <= 4) {
+    return [1, 2, 3, 4, 5, "...", total];
+  }
+  if (current >= total - 3) {
+    return [1, "...", total - 4, total - 3, total - 2, total - 1, total];
+  }
+  return [1, "...", current - 1, current, current + 1, "...", total];
+}
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -15,10 +45,19 @@ export default function AdminUsersPage() {
   const [roleFilter, setRoleFilter] = useState("");
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   // Deletion Confirmation Modal State
   const [deleteConfirmUser, setDeleteConfirmUser] = useState<{ id: string; email: string; name?: string } | null>(null);
 
   useEffect(() => { loadUsers(); }, [roleFilter]);
+
+  // Reset page to 1 when search or roleFilter or pageSize changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, roleFilter, pageSize]);
 
   async function loadUsers(searchQuery = search) {
     setIsLoading(true);
@@ -113,6 +152,13 @@ export default function AdminUsersPage() {
     SUSPENDED: "text-rose-400 bg-rose-500/10 border border-rose-500/30 font-bold",
   };
 
+  // Calculate Pagination ranges
+  const totalPages = Math.max(1, Math.ceil(users.length / pageSize));
+  const safePage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, users.length);
+  const paginatedUsers = users.slice(startIndex, endIndex);
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -191,7 +237,7 @@ export default function AdminUsersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
-                {users.map((u) => {
+                {paginatedUsers.map((u) => {
                   const isActionBusy = actionLoadingId === u.id;
                   const isSuspended = u.role === "SUSPENDED";
                   const totalSpentPaise = u.payments?.reduce((sum: number, p: any) => {
@@ -328,6 +374,100 @@ export default function AdminUsersPage() {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* ── Enhanced Pagination Footer Bar ── */}
+        {!isLoading && users.length > 0 && (
+          <div className="p-3.5 sm:p-4 bg-[#0d1322] border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+            {/* Range & Page Size */}
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-slate-400 w-full sm:w-auto">
+              <span>
+                Showing <span className="text-white font-bold">{startIndex + 1}</span> to{" "}
+                <span className="text-white font-bold">{endIndex}</span> of{" "}
+                <span className="text-white font-bold">{users.length}</span> users
+              </span>
+
+              <div className="flex items-center gap-1.5 pl-2 border-l border-slate-700">
+                <span className="text-slate-500">Per page:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => setPageSize(Number(e.target.value))}
+                  className="bg-[#0a0f1e] border border-slate-700 rounded-lg text-slate-200 text-xs px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Pagination Controls */}
+            <div className="flex items-center gap-1">
+              {/* First Page */}
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={safePage === 1}
+                className="p-1.5 rounded-lg border border-slate-800 bg-[#0a0f1e] text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+                title="First Page"
+              >
+                <ChevronsLeft className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Previous Page */}
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={safePage === 1}
+                className="p-1.5 rounded-lg border border-slate-800 bg-[#0a0f1e] text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+                title="Previous Page"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Page Number Buttons */}
+              <div className="flex items-center gap-1">
+                {getPageNumbers(safePage, totalPages).map((p, idx) =>
+                  typeof p === "number" ? (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentPage(p)}
+                      className={`min-w-[28px] h-7 px-2 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        safePage === p
+                          ? "bg-indigo-600 text-white shadow-md shadow-indigo-950 border border-indigo-500"
+                          : "bg-[#0a0f1e] border border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ) : (
+                    <span key={idx} className="px-1 text-slate-500 font-bold select-none">
+                      ...
+                    </span>
+                  )
+                )}
+              </div>
+
+              {/* Next Page */}
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={safePage === totalPages}
+                className="p-1.5 rounded-lg border border-slate-800 bg-[#0a0f1e] text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+                title="Next Page"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Last Page */}
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={safePage === totalPages}
+                className="p-1.5 rounded-lg border border-slate-800 bg-[#0a0f1e] text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+                title="Last Page"
+              >
+                <ChevronsRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         )}
       </div>
