@@ -17,7 +17,9 @@ export async function GET() {
     const specialPriceSetting = await prisma.systemSetting.findUnique({ where: { key: "offer_special_price" } });
     const cashbackSetting = await prisma.systemSetting.findUnique({ where: { key: "offer_cashback_amount" } });
     const premiumUpgradeSetting = await prisma.systemSetting.findUnique({ where: { key: "premium_upgrade_price" } });
+    const enabledSetting = await prisma.systemSetting.findUnique({ where: { key: "offer_pricing_enabled" } });
 
+    const isOfferEnabled = enabledSetting?.value !== "false";
     const originalPrice = originalPriceSetting?.value ? parseInt(originalPriceSetting.value, 10) : 500;
     const defaultSpecialPrice = specialPriceSetting?.value ? parseInt(specialPriceSetting.value, 10) : 200;
     const specialPrice = isPremium ? 0 : defaultSpecialPrice;
@@ -27,6 +29,7 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
+      enabled: isOfferEnabled,
       originalPrice,
       specialPrice,
       cashbackAmount,
@@ -37,6 +40,7 @@ export async function GET() {
   } catch (error: any) {
     return NextResponse.json({
       success: false,
+      enabled: true,
       originalPrice: 500,
       specialPrice: 200,
       cashbackAmount: 50,

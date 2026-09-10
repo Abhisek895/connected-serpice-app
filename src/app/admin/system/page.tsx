@@ -22,6 +22,7 @@ export default function SystemHealthPage() {
   const [originalPrice, setOriginalPrice] = useState<number>(500);
   const [specialPrice, setSpecialPrice] = useState<number>(200);
   const [cashbackAmount, setCashbackAmount] = useState<number>(50);
+  const [pricingEnabled, setPricingEnabled] = useState<boolean>(true);
   const [isSavingPricing, setIsSavingPricing] = useState(false);
   const [pricingSaveMessage, setPricingSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -50,6 +51,9 @@ export default function SystemHealthPage() {
           setSpecialPrice(pricingData.settings.specialPrice ?? 200);
           setCashbackAmount(pricingData.settings.cashbackAmount ?? 50);
           setPremiumUpgradePrice(pricingData.settings.premiumUpgradePrice ?? 5000);
+          if (pricingData.settings.enabled !== undefined) {
+            setPricingEnabled(pricingData.settings.enabled);
+          }
         }
       })
       .catch((e) => setError(e.message))
@@ -66,13 +70,14 @@ export default function SystemHealthPage() {
         originalPrice: Number(originalPrice),
         specialPrice: Number(specialPrice),
         cashbackAmount: Number(cashbackAmount),
+        enabled: pricingEnabled,
       });
 
       if (res.success) {
         const discount = originalPrice > 0 ? Math.round(((originalPrice - specialPrice) / originalPrice) * 100) : 60;
         setPricingSaveMessage({
           type: "success",
-          text: `Template pricing updated live! Strike: ₹${originalPrice}, Special: ₹${specialPrice} (${discount}% OFF), Cashback: ₹${cashbackAmount}.`,
+          text: `Template pricing updated live! Status: ${pricingEnabled ? "ACTIVE (ON)" : "DISABLED (OFF)"}, Strike: ₹${originalPrice}, Special: ₹${specialPrice} (${discount}% OFF), Cashback: ₹${cashbackAmount}.`,
         });
       } else {
         setPricingSaveMessage({ type: "error", text: res.error || "Failed to save pricing settings." });
@@ -347,24 +352,76 @@ export default function SystemHealthPage() {
           </div>
         )}
 
-        {/* Live Admin Preview Badge */}
-        <div className="mb-6 bg-gradient-to-r from-rose-950/60 via-purple-950/60 to-slate-900 border border-rose-500/30 rounded-xl p-4 text-white space-y-3">
-          <p className="text-xs font-bold text-rose-300 uppercase tracking-wider flex items-center gap-1.5">
-            <Tag className="w-3.5 h-3.5 text-rose-400" /> Live Template Purchase Banner Preview
-          </p>
-          <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
-            <span className="font-bold text-amber-300 bg-amber-500/20 border border-amber-500/30 px-2.5 py-1 rounded-lg">
-              🎁 Get ₹{cashbackAmount} cashback after payment
-            </span>
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400 line-through">₹{originalPrice}</span>
-              <span className="text-lg font-black text-rose-400">₹{specialPrice}</span>
-              <span className="bg-rose-500 text-white font-black text-[10px] px-2 py-0.5 rounded-md uppercase">
-                {originalPrice > 0 ? Math.round(((originalPrice - specialPrice) / originalPrice) * 100) : 60}% OFF
+        {/* Enable / Disable Status Bar */}
+        <div className="mb-6 p-4 bg-[#0a0f1e] border border-slate-700/80 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2.5">
+              <span className="font-bold text-sm text-white">Promotional Pricing &amp; Cashback Status</span>
+              <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider ${
+                pricingEnabled 
+                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" 
+                  : "bg-rose-500/20 text-rose-400 border border-rose-500/30"
+              }`}>
+                {pricingEnabled ? "🟢 Active (Enabled)" : "🔴 Paused (Disabled)"}
               </span>
             </div>
+            <p className="text-xs text-slate-400">
+              {pricingEnabled 
+                ? "Special discount banner and ₹" + cashbackAmount + " cashback reward are visible to customers." 
+                : "Promotional discount is disabled. Customers will pay standard template prices without cashback claims."}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setPricingEnabled(true)}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                pricingEnabled ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : "bg-slate-800 text-slate-400 hover:text-white"
+              }`}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" /> Enable
+            </button>
+            <button
+              type="button"
+              onClick={() => setPricingEnabled(false)}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                !pricingEnabled ? "bg-rose-500 text-white shadow-md shadow-rose-500/20" : "bg-slate-800 text-slate-400 hover:text-white"
+              }`}
+            >
+              <AlertCircle className="w-3.5 h-3.5" /> Disable
+            </button>
           </div>
         </div>
+
+        {/* Live Admin Preview Badge */}
+        {pricingEnabled ? (
+          <div className="mb-6 bg-gradient-to-r from-rose-950/60 via-purple-950/60 to-slate-900 border border-rose-500/30 rounded-xl p-4 text-white space-y-3">
+            <p className="text-xs font-bold text-rose-300 uppercase tracking-wider flex items-center gap-1.5">
+              <Tag className="w-3.5 h-3.5 text-rose-400" /> Live Template Purchase Banner Preview (Active)
+            </p>
+            <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
+              <span className="font-bold text-amber-300 bg-amber-500/20 border border-amber-500/30 px-2.5 py-1 rounded-lg">
+                🎁 Get ₹{cashbackAmount} cashback after payment
+              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-400 line-through">₹{originalPrice}</span>
+                <span className="text-lg font-black text-rose-400">₹{specialPrice}</span>
+                <span className="bg-rose-500 text-white font-black text-[10px] px-2 py-0.5 rounded-md uppercase">
+                  {originalPrice > 0 ? Math.round(((originalPrice - specialPrice) / originalPrice) * 100) : 60}% OFF
+                </span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="mb-6 bg-slate-900/90 border border-slate-700/80 rounded-xl p-4 text-slate-300 flex items-center gap-3 text-xs">
+            <AlertCircle className="w-5 h-5 text-amber-400 shrink-0" />
+            <div>
+              <span className="font-bold text-white block">Promotional Offer Banner is Currently Disabled</span>
+              <span className="text-slate-400">Customers will not see strike-through pricing or cashback rewards on the purchase modal.</span>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSavePricingSettings} className="space-y-5 max-w-2xl">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

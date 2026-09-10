@@ -47,10 +47,11 @@ export default function AutoClickSimulatedPreview({
 
   // Dynamic Admin Pricing State
   const [pricing, setPricing] = useState({
-    originalPrice: 499,
-    specialPrice: 199,
+    originalPrice: 500,
+    specialPrice: 200,
     cashbackAmount: 50,
     discountPercent: 60,
+    enabled: true,
   });
 
   // Auto-click simulation state loop
@@ -71,10 +72,11 @@ export default function AutoClickSimulatedPreview({
             setIsFetchedPremium(true);
           }
           setPricing({
-            originalPrice: data.originalPrice,
-            specialPrice: data.isPremium ? 0 : data.specialPrice,
-            cashbackAmount: data.cashbackAmount,
-            discountPercent: data.isPremium ? 100 : data.discountPercent,
+            originalPrice: data.originalPrice ?? 500,
+            specialPrice: data.isPremium ? 0 : (data.specialPrice ?? 200),
+            cashbackAmount: data.cashbackAmount ?? 50,
+            discountPercent: data.isPremium ? 100 : (data.discountPercent ?? 60),
+            enabled: data.enabled !== false,
           });
         }
       })
@@ -433,26 +435,37 @@ export default function AutoClickSimulatedPreview({
             <div className="flex items-center justify-between px-1">
               <div>
                 <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 flex items-center gap-1">
-                  {isPremiumAccount ? "Premium Member Price 👑" : "Special Price 🎨"}
+                  {isPremiumAccount ? "Premium Member Price 👑" : pricing.enabled ? "Special Offer Price 🏷️" : "Template Price 🏷️"}
                 </span>
                 <div className="flex items-baseline gap-2 mt-0.5">
-                  <span className="text-xs font-semibold text-slate-400 line-through">
-                    ₹{pricing.originalPrice}
-                  </span>
+                  {pricing.enabled && !isPremiumAccount && (
+                    <span className="text-xs font-semibold text-slate-400 line-through">
+                      ₹{pricing.originalPrice}
+                    </span>
+                  )}
                   <span className="text-xl sm:text-2xl font-black text-rose-400 tracking-tight">
                     ₹{isPremiumAccount ? 0 : pricing.specialPrice}
                   </span>
                 </div>
               </div>
 
-              <span className={`text-white font-black text-[10px] sm:text-xs px-2.5 py-1 rounded-xl uppercase tracking-wider shadow-md ${
-                isPremiumAccount 
-                  ? "bg-gradient-to-r from-amber-400 to-amber-600 shadow-amber-900/50 text-slate-950" 
-                  : "bg-gradient-to-r from-rose-500 to-pink-500 shadow-rose-900/50"
-              }`}>
-                {isPremiumAccount ? "100% OFF" : `${pricing.discountPercent}% OFF`}
-              </span>
+              {pricing.enabled && (
+                <span className={`text-white font-black text-[10px] sm:text-xs px-2.5 py-1 rounded-xl uppercase tracking-wider shadow-md ${
+                  isPremiumAccount 
+                    ? "bg-gradient-to-r from-amber-400 to-amber-600 shadow-amber-900/50 text-slate-950" 
+                    : "bg-gradient-to-r from-rose-500 to-pink-500 shadow-rose-900/50"
+                }`}>
+                  {isPremiumAccount ? "100% OFF" : `${pricing.discountPercent}% OFF`}
+                </span>
+              )}
             </div>
+
+            {pricing.enabled && pricing.cashbackAmount > 0 && !isPremiumAccount && (
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-2.5 py-1.5 text-[11px] font-bold text-amber-300 flex items-center justify-between">
+                <span>🎁 Post-Payment Cashback:</span>
+                <span className="text-amber-200">Get ₹{pricing.cashbackAmount} back</span>
+              </div>
+            )}
 
             {/* Action Button */}
             <div className="flex flex-col gap-2">

@@ -686,4 +686,26 @@ export async function updateAdminPricingSettings({
     await prisma.$transaction(operations);
     return { success: true };
   } catch (error: any) {
-    return { success: false, 
+    return { success: false, error: error.message || "Failed to update pricing settings" };
+  }
+}
+
+export async function updateAdminPremiumUpgradePrice({
+  premiumUpgradePrice,
+}: {
+  premiumUpgradePrice: number;
+}) {
+  await checkAuth();
+  try {
+    await prisma.systemSetting.upsert({
+      where: { key: "premium_upgrade_price" },
+      update: { value: premiumUpgradePrice.toString(), description: "Upgrade to Premium plan price in INR" },
+      create: { key: "premium_upgrade_price", value: premiumUpgradePrice.toString(), description: "Upgrade to Premium plan price in INR" },
+    });
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to update premium upgrade price" };
+  }
+}
+
+
