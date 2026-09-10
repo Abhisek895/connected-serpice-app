@@ -194,7 +194,12 @@ export default function AdminUsersPage() {
                 {users.map((u) => {
                   const isActionBusy = actionLoadingId === u.id;
                   const isSuspended = u.role === "SUSPENDED";
-                  const totalSpentPaise = u.payments?.reduce((sum: number, p: any) => sum + p.amount, 0) ?? 0;
+                  const totalSpentPaise = u.payments?.reduce((sum: number, p: any) => {
+                    const actualPaid = p.finalAmount !== null && p.finalAmount !== undefined ? p.finalAmount : p.amount;
+                    return sum + actualPaid;
+                  }, 0) ?? 0;
+                  const paidPaymentsCount = u.payments?.filter((p: any) => (p.finalAmount !== null && p.finalAmount !== undefined ? p.finalAmount : p.amount) > 0).length ?? 0;
+                  const freeClaimsCount = (u.payments?.length ?? 0) - paidPaymentsCount;
 
                   return (
                     <tr key={u.id} className="hover:bg-slate-800/30 transition-colors">
@@ -270,11 +275,16 @@ export default function AdminUsersPage() {
                         <div className={`font-bold text-xs ${totalSpentPaise > 0 ? "text-emerald-400" : "text-slate-400"}`}>
                           ₹{(totalSpentPaise / 100).toFixed(0)}
                         </div>
-                        {totalSpentPaise > 0 && (
+                        {totalSpentPaise > 0 ? (
                           <div className="text-[10px] text-slate-500 font-medium leading-tight mt-0.5">
-                            {u.payments?.length ?? 0} {u.payments?.length === 1 ? "purchase" : "purchases"}
+                            {paidPaymentsCount} {paidPaymentsCount === 1 ? "purchase" : "purchases"}
+                            {freeClaimsCount > 0 && ` (+${freeClaimsCount} free)`}
                           </div>
-                        )}
+                        ) : freeClaimsCount > 0 ? (
+                          <div className="text-[10px] text-amber-400/90 font-semibold leading-tight mt-0.5">
+                            {freeClaimsCount} {freeClaimsCount === 1 ? "free pass" : "free passes"}
+                          </div>
+                        ) : null}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">

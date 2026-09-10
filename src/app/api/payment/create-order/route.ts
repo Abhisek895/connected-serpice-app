@@ -94,11 +94,13 @@ export async function POST(req: Request) {
     }
 
     if (finalAmount === 0) {
-      const planName = walletDeductedPaise > 0
+      const planName = isPremiumUser
+        ? "PREMIUM_MEMBER_FREE_PASS"
+        : walletDeductedPaise > 0
         ? "WALLET_TEMPLATE_PURCHASE"
         : ["FREE100%", "FREE100", "FREE1"].includes(cleanCode)
         ? "1_DAY_FREE_PASS"
-        : "DISCOUNTED_TEMPLATE_PURCHASE";
+        : "100%_DISCOUNT_COUPON";
 
       const orderId = `free_order_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 

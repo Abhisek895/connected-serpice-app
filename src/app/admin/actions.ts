@@ -44,7 +44,18 @@ export async function getAdminUserById(id: string) {
         orderBy: { createdAt: "desc" },
       },
       events: { select: { id: true, slug: true, status: true, themeId: true, createdAt: true } },
-      payments: { select: { id: true, amount: true, plan: true, status: true, createdAt: true } },
+      payments: {
+        select: {
+          id: true,
+          amount: true,
+          finalAmount: true,
+          plan: true,
+          status: true,
+          createdAt: true,
+          coupon: { select: { code: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      },
     },
   });
   if (!user) throw new Error("User not found");
@@ -184,8 +195,15 @@ export async function getLocalAdminStats() {
   const newThisWeek = await prisma.user.count({ where: { createdAt: { gte: oneWeekAgo } } });
   const activePages = await prisma.event.count({ where: { status: { in: ["PUBLISHED", "DRAFT"] } } });
   const linkViews = await prisma.response.count({ where: { action: "VIEWED" } });
-  const payments = await prisma.payment.aggregate({ where: { status: "SUCCESS" }, _sum: { amount: true } });
-  const totalRevenue = (payments._sum.amount || 0) / 100;
+  const successfulPayments = await prisma.payment.findMany({
+    where: { status: "SUCCESS" },
+    select: { amount: true, finalAmount: true },
+  });
+  const totalRevenuePaise = successfulPayments.reduce((sum, p) => {
+    const actualPaid = p.finalAmount !== null && p.finalAmount !== undefined ? p.finalAmount : p.amount;
+    return sum + actualPaid;
+  }, 0);
+  const totalRevenue = totalRevenuePaise / 100;
   return { totalUsers, newThisWeek, activePages, linkViews, totalRevenue };
 }
 
@@ -253,7 +271,7 @@ export async function getAdminUsers(search = "", role = "") {
       },
       payments: {
         where: { status: "SUCCESS" },
-        select: { amount: true },
+        select: { amount: true, finalAmount: true, plan: true },
       },
     },
   });

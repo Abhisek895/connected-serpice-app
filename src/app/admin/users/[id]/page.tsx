@@ -193,19 +193,45 @@ export default function UserDetailPage() {
             </div>
           )}
 
-          {/* Payments */}
+          {/* Payments & Passes */}
           {user.payments?.length > 0 && (
             <div className="bg-[#111827] border border-slate-800 rounded-xl p-6 shadow-sm">
-              <h3 className="text-white font-semibold mb-4 flex items-center gap-2"><CreditCard className="w-4 h-4 text-emerald-400" /> Payments</h3>
+              <h3 className="text-white font-semibold mb-4 flex items-center gap-2"><CreditCard className="w-4 h-4 text-emerald-400" /> Payments &amp; Passes</h3>
               <div className="space-y-2">
-                {user.payments.map((p: any) => (
-                  <div key={p.id} className="flex items-center justify-between text-sm bg-[#0a0f1e] px-4 py-2.5 rounded-lg border border-slate-800">
-                    <span className="text-indigo-400 text-xs uppercase">{p.plan}</span>
-                    <span className="text-emerald-400 font-bold">₹{(p.amount / 100).toFixed(2)}</span>
-                    <span className={`text-xs ${p.status === "SUCCESS" ? "text-emerald-400" : "text-amber-400"}`}>{p.status}</span>
-                    <span className="text-slate-500 text-xs">{new Date(p.createdAt).toLocaleDateString()}</span>
-                  </div>
-                ))}
+                {user.payments.map((p: any) => {
+                  const actualPaid = p.finalAmount !== null && p.finalAmount !== undefined ? p.finalAmount : p.amount;
+                  const isDiscounted = p.finalAmount !== null && p.finalAmount < p.amount;
+                  const isFree = actualPaid === 0;
+
+                  return (
+                    <div key={p.id} className="flex items-center justify-between text-sm bg-[#0a0f1e] px-4 py-2.5 rounded-lg border border-slate-800">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-indigo-400 text-xs font-semibold uppercase">{p.plan || "PURCHASE"}</span>
+                        {p.coupon?.code && (
+                          <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded font-bold uppercase">
+                            🏷️ {p.coupon.code}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <span className={`font-bold text-xs ${isFree ? "text-slate-400" : "text-emerald-400"}`}>
+                            ₹{(actualPaid / 100).toFixed(2)}
+                          </span>
+                          {isDiscounted && (
+                            <span className="text-[10px] text-slate-500 block line-through leading-none">
+                              ₹{(p.amount / 100).toFixed(2)}
+                            </span>
+                          )}
+                        </div>
+                        <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${p.status === "SUCCESS" ? "text-emerald-400 bg-emerald-500/10" : "text-amber-400 bg-amber-500/10"}`}>
+                          {p.status}
+                        </span>
+                        <span className="text-slate-500 text-xs">{new Date(p.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
