@@ -32,7 +32,7 @@ export default function AdminOverviewPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-[80vh] items-center justify-center">
+      <div className="flex h-[70vh] items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
       </div>
     );
@@ -40,7 +40,7 @@ export default function AdminOverviewPage() {
 
   if (error) {
     return (
-      <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-lg">
+      <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl">
         <h3 className="text-rose-400 font-bold flex items-center gap-2">
           <ShieldAlert className="w-5 h-5" /> Error Loading Overview
         </h3>
@@ -50,14 +50,14 @@ export default function AdminOverviewPage() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
-        <h2 className="text-2xl font-bold text-white tracking-tight">Admin Overview</h2>
-        <p className="text-slate-400 text-sm mt-1">Live metrics and platform health snapshot for OurStory.</p>
+        <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Admin Overview</h2>
+        <p className="text-slate-400 text-xs sm:text-sm mt-1">Live metrics and platform health snapshot for OurStory.</p>
       </div>
 
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
           <KpiCard title="Total Users" value={stats.totalUsers.toLocaleString()} icon={Users} trend="neutral" trendLabel="Lifetime" />
           <KpiCard title="New This Week" value={stats.newThisWeek.toLocaleString()} icon={UserPlus} trend="up" trendLabel="from last week" />
           <KpiCard title="Memory Pages" value={stats.activePages.toLocaleString()} icon={FileHeart} trend="up" trendLabel="draft & published" />
@@ -73,8 +73,8 @@ export default function AdminOverviewPage() {
         </div>
       )}
 
-      <div className="pt-4">
-        <h3 className="text-lg font-bold text-white mb-4">Platform Growth (30 Days)</h3>
+      <div className="pt-2 sm:pt-4">
+        <h3 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4">Platform Growth (30 Days)</h3>
         <GrowthChart data={growth} />
       </div>
     </div>

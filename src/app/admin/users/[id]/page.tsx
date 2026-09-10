@@ -131,21 +131,23 @@ export default function UserDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-[#111827] border border-slate-800 rounded-xl p-6 shadow-sm">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-slate-400">
-                <User className="w-8 h-8" />
+          <div className="bg-[#111827] border border-slate-800 rounded-xl p-4 sm:p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 shrink-0">
+                  <User className="w-6 h-6 sm:w-8 sm:h-8" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white truncate">{user.name || "Unnamed User"}</h2>
+                  <p className="text-slate-400 text-xs sm:text-sm truncate">{user.email}</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white">{user.name || "Unnamed User"}</h2>
-                <p className="text-slate-400 text-sm">{user.email}</p>
-              </div>
-              <span className={`ml-auto px-3 py-1 rounded-full text-xs font-bold border ${roleColors[user.role] || roleColors.USER}`}>
+              <span className={`self-start sm:self-center px-3 py-1 rounded-full text-xs font-bold border shrink-0 ${roleColors[user.role] || roleColors.USER}`}>
                 {user.role}
               </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 mt-4 sm:mt-6">
               <div className="bg-[#0a0f1e] p-3 rounded-lg border border-slate-800">
                 <div className="text-xs text-slate-500 uppercase tracking-wider">Plan</div>
                 <div className="mt-1 font-medium text-slate-300">{user.plan}</div>
@@ -357,12 +359,12 @@ export default function UserDetailPage() {
       {/* ── Custom Confirmation & Action Modals ── */}
       <AnimatePresence>
         {confirmModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-[#111827] border border-amber-500/30 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative text-center"
+              className="bg-[#111827] border border-amber-500/30 rounded-3xl p-5 sm:p-8 max-w-md w-full shadow-2xl relative text-center max-h-[90vh] overflow-y-auto"
             >
               <button
                 onClick={() => setConfirmModal(null)}

@@ -33,18 +33,18 @@ export default function AuditLogsPage() {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
-        <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-          <ListOrdered className="w-6 h-6 text-indigo-400" /> Audit Logs
+        <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+          <ListOrdered className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-400" /> Audit Logs
         </h2>
-        <p className="text-slate-400 text-sm mt-1">All recent platform activity — signups, page creation, payments.</p>
+        <p className="text-slate-400 text-xs sm:text-sm mt-1">All recent platform activity — signups, page creation, payments.</p>
       </div>
 
-      <div className="bg-[#111827] border border-slate-800 rounded-xl overflow-hidden shadow-sm divide-y divide-slate-800">
+      <div className="-mx-3.5 sm:mx-0 rounded-none sm:rounded-xl border-x-0 sm:border border-slate-800 bg-[#111827] overflow-hidden shadow-sm divide-y divide-slate-800">
         {logs.length === 0 ? (
           <div className="p-8 text-center text-slate-500 text-sm">No activity recorded yet.</div>
         ) : (
           logs.map((log, i) => (
-            <div key={i} className="flex items-start gap-4 px-6 py-4 hover:bg-slate-800/30 transition-colors">
+            <div key={i} className="flex items-start gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 hover:bg-slate-800/30 transition-colors">
               <span className={`mt-0.5 px-2 py-0.5 rounded text-xs font-bold border ${typeColors[log.type] || "text-slate-400 bg-slate-800 border-slate-700"} whitespace-nowrap`}>
                 {log.type.replace("_", " ")}
               </span>
