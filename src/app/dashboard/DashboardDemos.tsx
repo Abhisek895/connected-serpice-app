@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, Zap, Loader2, CheckCircle2, Copy, Edit3, Eye, X, ExternalLink } from "lucide-react";
+import { Zap, Loader2, CheckCircle2, Copy, Edit3, Eye, X, ExternalLink, Palette } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createInstantEventFromTemplate } from "./builder/actions";
 import { TEMPLATE_CLASSES } from "./templateConfig";
@@ -216,7 +216,7 @@ export default function DashboardDemos({
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="bg-rose-100 text-rose-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 fill-rose-500" /> Pre-Configured Templates
+                <Palette className="w-3.5 h-3.5 text-rose-500" /> Pre-Configured Templates
               </span>
             </div>
             <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">

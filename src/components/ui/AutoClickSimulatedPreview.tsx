@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, MousePointer2, ShieldCheck, Zap, Share2, Check, Lock, Sparkles } from "lucide-react";
+import { Heart, MousePointer2, ShieldCheck, Zap, Share2, Check, Lock } from "lucide-react";
 import CanvasConfetti from "./CanvasConfetti";
 import { useSession } from "next-auth/react";
 
@@ -467,7 +467,7 @@ export default function AutoClickSimulatedPreview({
                   <p className="text-[10px] text-slate-400 text-center font-medium flex items-center justify-center gap-1">
                     {isPremiumAccount ? (
                       <>
-                        <Sparkles className="w-3 h-3 text-amber-400 fill-amber-400" />
+                        <Zap className="w-3 h-3 text-amber-400 fill-amber-400" />
                         <span className="text-amber-300 font-bold">👑 100% Free for Premium Members</span>
                       </>
                     ) : (

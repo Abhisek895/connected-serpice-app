@@ -1,6 +1,6 @@
 "use client"
 import { useState, Suspense, useEffect } from "react"
-import { Sparkles, Image as ImageIcon, Music, Type, CheckCircle, ArrowRight, Loader2, AlertCircle, Bookmark, Heart, Mail } from "lucide-react"
+import { Image as ImageIcon, Music, Type, CheckCircle, ArrowRight, Loader2, AlertCircle, Bookmark, Zap, Mail } from "lucide-react"
 import { createDraftEvent, updateEventCustomData, uploadMedia, publishEvent, checkPaymentAccess } from "./actions"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
@@ -322,7 +322,7 @@ function BuilderWizard() {
               <div className="space-y-4 max-w-xl">
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-1.5">
-                    <Heart className="w-4 h-4 text-rose-500" /> Custom Photo Image URL (Optional or Upload File Below)
+                    <ImageIcon className="w-4 h-4 text-rose-500" /> Custom Photo Image URL (Optional or Upload File Below)
                   </label>
                   <input
                     type="url"
@@ -396,7 +396,7 @@ function BuilderWizard() {
                       {isLoading ? 'Publishing...' : '🚀 Publish & Go Live'}
                     </motion.button>
                     <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1 bg-rose-500 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-rose-600 transition-all shadow-rose-200 flex items-center justify-center gap-2">
-                      <Sparkles className="w-5 h-5" /> Upgrade to Premium (₹99)
+                      <Zap className="w-5 h-5 fill-amber-300 text-amber-300" /> Upgrade to Premium (₹99)
                     </motion.button>
                   </div>
                 </>

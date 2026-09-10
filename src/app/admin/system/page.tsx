@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Activity, CheckCircle, Loader2, ShieldAlert, Gift, Save, CheckCircle2, AlertCircle, Tag, Sparkles } from "lucide-react";
+import { Activity, CheckCircle, Loader2, ShieldAlert, Gift, Save, CheckCircle2, AlertCircle, Tag } from "lucide-react";
 import { getAdminSystemHealth, getAdminReferralSettings, updateAdminReferralSettings, getAdminPricingSettings, updateAdminPricingSettings } from "@/app/admin/actions";
 
 export default function SystemHealthPage() {
@@ -244,7 +244,7 @@ export default function SystemHealthPage() {
           {/* Live Admin Reward Calculation Preview */}
           <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3.5 text-xs text-amber-300 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 font-bold">
-              <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+              <Gift className="w-4 h-4 text-amber-400 shrink-0" />
               <span>Live Earnings Preview:</span>
             </div>
             <div className="text-right font-mono">
@@ -319,7 +319,7 @@ export default function SystemHealthPage() {
         {/* Live Admin Preview Badge */}
         <div className="mb-6 bg-gradient-to-r from-rose-950/60 via-purple-950/60 to-slate-900 border border-rose-500/30 rounded-xl p-4 text-white">
           <p className="text-xs font-bold text-rose-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 fill-rose-400" /> Live Customer Banner Preview
+            <Tag className="w-3.5 h-3.5 text-rose-400" /> Live Customer Banner Preview
           </p>
           <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
             <span className="font-bold text-amber-300 bg-amber-500/20 border border-amber-500/30 px-2.5 py-1 rounded-lg">

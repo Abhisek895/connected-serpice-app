@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X, Sparkles, ChevronRight, ChevronLeft, Loader2, Send,
+  X, ChevronRight, ChevronLeft, Loader2, Send,
   CheckCircle2, Copy, ExternalLink, Image as ImageIcon, Music,
-  AlertCircle, MessageCircle, Smartphone, Edit3,
+  AlertCircle, MessageCircle, Smartphone, Edit3, SlidersHorizontal,
 } from "lucide-react";
 import { getTemplateClass, TemplateClass, TemplateField } from "./templateConfig";
 import { demos } from "./demoConfig";
@@ -451,7 +451,7 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
         <div className="sticky top-0 z-40 bg-white rounded-t-3xl border-b border-slate-100 px-6 pt-5 pb-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-rose-100 rounded-2xl text-rose-600 flex-shrink-0">
-              <Sparkles className="w-5 h-5 fill-rose-500" />
+              <SlidersHorizontal className="w-5 h-5 text-rose-600" />
             </div>
             <div>
               <h3 className="text-lg font-bold text-slate-900 leading-tight">

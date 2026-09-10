@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useRef } from "react";
-import { Tag, Loader2, Check, X, Edit3, Eye, Search, Sparkles, Upload, ImageIcon, Type, AlignLeft } from "lucide-react";
+import { Tag, Loader2, Check, X, Edit3, Eye, Search, Palette, Upload, ImageIcon, Type, AlignLeft } from "lucide-react";
 import { getAdminThemes, upsertThemePricing } from "@/app/admin/actions";
 import { demos } from "@/app/dashboard/demoConfig";
 import { motion, AnimatePresence } from "framer-motion";
@@ -202,7 +202,7 @@ export default function AdminThemesPage() {
 
           <div className="relative flex items-center gap-2 mb-5">
             <span className="bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 border border-indigo-500/20">
-              <Sparkles className="w-3.5 h-3.5" /> Explore Demos &amp; Template Actions 💖
+              <Palette className="w-3.5 h-3.5 text-indigo-400" /> Explore Demos &amp; Template Actions
             </span>
           </div>
 

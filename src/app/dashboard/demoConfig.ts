@@ -1,4 +1,4 @@
-import { Compass, Gift, Heart, Sparkles } from "lucide-react";
+import { Compass, Gift, Heart, HeartHandshake, Music } from "lucide-react";
 
 export type DemoItem = {
   id: string;
@@ -26,7 +26,7 @@ export const demos: DemoItem[] = [
     previewUrl: "/demos/surprise/index.html",
     builderTheme: "Romantic",
     image: "/demos/surprise/thumb_surprise_1786296446260.jpg",
-    icon: Sparkles,
+    icon: Heart,
     borderColor: "border-rose-200",
     hasInstantUse: false,
     price: 7900,
@@ -56,7 +56,7 @@ export const demos: DemoItem[] = [
     previewUrl: "/demos/im-sorry/index.html",
     builderTheme: "Romantic",
     image: "/demos/im-sorry/thumb_im-sorry_1787476191118.jpg",
-    icon: Sparkles,
+    icon: HeartHandshake,
     borderColor: "border-rose-300",
     hasInstantUse: true,
     price: 2100,
@@ -86,7 +86,7 @@ export const demos: DemoItem[] = [
     previewUrl: "/demos/nasamajh-lakri/index.html",
     builderTheme: "Romantic",
     image: "/demos/birthday-wish/s0.jpeg",
-    icon: Heart,
+    icon: Music,
     borderColor: "border-pink-200",
     hasInstantUse: true,
     price: 3400,

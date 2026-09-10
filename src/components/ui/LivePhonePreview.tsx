@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Heart, Music, Sparkles, Image as ImageIcon, MessageSquare } from "lucide-react";
+import { Heart, Music, Image as ImageIcon, MessageSquare } from "lucide-react";
 
 interface LivePhonePreviewProps {
   demoId: string;

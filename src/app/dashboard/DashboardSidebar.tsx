@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { LayoutDashboard, Settings, LogOut, Bell, User, Menu, X, ChevronRight, ShieldAlert, Gift, Sparkles, Heart } from "lucide-react";
+import { LayoutDashboard, Settings, LogOut, Bell, User, Menu, X, ChevronRight, ShieldAlert, Gift, Heart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function DashboardSidebar() {
@@ -48,7 +48,7 @@ export default function DashboardSidebar() {
             <Heart className="w-8 h-8 text-rose-500 fill-rose-500 shrink-0" />
           ) : (
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-lg shadow-rose-500/30 group-hover:shadow-rose-500/50 transition-all">
-              <Sparkles className="w-4 h-4 text-white fill-white" />
+              <Heart className="w-4 h-4 text-white fill-white" />
             </div>
           )}
           <h1 className={`text-xl font-bold font-pacifico tracking-wider ${mobile ? "text-rose-500" : "text-white"}`}>

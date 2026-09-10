@@ -17,7 +17,7 @@ import {
   CreditCard,
   Tag,
   Ticket,
-  Sparkles,
+  Heart,
   Menu,
   X,
 } from "lucide-react";
@@ -122,7 +122,7 @@ export default function AdminSidebar() {
         className="flex items-center justify-between px-3.5 py-2.5 w-full rounded-xl bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-700 text-white font-extrabold text-xs tracking-wide shadow-md shadow-rose-900/40 border border-rose-400/40 transition group cursor-pointer"
       >
         <div className="flex items-center gap-2.5">
-          <Sparkles className="w-4 h-4 text-white fill-white group-hover:rotate-12 transition-transform" />
+          <Heart className="w-4 h-4 text-white fill-white group-hover:scale-110 transition-transform" />
           <span>User Portal</span>
         </div>
         <span className="text-sm">💖</span>
@@ -171,7 +171,7 @@ export default function AdminSidebar() {
             className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/20 transition flex items-center justify-center"
             title="User Portal"
           >
-            <Sparkles className="w-4 h-4 fill-rose-400" />
+            <Heart className="w-4 h-4 fill-rose-400 text-rose-400" />
           </Link>
 
           <button

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import OnboardingProgressBar from "@/components/ui/OnboardingProgressBar";
 import OnboardingTourEngine from "@/components/ui/OnboardingTourEngine";
-import { Sparkles, HelpCircle, X } from "lucide-react";
+import { Compass, HelpCircle, X } from "lucide-react";
 
 export default function DashboardTourClient({ children }: { children: React.ReactNode }) {
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -60,7 +60,7 @@ export default function DashboardTourClient({ children }: { children: React.Reac
             onClick={handleStartTour}
             className="px-4 py-2 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white rounded-2xl text-xs font-extrabold shadow-md shadow-rose-200 transition flex items-center gap-2 group cursor-pointer"
           >
-            <Sparkles className="w-4 h-4 text-white group-hover:rotate-12 transition-transform" />
+            <Compass className="w-4 h-4 text-white group-hover:rotate-45 transition-transform" />
             <span>🎓 Launch New User Guidance Tour</span>
           </button>
           <button

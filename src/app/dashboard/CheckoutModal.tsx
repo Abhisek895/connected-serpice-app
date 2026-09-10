@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, CreditCard, Tag, Loader2, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
+import { X, CreditCard, Tag, Loader2, CheckCircle2, AlertCircle, Zap } from "lucide-react";
 import Script from "next/script";
 import { useSession } from "next-auth/react";
 import { loadRazorpayScript } from "@/hooks/useRazorpay";
@@ -374,7 +374,7 @@ export default function CheckoutModal({
             {couponMessage.includes("Premium Member") ? (
               <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-2xl p-4 text-center space-y-1">
                 <div className="text-amber-800 font-black text-sm flex items-center justify-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-amber-600 fill-amber-500" />
+                  <Zap className="w-4 h-4 text-amber-600 fill-amber-500" />
                   👑 Premium Unlimited Pass Active
                 </div>
                 <p className="text-xs text-amber-700 font-semibold">
@@ -416,7 +416,7 @@ export default function CheckoutModal({
                           : "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
                         }`}
                     >
-                      <Sparkles className="w-3 h-3 fill-white" />
+                      <Tag className="w-3 h-3" />
                       🎁 FREE100% (100% OFF 1-Day Pass)
                     </button>
                   )}

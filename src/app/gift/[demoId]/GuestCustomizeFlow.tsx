@@ -6,9 +6,9 @@ import Script from "next/script";
 import Link from "next/link";
 import { useSession, signIn } from "next-auth/react";
 import {
-  X, Sparkles, ChevronRight, ChevronLeft, Loader2, Send,
+  X, ChevronRight, ChevronLeft, Loader2, Send,
   CheckCircle2, Copy, ExternalLink, Image as ImageIcon, Music,
-  AlertCircle, Smartphone, Edit3, Tag, Heart, Compass, Gift, Zap, Eye, Bell, LucideIcon,
+  AlertCircle, Smartphone, Edit3, Tag, Heart, Compass, Gift, Zap, Eye, Bell, ShieldCheck, RefreshCw, HeartHandshake, LucideIcon,
 } from "lucide-react";
 import type { DemoItem } from "@/app/dashboard/demoConfig";
 import type { TemplateClass, TemplateField } from "@/app/dashboard/templateConfig";
@@ -18,11 +18,11 @@ import { loadRazorpayScript } from "@/hooks/useRazorpay";
 
 // Map demoId → icon client-side (icons are functions, can't be serialized server→client)
 const DEMO_ICONS: Record<string, LucideIcon> = {
-  "surprise": Sparkles,
+  "surprise": Heart,
   "birthday-wish": Gift,
-  "im-sorry": Sparkles,
+  "im-sorry": HeartHandshake,
   "she-cant-say-no": Heart,
-  "nasamajh-lakri": Heart,
+  "nasamajh-lakri": Music,
   "date-planner": Compass,
   "jalpaiguri-planner": Compass,
 };
@@ -214,7 +214,7 @@ export default function GuestCustomizeFlow({
   const [buyerEmail, setBuyerEmail] = useState(""); // for link delivery email
   const [pollingForLink, setPollingForLink] = useState(false); // recovery poller state
 
-  const Icon = DEMO_ICONS[demo.id] ?? Sparkles;
+  const Icon = DEMO_ICONS[demo.id] ?? Heart;
   const totalSteps = tmpl.steps.length;
   const step = tmpl.steps[currentStep];
 
@@ -595,7 +595,7 @@ export default function GuestCustomizeFlow({
           <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-rose-950 to-slate-900 text-white flex flex-col sm:flex-row items-center justify-between gap-3 border border-rose-500/30">
             <div>
               <p className="text-xs font-black text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400 fill-amber-400" /> Save Page &amp; Track Live Views
+                <Eye className="w-3.5 h-3.5 text-rose-400" /> Save Page &amp; Track Live Views
               </p>
               <p className="text-xs text-slate-300 font-medium mt-0.5">
                 Create a free account to track when {formValues["recipientName"] || "they"} open your surprise &amp; answer YES! 💖
@@ -639,7 +639,7 @@ export default function GuestCustomizeFlow({
                 <div className="flex-1 min-w-0 pr-2">
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-amber-400 fill-amber-400" /> OurStory Special Offer
+                      <Zap className="w-3 h-3 text-amber-400 fill-amber-400" /> OurStory Special Offer
                     </span>
                     <span className="text-[10px] text-slate-400">now</span>
                   </div>
@@ -777,7 +777,7 @@ export default function GuestCustomizeFlow({
                 </div>
 
                 <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
-                  <span className="flex items-center gap-1"><Heart className="w-3 h-3 text-rose-500 fill-rose-500" /> Instant Share Link</span>
+                  <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-rose-500 fill-rose-500" /> Instant Share Link</span>
                   <span>🔒 SSL Encrypted</span>
                 </div>
               </div>
@@ -804,7 +804,7 @@ export default function GuestCustomizeFlow({
           <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-rose-50 to-pink-50 flex justify-between items-center">
             <div>
               <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-rose-500" /> Secure Checkout
+                <ShieldCheck className="w-5 h-5 text-emerald-600" /> Secure Checkout
               </h2>
               <p className="text-sm font-semibold text-rose-600 mt-0.5">{demo.title}</p>
             </div>
@@ -1006,7 +1006,7 @@ export default function GuestCustomizeFlow({
                       }}
                       className="w-full py-3.5 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-rose-200 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
-                      <Sparkles className="w-4 h-4 fill-white" />
+                      <RefreshCw className="w-4 h-4" />
                       🚀 Retry Payment &amp; Activate Link
                     </button>
 
@@ -1386,7 +1386,7 @@ export default function GuestCustomizeFlow({
                     }}
                     className="w-full py-4 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white font-extrabold text-sm rounded-2xl shadow-xl shadow-rose-200 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <Sparkles className="w-4 h-4 fill-white" />
+                    <Tag className="w-4 h-4" />
                     {finalPriceINR === 0 ? "🚀 Activate Free Link Now (₹0)" : `🚀 Claim Discount & Pay ₹${finalPriceINR.toFixed(0)}`}
                   </button>
 
@@ -1432,7 +1432,7 @@ export default function GuestCustomizeFlow({
               <div className="flex-1 min-w-0 pr-2">
                 <div className="flex items-center gap-1.5 mb-0.5">
                   <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-amber-400 fill-amber-400" /> OurStory Special Offer
+                    <Zap className="w-3 h-3 text-amber-400 fill-amber-400" /> OurStory Special Offer
                   </span>
                   <span className="text-[10px] text-slate-400">now</span>
                 </div>
@@ -1522,7 +1522,7 @@ export default function GuestCustomizeFlow({
                     }}
                     className="w-full py-3.5 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-rose-200 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <Sparkles className="w-4 h-4 fill-white" />
+                    <RefreshCw className="w-4 h-4" />
                     🚀 Retry Payment &amp; Activate Link
                   </button>
 

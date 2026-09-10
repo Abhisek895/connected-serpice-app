@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { X, Sparkles, Loader2, CheckCircle2, AlertCircle, Link2 } from "lucide-react";
+import { X, Loader2, CheckCircle2, AlertCircle, Link2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function ClaimGuestPageModal({ onClose }: { onClose: () => void }) {
@@ -115,7 +115,7 @@ export default function ClaimGuestPageModal({ onClose }: { onClose: () => void }
               "Linked! ✓"
             ) : (
               <>
-                <Sparkles className="w-4 h-4 fill-white" /> Link to My Account
+                <Link2 className="w-4 h-4" /> Link to My Account
               </>
             )}
           </button>

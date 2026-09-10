@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import {
   Mail, Send, Plus, Server, ListOrdered, RefreshCw, Play, Pause, XCircle, Trash2,
   CheckCircle, AlertCircle, Eye, EyeOff, ShieldCheck, Zap, Clock, Users, FileText, Check, Copy,
-  Upload, HelpCircle, Loader2, Sparkles, Filter, ChevronLeft, ChevronRight, Activity, X
+  Upload, HelpCircle, Loader2, Filter, ChevronLeft, ChevronRight, Activity, X
 } from "lucide-react";
 import {
   getColdDashboardStats,
@@ -645,7 +645,7 @@ export default function ColdEmailAdminPage() {
         >
           {toast.type === "success" && <CheckCircle className="w-4 h-4" />}
           {toast.type === "error" && <AlertCircle className="w-4 h-4" />}
-          {toast.type === "info" && <Sparkles className="w-4 h-4" />}
+          {toast.type === "info" && <Zap className="w-4 h-4" />}
           <span>{toast.message}</span>
         </div>
       )}
@@ -1274,7 +1274,7 @@ export default function ColdEmailAdminPage() {
                 <div className="bg-[#0a0f1e] border border-indigo-500/30 rounded-2xl p-3.5 space-y-2">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <label className="text-xs uppercase tracking-wider font-bold text-indigo-400 flex items-center gap-1.5">
-                      <Sparkles className="w-4 h-4 text-amber-400" /> Database Email Template Library ({customTemplates.length})
+                      <FileText className="w-4 h-4 text-indigo-400" /> Database Email Template Library ({customTemplates.length})
                     </label>
                   </div>
 

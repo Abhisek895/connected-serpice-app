@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Heart, Sparkles, Image as ImageIcon, Music, ArrowRight, ShieldCheck, Zap, Star } from "lucide-react";
+import { Heart, Image as ImageIcon, Music, ArrowRight, ShieldCheck, Zap, Award, Rocket, Activity } from "lucide-react";
 import type { Metadata } from "next";
 import { demos } from "@/app/dashboard/demoConfig";
 import { prisma } from "@/lib/prisma";
@@ -99,7 +99,7 @@ export default async function Home({
 
         {/* Top Badge */}
         <div className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-rose-100/80 border border-rose-200/50 text-rose-600 text-xs sm:text-sm font-semibold mb-6 sm:mb-8 shadow-xs">
-          <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-500 fill-rose-400" />
+          <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-500" />
           <span>The #1 No-Code Digital Memory &amp; Proposal Builder</span>
         </div>
 
@@ -143,7 +143,7 @@ export default async function Home({
             <Zap className="w-4 h-4 text-amber-500" /> Zero Coding Required
           </span>
           <span className="flex items-center gap-1.5">
-            <Star className="w-4 h-4 text-rose-500 fill-rose-500" /> Real-time Reaction Tracker
+            <Activity className="w-4 h-4 text-rose-500" /> Real-time Reaction Tracker
           </span>
         </div>
 
@@ -256,7 +256,7 @@ export default async function Home({
           <div className="bg-white/80 backdrop-blur-xs p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 hover:border-pink-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group sm:col-span-2 md:col-span-1">
             <div>
               <div className="w-12 h-12 sm:w-14 sm:h-14 bg-pink-100/80 text-pink-500 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                <Heart className="w-6 h-6 sm:w-7 sm:h-7 fill-pink-500" />
+                <Activity className="w-6 h-6 sm:w-7 sm:h-7" />
               </div>
               <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">Real-Time Analytics</h2>
               <p className="text-slate-500 text-xs sm:text-sm leading-relaxed">
@@ -280,7 +280,7 @@ export default async function Home({
             href="/dashboard"
             className="inline-flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white font-bold px-7 py-3.5 rounded-full transition-all shadow-lg shadow-rose-900/30"
           >
-            <Sparkles className="w-4 h-4" /> Start for Free
+            <Rocket className="w-4 h-4 text-white" /> Start for Free
           </Link>
         </div>
 
