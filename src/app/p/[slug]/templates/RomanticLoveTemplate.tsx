@@ -61,10 +61,11 @@ function TextArtPortrait({
       style={{
         position: "relative",
         display: "inline-flex",
-        maxWidth: "98vw",
-        maxHeight: "80vh",
+        maxWidth: "94vw",
+        maxHeight: "65dvh",
         boxShadow: "inset 0 0 80px rgba(0,0,0,1)",
         overflow: "hidden",
+        borderRadius: "16px",
       }}
     >
       {/* Text pixel layer */}
@@ -101,7 +102,7 @@ function TextArtPortrait({
           width: "auto",
           height: "auto",
           maxWidth: "100%",
-          maxHeight: "80vh",
+          maxHeight: "65dvh",
           position: "relative",
           zIndex: 2,
           filter: "grayscale(100%) contrast(160%) brightness(1.2)",
@@ -375,12 +376,16 @@ export default function RomanticLoveTemplate({
         .portrait-page {
           width: 100%;
           height: 100vh;
+          height: 100dvh;
+          min-height: -webkit-fill-available;
           display: flex;
+          flex-direction: column;
           justify-content: center;
           align-items: center;
           position: relative;
           z-index: 10;
           overflow: hidden;
+          padding-bottom: max(36px, calc(env(safe-area-inset-bottom, 0px) + 24px));
         }
 
         .portrait-container-wrapper {
@@ -389,21 +394,25 @@ export default function RomanticLoveTemplate({
           align-items: center;
           justify-content: center;
           z-index: 10;
+          /* Shift slightly upward into the optical center of mobile viewport */
+          margin-top: -36px;
+          transition: transform 0.3s ease;
         }
 
         .portrait-buttons-container {
           position: absolute;
-          bottom: 20px;
+          /* Lifted well above mobile navigation bar / home indicator */
+          bottom: max(36px, calc(env(safe-area-inset-bottom, 0px) + 24px));
           left: 50%;
           transform: translateX(-50%);
           display: flex;
-          flex-direction: column;
+          flex-direction: row;
           align-items: center;
           justify-content: center;
-          gap: 8px;
-          z-index: 20;
+          gap: 12px;
+          z-index: 25;
           width: calc(100% - 32px);
-          max-width: 220px;
+          max-width: 380px;
         }
 
         .love-letter-popup {
@@ -413,8 +422,8 @@ export default function RomanticLoveTemplate({
           width: calc(100% - 32px);
           max-width: 440px;
           height: auto;
-          max-height: 75vh;
-          background: rgba(255, 255, 255, 0.96);
+          max-height: 70vh;
+          background: rgba(255, 255, 255, 0.97);
           backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px);
           border-radius: 22px;
@@ -424,7 +433,7 @@ export default function RomanticLoveTemplate({
           color: #111;
           line-height: 1.6;
           text-align: center;
-          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.6);
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.6);
           z-index: 30;
           cursor: pointer;
           display: flex;
@@ -434,25 +443,26 @@ export default function RomanticLoveTemplate({
           overflow-y: auto;
         }
 
-        /* Love letter button (compact) */
+        /* Love letter button (compact, elevated pill) */
         .love-letter-btn {
-          background: rgba(255,255,255,0.95);
+          background: rgba(255,255,255,0.98);
           color: #d6336c;
-          border: 1px solid rgba(255,255,255,0.6);
-          border-radius: 30px;
-          padding: 8px 20px;
+          border: 1px solid rgba(255,255,255,0.8);
+          border-radius: 9999px;
+          padding: 11px 18px;
           font-family: 'Dancing Script', cursive;
           font-size: 1.05rem;
           font-weight: bold;
           cursor: pointer;
-          box-shadow: 0 4px 15px rgba(214,51,108,0.3);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 2px 10px rgba(214,51,108,0.3);
           transition: all 0.25s ease;
           white-space: nowrap;
           z-index: 10;
-          width: 100%;
+          flex: 1;
           text-align: center;
+          min-width: 140px;
         }
-        .love-letter-btn:hover { transform: scale(1.05); background: #ffffff; }
+        .love-letter-btn:hover { transform: translateY(-2px) scale(1.03); background: #ffffff; }
         .love-letter-box {
           max-width: 500px;
           width: 90%;
@@ -468,37 +478,39 @@ export default function RomanticLoveTemplate({
           z-index: 10;
         }
 
-        /* Continue to proposal */
+        /* Continue to proposal button (elevated gradient pill) */
         .continue-btn {
-          background: #ff4d6d;
+          background: linear-gradient(135deg, #ff4d6d, #e8003d);
           color: white;
           border: none;
-          border-radius: 30px;
-          padding: 8px 20px;
+          border-radius: 9999px;
+          padding: 11px 18px;
           font-size: 0.95rem;
           font-weight: bold;
           cursor: pointer;
           font-family: sans-serif;
-          box-shadow: 0 4px 15px rgba(255,77,109,0.5);
-          transition: all 0.3s ease;
+          box-shadow: 0 8px 24px rgba(255,77,109,0.55);
+          transition: all 0.25s ease;
           white-space: nowrap;
           z-index: 10;
-          width: 100%;
+          flex: 1;
           text-align: center;
+          min-width: 120px;
         }
-        .continue-btn:hover { transform: scale(1.05); background: #e8003d; }
+        .continue-btn:hover { transform: translateY(-2px) scale(1.03); filter: brightness(1.08); }
 
         @media (min-width: 640px) {
+          .portrait-container-wrapper {
+            margin-top: -44px;
+          }
           .portrait-buttons-container {
-            flex-direction: row;
-            max-width: 480px;
+            max-width: 440px;
             gap: 16px;
-            bottom: 28px;
+            bottom: max(40px, calc(env(safe-area-inset-bottom, 0px) + 28px));
           }
           .love-letter-btn,
           .continue-btn {
-            width: auto;
-            padding: 10px 24px;
+            padding: 12px 24px;
             font-size: 1.05rem;
           }
         }

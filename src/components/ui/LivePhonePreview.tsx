@@ -98,17 +98,17 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
               </div>
 
               {/* Page 2 Buttons at Bottom */}
-              <div className="pb-1.5 flex flex-col items-center justify-center gap-1 w-full max-w-[150px] mx-auto shrink-0">
+              <div className="pb-2.5 pt-1 flex flex-row items-center justify-center gap-1.5 w-full max-w-[210px] mx-auto shrink-0">
                 {!showLetterPreview && (
                   <button
                     onClick={() => setShowLetterPreview(true)}
-                    className="w-full py-0.5 rounded-full bg-white/95 text-rose-600 text-[8.5px] font-bold shadow-md tracking-tight hover:bg-white cursor-pointer transition transform active:scale-95 text-center whitespace-nowrap"
+                    className="flex-1 py-1 rounded-full bg-white/95 text-rose-600 text-[8px] font-bold shadow-md tracking-tight hover:bg-white cursor-pointer transition transform active:scale-95 text-center whitespace-nowrap"
                   >
-                    💌 Read My Message
+                    💌 Message
                   </button>
                 )}
-                <span className="w-full py-0.5 rounded-full bg-rose-500 text-white text-[8.5px] font-bold shadow-md shadow-rose-950/60 text-center whitespace-nowrap">
-                  💌 Continue
+                <span className="flex-1 py-1 rounded-full bg-gradient-to-r from-rose-500 to-rose-600 text-white text-[8px] font-bold shadow-md shadow-rose-950/60 text-center whitespace-nowrap">
+                  ✨ Continue
                 </span>
               </div>
             </div>
