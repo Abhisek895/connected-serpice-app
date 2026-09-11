@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getRazorpay, hasValidRazorpayKeys } from "@/lib/razorpay";
+import { getOrCreateGuestUser } from "@/lib/guest-user";
 
 /**
  * POST /api/guest/create-order
@@ -25,22 +26,31 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: "Missing demoId" }, { status: 400 });
     }
 
-    // Find the GUEST system user
-    const guestUser = await prisma.user.findUnique({
-      where: { email: "guest@ourstory.internal" },
-    });
+    // Auto-provision the GUEST system user on the fly if missing (guarantees zero crashes)
+    const guestUser = await getOrCreateGuestUser();
 
-    if (!guestUser) {
-      return NextResponse.json(
-        { success: false, message: "Guest system not configured. Please run: npm run db:seed" },
-        { status: 500 }
-      );
-    }
-
-    // Find the template/theme
+    // Find or auto-provision the template/theme
     let theme = await prisma.theme.findUnique({ where: { name: demoId } });
     if (!theme) {
-      return NextResponse.json({ success: false, message: "Template not found" }, { status: 404 });
+      const TEMPLATE_PRICES: Record<string, number> = {
+        "she-cant-say-no": 2500,
+        "surprise": 2100,
+        "birthday-wish": 2100,
+        "nasamajh-lakri": 3400,
+        "date-planner": 1500,
+        "jalpaiguri-planner": 1500,
+      };
+      theme = await prisma.theme.upsert({
+        where: { name: demoId },
+        update: {},
+        create: {
+          name: demoId,
+          price: TEMPLATE_PRICES[demoId] || 2100,
+          durationDays: 7,
+          isPremium: true,
+          isActive: true,
+        },
+      });
     }
 
     let finalAmount = theme.price;

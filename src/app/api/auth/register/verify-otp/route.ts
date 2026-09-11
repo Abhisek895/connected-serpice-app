@@ -108,6 +108,30 @@ export async function POST(req: Request) {
     // Delete used verification token
     await prisma.verificationToken.deleteMany({ where: { identifier } });
 
+    // Auto-claim any previous guest events & payments purchased with this email
+    try {
+      const guestPayments = await prisma.payment.findMany({
+        where: { buyerEmail: cleanEmail },
+        include: { fulfillment: true },
+      });
+
+      for (const p of guestPayments) {
+        await prisma.payment.update({
+          where: { id: p.id },
+          data: { userId: newUser.id },
+        });
+
+        if (p.fulfillment?.eventId) {
+          await prisma.event.update({
+            where: { id: p.fulfillment.eventId },
+            data: { userId: newUser.id },
+          });
+        }
+      }
+    } catch (claimErr) {
+      console.warn("[verify-otp] Auto-claim guest events error:", claimErr);
+    }
+
     return NextResponse.json(
       {
         success: true,

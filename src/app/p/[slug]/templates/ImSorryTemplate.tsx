@@ -15,10 +15,16 @@ export type ProposalClientProps = {
   rejectBtn?: string;
   loveMessage?: string;
   photoUrl?: string;
+  audioUrl?: string;
+  _photo?: string;
+  _photo2?: string;
+  _photo3?: string;
+  _audio?: string;
   demoId?: string;
   recipientName?: string;
   dodgeMessages?: string;
   patternText?: string;
+  customData?: Record<string, any>;
   media?: any[];
 };
 
@@ -31,6 +37,8 @@ export default function ImSorryTemplate({
   loveMessage,
   recipientName,
   photoUrl: propPhotoUrl,
+  _photo,
+  customData,
   media = [],
 }: ProposalClientProps) {
   const [mounted, setMounted] = useState(false);
@@ -78,7 +86,14 @@ export default function ImSorryTemplate({
 
   const uploadedImage = media?.find((m: any) => m.type === "IMAGE")?.url;
   const currentSadCatGif = sadCatGifs[dodgeCount % sadCatGifs.length];
-  const displayPhoto = propPhotoUrl || uploadedImage || currentSadCatGif;
+  const displayPhoto =
+    customData?._photo ||
+    customData?.photoUrl ||
+    customData?._photo1 ||
+    propPhotoUrl ||
+    _photo ||
+    uploadedImage ||
+    currentSadCatGif;
   const happyCatGif = "/demos/im-sorry/cat-happy.png";
 
   useEffect(() => {

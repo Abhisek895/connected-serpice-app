@@ -260,6 +260,7 @@ export default function RomanticLoveTemplate({
   audioUrl,
   _photo,
   _audio,
+  customData,
   media,
 }: ProposalClientProps) {
   // 0 = landing, 1 = fade-to-black, 2 = portrait, 3 = proposal, 4 = accepted, 5 = rejected
@@ -279,11 +280,16 @@ export default function RomanticLoveTemplate({
   const audioMedia = media.find((m) => m.type === "AUDIO");
 
   const displayPhoto =
+    customData?._photo ||
+    customData?.photoUrl ||
+    customData?._photo1 ||
     photoUrl ||
     _photo ||
     (imageMedia.length > 0 ? imageMedia[0].url : "/demos/surprise/cute_woman.png");
 
   const audioSrc =
+    customData?.audioUrl ||
+    customData?._audio ||
     audioUrl ||
     _audio ||
     (audioMedia ? audioMedia.url : "/demos/surprise/loveSong.mp3");

@@ -19,6 +19,7 @@ import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 import { sendPaymentSuccessEmail } from "@/lib/email";
 import { creditReferrer } from "@/lib/referral";
+import { getOrCreateGuestUser } from "@/lib/guest-user";
 
 // ─── Slug Prefix Map ─────────────────────────────────────────────────────────
 
@@ -167,13 +168,27 @@ export async function fulfillPayment(
     });
   }
 
-  // ── 5. Resolve user — fall back to guest user ──────────────────────────────
+  // ── 5. Resolve user — smart linking to registered account or guest ──────────
   let targetUserId = payment.userId;
+  const guestUser = await getOrCreateGuestUser();
 
-  // If payment is on the guest user, we still use the guest account
-  const guestUser = await prisma.user.findUnique({
-    where: { email: "guest@ourstory.internal" },
-  });
+  // If buyerEmail belongs to an already registered user, automatically attach event & payment to their account!
+  if (payment.buyerEmail) {
+    const existingUser = await prisma.user.findUnique({
+      where: { email: payment.buyerEmail.toLowerCase().trim() },
+    });
+    if (existingUser && existingUser.id !== guestUser.id) {
+      targetUserId = existingUser.id;
+      await prisma.payment.update({
+        where: { id: payment.id },
+        data: { userId: existingUser.id },
+      });
+    }
+  }
+
+  if (!targetUserId) {
+    targetUserId = guestUser.id;
+  }
 
   // ── 6. Build customData ────────────────────────────────────────────────────
   // Priority: provided customData > snapshot stored at order-creation > class defaults

@@ -690,15 +690,23 @@ export default function GuestCustomizeFlow({
                 <Eye className="w-3.5 h-3.5 text-rose-400" /> Save Page &amp; Track Live Views
               </p>
               <p className="text-xs text-slate-300 font-medium mt-0.5">
-                Create a free account to track when {formValues["recipientName"] || "they"} open your surprise &amp; answer YES! 💖
+                Sign in or create a free account to track when {formValues["recipientName"] || "they"} open your surprise &amp; answer YES! 💖
               </p>
             </div>
-            <Link
-              href={`/register${publishedUrl.includes("/p/") ? `?claimSlug=${encodeURIComponent(publishedUrl.split("/p/")[1])}` : ""}`}
-              className="whitespace-nowrap px-4 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer"
-            >
-              Create Free Account ➔
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/login${publishedUrl.includes("/p/") ? `?redirect=/dashboard` : ""}`}
+                className="whitespace-nowrap px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition cursor-pointer"
+              >
+                Sign In
+              </Link>
+              <Link
+                href={`/register${publishedUrl.includes("/p/") ? `?claimSlug=${encodeURIComponent(publishedUrl.split("/p/")[1])}` : ""}`}
+                className="whitespace-nowrap px-4 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer"
+              >
+                Create Account ➔
+              </Link>
+            </div>
           </div>
         </div>
       </div>

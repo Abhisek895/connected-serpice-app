@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { cookies } from "next/headers";
+import { getOrCreateGuestUser } from "@/lib/guest-user";
 
 export async function POST(req: Request) {
   try {
@@ -18,15 +19,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: "No claim slug provided" });
     }
 
-    // Find the guest system user
-    const guestUser = await prisma.user.findUnique({
-      where: { email: "guest@ourstory.internal" },
-      select: { id: true },
-    });
-
-    if (!guestUser) {
-      return NextResponse.json({ success: false, message: "Guest system user not configured" });
-    }
+    // Find or auto-provision the guest system user
+    const guestUser = await getOrCreateGuestUser();
 
     // Find event
     const event = await prisma.event.findUnique({
