@@ -262,7 +262,17 @@ export default function CheckoutModal({
           }
         },
         modal: {
-          ondismiss: function () {
+          ondismiss: async function () {
+            // On mobile UPI app switch, check if payment went through before closing
+            try {
+              const res = await fetch(`/api/payment/status?orderId=${encodeURIComponent(data.orderId)}`);
+              const stat = await res.json();
+              if (stat.fulfilled) {
+                setIsProcessing(false);
+                onSuccess(activeCoupon);
+                return;
+              }
+            } catch { }
             setIsProcessing(false);
           },
         },
