@@ -418,12 +418,12 @@ export default function DashboardDemos({
             />
 
             {/* Modal positioning container */}
-            <div className="relative min-h-[100dvh] w-full flex items-center justify-center p-4 py-8 -translate-y-24 sm:translate-y-0 pointer-events-none">
+            <div className="relative min-h-[100dvh] w-full flex items-start sm:items-center justify-center p-4 pt-6 pb-12 sm:p-4 pointer-events-none">
               <motion.div
                 initial={{ scale: 0.95, opacity: 0, y: -10 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.95, opacity: 0, y: -10 }}
-                className="relative bg-white rounded-3xl p-6 shadow-2xl max-w-sm w-full border border-slate-100 pointer-events-auto my-auto"
+                className="relative bg-white rounded-3xl p-5 sm:p-6 shadow-2xl max-w-sm w-full border border-slate-100 pointer-events-auto sm:my-auto"
               >
               {/* Close Button */}
               <button
@@ -435,8 +435,8 @@ export default function DashboardDemos({
                 <X className="w-5 h-5" />
               </button>
 
-              <h3 className="text-xl font-bold text-slate-900 mb-2 pr-8">Give it a Title 🎀</h3>
-              <p className="text-sm text-slate-500 mb-4">What would you like to call this event?</p>
+              <h3 className="text-xl font-bold text-slate-900 mb-1.5 pr-8">Give it a Title 🎀</h3>
+              <p className="text-sm text-slate-500 mb-3.5">What would you like to call this event?</p>
 
               <form
                 onSubmit={(e) => {
