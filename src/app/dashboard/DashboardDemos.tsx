@@ -418,7 +418,7 @@ export default function DashboardDemos({
             />
 
             {/* Modal positioning container */}
-            <div className="relative min-h-[100dvh] w-full flex items-center justify-center p-4 py-8 -translate-y-8 sm:translate-y-0 pointer-events-none">
+            <div className="relative min-h-[100dvh] w-full flex items-center justify-center p-4 py-8 -translate-y-24 sm:translate-y-0 pointer-events-none">
               <motion.div
                 initial={{ scale: 0.95, opacity: 0, y: -10 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
