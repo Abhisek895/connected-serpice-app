@@ -52,12 +52,12 @@ export default function ClaimGuestPageModal({ onClose }: { onClose: () => void }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4 pt-10 sm:pt-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 15 }}
+        initial={{ opacity: 0, scale: 0.95, y: -10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 15 }}
-        className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-rose-100 relative"
+        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+        className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-rose-100 relative my-2 sm:my-auto"
       >
         <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-rose-50 to-pink-50 flex items-center justify-between">
           <div className="flex items-center gap-2">

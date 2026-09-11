@@ -400,40 +400,93 @@ export default function DashboardDemos({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md w-screen h-screen"
+            className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4 pt-10 sm:pt-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto"
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-3xl p-6 shadow-2xl max-w-sm w-full border border-slate-100"
+              initial={{ scale: 0.95, opacity: 0, y: -10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: -10 }}
+              className="relative bg-white rounded-3xl p-6 shadow-2xl max-w-sm w-full border border-slate-100 my-2 sm:my-auto"
             >
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Give it a Title 🎀</h3>
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={handleCloseInstantTitleModal}
+                className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition cursor-pointer"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <h3 className="text-xl font-bold text-slate-900 mb-2 pr-8">Give it a Title 🎀</h3>
               <p className="text-sm text-slate-500 mb-4">What would you like to call this event?</p>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={instantModalTitle}
-                  onChange={(e) => setInstantModalTitle(e.target.value.slice(0, 60))}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-rose-400 focus:ring-4 focus:ring-rose-100 transition outline-none text-slate-800 mb-1"
-                  placeholder="e.g. For Sarah ❤️"
-                  autoFocus
-                />
-                <span className={`text-[10px] font-semibold absolute right-3 bottom-3.5 ${instantModalTitle.length >= 55 ? 'text-amber-500' : 'text-slate-400'}`}>
-                  {instantModalTitle.length}/60
-                </span>
-              </div>
-              <p className="text-xs text-slate-400 mb-5">Try: &quot;For Priya 💖&quot;, &quot;Surprise for Ananya ✨&quot;, &quot;For My Best Girl 🌸&quot;</p>
-              <div className="flex items-center gap-3">
-                <button onClick={handleCloseInstantTitleModal} className="flex-1 px-4 py-3 rounded-xl text-slate-600 font-bold bg-slate-100 hover:bg-slate-200 transition">Cancel</button>
-                <button
-                  onClick={() => handleTitleSubmit(selectedDemo, instantModalTitle)}
-                  disabled={instantModalTitle.trim().length === 0}
-                  className="flex-1 px-4 py-3 rounded-xl text-white font-bold bg-rose-500 hover:bg-rose-600 transition shadow-sm shadow-rose-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Continue ➔
-                </button>
-              </div>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (instantModalTitle.trim().length > 0) {
+                    handleTitleSubmit(selectedDemo, instantModalTitle);
+                  }
+                }}
+              >
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={instantModalTitle}
+                    onChange={(e) => setInstantModalTitle(e.target.value.slice(0, 60))}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-rose-400 focus:ring-4 focus:ring-rose-100 transition outline-none text-slate-800 mb-1"
+                    placeholder="e.g. For Sarah ❤️"
+                    autoFocus
+                  />
+                  <span className={`text-[10px] font-semibold absolute right-3 bottom-3.5 ${instantModalTitle.length >= 55 ? 'text-amber-500' : 'text-slate-400'}`}>
+                    {instantModalTitle.length}/60
+                  </span>
+                </div>
+
+                <p className="text-xs text-slate-400 mb-5 leading-relaxed">
+                  Try:{" "}
+                  <button
+                    type="button"
+                    onClick={() => setInstantModalTitle("For Priya 💖")}
+                    className="text-rose-500 hover:text-rose-600 hover:underline cursor-pointer font-medium"
+                  >
+                    &quot;For Priya 💖&quot;
+                  </button>
+                  {", "}
+                  <button
+                    type="button"
+                    onClick={() => setInstantModalTitle("Surprise for Ananya ✨")}
+                    className="text-rose-500 hover:text-rose-600 hover:underline cursor-pointer font-medium"
+                  >
+                    &quot;Surprise for Ananya ✨&quot;
+                  </button>
+                  {", "}
+                  <button
+                    type="button"
+                    onClick={() => setInstantModalTitle("For My Best Girl 🌸")}
+                    className="text-rose-500 hover:text-rose-600 hover:underline cursor-pointer font-medium"
+                  >
+                    &quot;For My Best Girl 🌸&quot;
+                  </button>
+                </p>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleCloseInstantTitleModal}
+                    className="flex-1 px-4 py-3 rounded-xl text-slate-600 font-bold bg-slate-100 hover:bg-slate-200 transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={instantModalTitle.trim().length === 0}
+                    className="flex-1 px-4 py-3 rounded-xl text-white font-bold bg-rose-500 hover:bg-rose-600 transition shadow-sm shadow-rose-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    Continue ➔
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </motion.div>
         )}
