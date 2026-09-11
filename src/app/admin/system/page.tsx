@@ -1,13 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Activity, CheckCircle, Loader2, ShieldAlert, Gift, Save, CheckCircle2, AlertCircle, Tag, Crown, Zap } from "lucide-react";
-import { getAdminSystemHealth, getAdminReferralSettings, updateAdminReferralSettings, getAdminPricingSettings, updateAdminPricingSettings, updateAdminPremiumUpgradePrice } from "@/app/admin/actions";
+import {
+  Activity, CheckCircle, Loader2, ShieldAlert, Gift, Save,
+  CheckCircle2, AlertCircle, Tag, Crown, Zap, Database,
+  HardDrive, Cpu, Server, RefreshCw, Copy, Check, Code, ExternalLink,
+} from "lucide-react";
+import {
+  getAdminSystemHealth, getAdminReferralSettings, updateAdminReferralSettings,
+  getAdminPricingSettings, updateAdminPricingSettings, updateAdminPremiumUpgradePrice,
+} from "@/app/admin/actions";
 
 export default function SystemHealthPage() {
   const [health, setHealth] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isRefreshingHealth, setIsRefreshingHealth] = useState(false);
+  const [showRawJson, setShowRawJson] = useState(false);
+  const [rawJsonData, setRawJsonData] = useState<any>(null);
+  const [copiedApiUrl, setCopiedApiUrl] = useState(false);
 
   // Referral Settings State
   const [rewardType, setRewardType] = useState<"FIXED" | "PERCENTAGE">("FIXED");
@@ -59,6 +70,32 @@ export default function SystemHealthPage() {
       .catch((e) => setError(e.message))
       .finally(() => setIsLoading(false));
   }, []);
+
+  const handleRefreshHealth = async () => {
+    setIsRefreshingHealth(true);
+    try {
+      const [data, apiRes] = await Promise.all([
+        getAdminSystemHealth(),
+        fetch("/api/admin/system"),
+      ]);
+      setHealth(data);
+      if (apiRes.ok) {
+        const json = await apiRes.json();
+        setRawJsonData(json);
+      }
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setIsRefreshingHealth(false);
+    }
+  };
+
+  const handleCopyApiUrl = () => {
+    const fullUrl = `${window.location.origin}/api/admin/system`;
+    navigator.clipboard.writeText(fullUrl);
+    setCopiedApiUrl(true);
+    setTimeout(() => setCopiedApiUrl(false), 2000);
+  };
 
   const handleSavePricingSettings = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,12 +201,177 @@ export default function SystemHealthPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div>
-        <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-          <Activity className="w-6 h-6 text-emerald-400" /> System Health &amp; Platform Controls
-        </h2>
-        <p className="text-slate-400 text-sm mt-1">Real-time metrics and configurable settings for OurStory.</p>
+      {/* Header & Live API Controls */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#111827] border border-slate-800 rounded-2xl p-6 shadow-xl">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <Activity className="w-5 h-5" />
+            </div>
+            <h2 className="text-2xl font-bold text-white tracking-tight">
+              System Health &amp; Live Telemetry
+            </h2>
+          </div>
+          <p className="text-slate-400 text-sm mt-1.5">
+            Real-time server telemetry, Neon PostgreSQL latency, cloud media storage status, and platform controls.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            onClick={handleRefreshHealth}
+            disabled={isRefreshingHealth}
+            className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold border border-slate-700 transition flex items-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingHealth ? "animate-spin text-emerald-400" : ""}`} />
+            <span>{isRefreshingHealth ? "Pinging..." : "Refresh Live"}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleCopyApiUrl}
+            className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold border border-slate-700 transition flex items-center gap-2 shadow-sm cursor-pointer"
+            title="Copy API Route URL"
+          >
+            {copiedApiUrl ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
+            <span>{copiedApiUrl ? "Copied /api/admin/system!" : "API: /api/admin/system"}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowRawJson(!showRawJson)}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold border transition flex items-center gap-2 shadow-sm cursor-pointer ${
+              showRawJson
+                ? "bg-indigo-500/20 border-indigo-500/40 text-indigo-300"
+                : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"
+            }`}
+          >
+            <Code className="w-3.5 h-3.5" />
+            <span>{showRawJson ? "Hide JSON" : "Raw JSON API"}</span>
+          </button>
+        </div>
       </div>
+
+      {/* Live Infrastructure Telemetry Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Database Condition */}
+        <div className="bg-[#111827] border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Database Engine</span>
+            <div className={`px-2 py-0.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 ${
+              health?.dbStatus === "healthy"
+                ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"
+                : "bg-rose-500/15 text-rose-400 border border-rose-500/20"
+            }`}>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>{health?.dbStatus === "healthy" ? "ONLINE" : "DEGRADED"}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 shrink-0">
+              <Database className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-extrabold text-white truncate">{health?.dbProvider || "PostgreSQL"}</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Latency: <span className="text-emerald-400 font-bold">{health?.dbLatencyMs ?? 0} ms</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Cloud Media Storage Condition */}
+        <div className="bg-[#111827] border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Media Storage</span>
+            <div className={`px-2 py-0.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 ${
+              health?.storageStatus === "healthy"
+                ? "bg-sky-500/15 text-sky-400 border border-sky-500/20"
+                : "bg-amber-500/15 text-amber-400 border border-amber-500/20"
+            }`}>
+              <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
+              <span>{health?.storageStatus === "healthy" ? "CONNECTED" : "ATTENTION"}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 shrink-0">
+              <HardDrive className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-extrabold text-white truncate">{health?.activeStorage || "Storage Active"}</p>
+              <p className="text-xs text-slate-400 mt-0.5">Custom Photos &amp; Songs</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Server Memory Usage */}
+        <div className="bg-[#111827] border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Server Compute RAM</span>
+            <div className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-purple-500/15 text-purple-400 border border-purple-500/20">
+              <span>ACTIVE</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 shrink-0">
+              <Cpu className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-extrabold text-white truncate">{health?.memoryUsageMb || 0} MB RSS</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Heap Used: <span className="text-purple-300 font-bold">{health?.heapUsedMb || 0} MB</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Server Uptime & Platform */}
+        <div className="bg-[#111827] border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Platform &amp; Runtime</span>
+            <div className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+              <span>{health?.nodeVersion || "Node.js"}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 shrink-0">
+              <Server className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-extrabold text-white truncate">{health?.hostingPlatform || "Node.js Server"}</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Uptime: <span className="text-white font-bold">{health?.uptimeSeconds ? `${Math.floor(health.uptimeSeconds / 60)}m ${health.uptimeSeconds % 60}s` : "Active"}</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Collapsible Live JSON Telemetry Viewer */}
+      {showRawJson && (
+        <div className="bg-[#0a0f1e] border border-indigo-500/30 rounded-2xl p-5 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
+            <div className="flex items-center gap-2 text-indigo-400 text-xs font-bold uppercase tracking-wider">
+              <Code className="w-4 h-4" />
+              <span>Live API Response Payload: GET /api/admin/system</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(JSON.stringify(rawJsonData || health, null, 2));
+                alert("JSON copied to clipboard!");
+              }}
+              className="text-xs text-slate-400 hover:text-white px-2.5 py-1 bg-slate-800/80 rounded-lg transition"
+            >
+              Copy JSON
+            </button>
+          </div>
+          <pre className="text-xs text-emerald-400 font-mono overflow-x-auto max-h-96 p-3 bg-slate-950/80 rounded-xl border border-slate-800">
+            {JSON.stringify(rawJsonData || health, null, 2)}
+          </pre>
+        </div>
+      )}
 
       {/* Referral & Wallet Settings Controls */}
       <div className="bg-[#111827] border border-slate-800 rounded-2xl p-6 shadow-xl">

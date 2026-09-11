@@ -376,6 +376,17 @@ export async function getAdminAuditLog() {
 // ─── System Health ───────────────────────────────────────────────────────────
 export async function getAdminSystemHealth() {
   await checkAuth();
+
+  let dbStatus = "healthy";
+  let dbLatencyMs = 0;
+  try {
+    const start = performance.now();
+    await prisma.user.findFirst({ select: { id: true } });
+    dbLatencyMs = Math.round((performance.now() - start) * 10) / 10;
+  } catch (err) {
+    dbStatus = "degraded";
+  }
+
   const [totalUsers, totalEvents, totalPayments, totalViews, publishedPages] = await Promise.all([
     prisma.user.count(),
     prisma.event.count(),
@@ -383,7 +394,39 @@ export async function getAdminSystemHealth() {
     prisma.response.count(),
     prisma.event.count({ where: { status: "PUBLISHED" } }),
   ]);
-  return { totalUsers, totalEvents, totalPayments, totalViews, publishedPages, dbStatus: "healthy", appVersion: "1.0.0" };
+
+  const hasVercelBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+  const hasCloudinary = Boolean(process.env.CLOUDINARY_URL || process.env.CLOUDINARY_CLOUD_NAME);
+  const isVercel = Boolean(process.env.VERCEL || process.env.NEXT_PUBLIC_VERCEL_ENV);
+
+  let activeStorage = "Local Disk (/public/uploads)";
+  if (hasVercelBlob) activeStorage = "Vercel Blob Storage";
+  else if (hasCloudinary) activeStorage = "Cloudinary Media";
+  else if (isVercel) activeStorage = "Read-Only (Needs Blob Token)";
+
+  const memory = process.memoryUsage();
+  const uptimeSeconds = Math.floor(process.uptime());
+
+  return {
+    totalUsers,
+    totalEvents,
+    totalPayments,
+    totalViews,
+    publishedPages,
+    dbStatus,
+    dbLatencyMs,
+    dbProvider: (process.env.DATABASE_URL || "").includes("neon.tech") ? "Neon PostgreSQL (AWS)" : "PostgreSQL",
+    activeStorage,
+    storageStatus: hasVercelBlob || hasCloudinary || !isVercel ? "healthy" : "warning",
+    memoryUsageMb: Math.round((memory.rss / (1024 * 1024)) * 10) / 10,
+    heapUsedMb: Math.round((memory.heapUsed / (1024 * 1024)) * 10) / 10,
+    uptimeSeconds,
+    nodeVersion: process.version,
+    hostingPlatform: isVercel ? "Vercel Cloud Serverless" : "Node.js Server",
+    razorpayLive: process.env.RAZORPAY_KEY_ID?.startsWith("rzp_live_") ?? false,
+    smtpConfigured: Boolean(process.env.SMTP_USER),
+    appVersion: "1.0.0",
+  };
 }
 
 // ─── AI Insights (engagement analytics) ─────────────────────────────────────
