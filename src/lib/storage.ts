@@ -22,18 +22,33 @@ export async function uploadToStorage(
   mimeType: string,
   folder: string = "uploads"
 ): Promise<StorageUploadResult> {
-  const ext =
+  const ext = (
     originalFilename.split(".").pop() ||
-    (mimeType.startsWith("audio/") ? "mp3" : "jpg");
+    (mimeType.startsWith("audio/") ? "mp3" : "jpg")
+  ).toLowerCase();
   const uniqueName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
   const pathName = `${folder}/${uniqueName}`;
+  const cleanContentType =
+    mimeType ||
+    (ext === "mp3"
+      ? "audio/mpeg"
+      : ext === "webp"
+      ? "image/webp"
+      : ext === "png"
+      ? "image/png"
+      : "image/jpeg");
 
-  // ── 1. Vercel Blob Storage ──
-  if (process.env.BLOB_READ_WRITE_TOKEN) {
+  // ── 1. Vercel Blob Storage (detects standard or custom prefixed tokens) ──
+  const blobToken =
+    process.env.BLOB_READ_WRITE_TOKEN ||
+    Object.entries(process.env).find(([k]) => k.endsWith("_READ_WRITE_TOKEN"))?.[1];
+
+  if (blobToken) {
     try {
       const blob = await put(pathName, buffer, {
         access: "public",
-        contentType: mimeType,
+        contentType: cleanContentType,
+        token: blobToken,
       });
       return {
         success: true,
@@ -104,11 +119,10 @@ export async function uploadToStorage(
     }
   }
 
-  // ── 3. Local Filesystem (Safe for local dev / writable environments) ──
+  // ── 3. Local Filesystem (Active whenever running outside of serverless read-only cloud) ──
   const isVercel = Boolean(process.env.VERCEL || process.env.NEXT_PUBLIC_VERCEL_ENV);
-  const isProduction = process.env.NODE_ENV === "production";
 
-  if (!isVercel && (!isProduction || process.env.ALLOW_LOCAL_STORAGE === "true")) {
+  if (!isVercel) {
     try {
       const uploadDir = path.join(process.cwd(), "public", folder);
       await mkdir(uploadDir, { recursive: true });

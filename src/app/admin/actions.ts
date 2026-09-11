@@ -395,7 +395,10 @@ export async function getAdminSystemHealth() {
     prisma.event.count({ where: { status: "PUBLISHED" } }),
   ]);
 
-  const hasVercelBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+  const hasVercelBlob = Boolean(
+    process.env.BLOB_READ_WRITE_TOKEN ||
+    Object.keys(process.env).some((k) => k.endsWith("_READ_WRITE_TOKEN"))
+  );
   const hasCloudinary = Boolean(process.env.CLOUDINARY_URL || process.env.CLOUDINARY_CLOUD_NAME);
   const isVercel = Boolean(process.env.VERCEL || process.env.NEXT_PUBLIC_VERCEL_ENV);
 

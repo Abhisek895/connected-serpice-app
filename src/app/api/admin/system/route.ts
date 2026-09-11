@@ -78,7 +78,10 @@ export async function GET(req: Request) {
     else if (dbUrl.includes("localhost") || dbUrl.includes("127.0.0.1")) dbProvider = "Local Database";
 
     // ── 3. Storage Subsystem Telemetry ──
-    const hasVercelBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+    const hasVercelBlob = Boolean(
+      process.env.BLOB_READ_WRITE_TOKEN ||
+      Object.keys(process.env).some((k) => k.endsWith("_READ_WRITE_TOKEN"))
+    );
     const hasCloudinary = Boolean(process.env.CLOUDINARY_URL || process.env.CLOUDINARY_CLOUD_NAME);
     const isVercel = Boolean(process.env.VERCEL || process.env.NEXT_PUBLIC_VERCEL_ENV);
 
