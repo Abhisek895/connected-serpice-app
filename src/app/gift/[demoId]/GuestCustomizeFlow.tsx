@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Script from "next/script";
 import Link from "next/link";
@@ -240,6 +240,7 @@ export default function GuestCustomizeFlow({
   const [showExitPushToast, setShowExitPushToast] = useState(false);
   const [showPaymentPushModal, setShowPaymentPushModal] = useState(false);
   const [showPaymentCancelledPushModal, setShowPaymentCancelledPushModal] = useState(false);
+  const isPaymentHandledRef = useRef(false);
 
   // Coupon & Payment state
   const [couponCode, setCouponCode] = useState("LOVE2026");
@@ -447,6 +448,7 @@ export default function GuestCustomizeFlow({
   const [showLoginRequiredModal, setShowLoginRequiredModal] = useState(false);
 
   async function handlePayment() {
+    isPaymentHandledRef.current = false;
     setIsProcessing(true);
     setError(null);
     const { source, campaign } = getUtmParams();
@@ -523,6 +525,7 @@ export default function GuestCustomizeFlow({
           email: buyerEmail.trim() || undefined,
         },
         handler: async (response: any) => {
+          isPaymentHandledRef.current = true;
           await createGuestEvent(
             response.razorpay_order_id,
             response.razorpay_payment_id,
@@ -534,14 +537,16 @@ export default function GuestCustomizeFlow({
         },
         modal: {
           ondismiss: async () => {
+            // If payment was already handled and completed by handler, do not run ondismiss!
+            if (isPaymentHandledRef.current) return;
+
             // On mobile Android, UPI app switches can fire ondismiss.
             // Check if payment was actually completed before showing cancelled modal!
-            setIsProcessing(true);
-            setPollingForLink(true);
             try {
               const res = await fetch(`/api/payment/status?orderId=${encodeURIComponent(data.orderId)}`);
               const stat = await res.json();
               if (stat.fulfilled && stat.shareUrl) {
+                isPaymentHandledRef.current = true;
                 const fullUrl = `${window.location.origin}${stat.shareUrl}`;
                 if (typeof window !== "undefined") {
                   sessionStorage.removeItem(`ourstory_pending_${demo.id}`);
@@ -552,6 +557,8 @@ export default function GuestCustomizeFlow({
                 return;
               }
             } catch { }
+
+            if (isPaymentHandledRef.current) return;
             if (typeof window !== "undefined") {
               sessionStorage.removeItem(`ourstory_pending_${demo.id}`);
             }
@@ -606,6 +613,7 @@ export default function GuestCustomizeFlow({
           razorpaySignature: sig,
           utmSource: source,
           utmCampaign: campaign,
+          buyerEmail: buyerEmail.trim() || undefined,
         }),
       });
       const data = await res.json();
@@ -713,13 +721,16 @@ export default function GuestCustomizeFlow({
   if (publishedUrl) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center p-3 sm:p-6">
-        <div className="bg-white rounded-3xl p-5 max-w-2xl w-full shadow-2xl border border-rose-100 relative">
+        <div className="bg-white rounded-3xl p-4 sm:p-6 max-w-2xl w-full max-h-[95vh] overflow-y-auto shadow-2xl border border-rose-100 relative">
           <AutoClickSimulatedPreview
             demoId={demo.id}
             formValues={formValues}
             defaultData={tmpl.defaultData}
             publishedUrl={publishedUrl}
             isPaid={true}
+            onClose={() => {
+              setViewState("landing");
+            }}
             onActivateOffer={() => { }}
             onShareFreeLink={() => {
               const text = `Hey! I made a special surprise link for you... Tap here to open 💖\n${publishedUrl}`;

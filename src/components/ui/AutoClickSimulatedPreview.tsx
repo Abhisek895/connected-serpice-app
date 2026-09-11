@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, MousePointer2, ShieldCheck, Zap, Share2, Check, Lock } from "lucide-react";
+import { Heart, MousePointer2, ShieldCheck, Zap, Share2, Check, Lock, X } from "lucide-react";
 import CanvasConfetti from "./CanvasConfetti";
 import { useSession } from "next-auth/react";
 
@@ -12,6 +12,7 @@ interface AutoClickSimulatedPreviewProps {
   defaultData: Record<string, any>;
   onActivateOffer?: (pricing: { originalPrice: number; specialPrice: number; cashbackAmount: number }) => void;
   onShareFreeLink?: () => void;
+  onClose?: () => void;
   publishedUrl?: string | null;
   isPaid?: boolean;
   isPremiumUser?: boolean;
@@ -23,6 +24,7 @@ export default function AutoClickSimulatedPreview({
   defaultData,
   onActivateOffer,
   onShareFreeLink,
+  onClose,
   publishedUrl,
   isPaid = false,
   isPremiumUser,
@@ -87,6 +89,15 @@ export default function AutoClickSimulatedPreview({
   useEffect(() => {
     let timers: NodeJS.Timeout[] = [];
 
+    // If payment is already completed, freeze on the celebratory unlocked state
+    // and fire a single 2.5s confetti burst rather than thrashing mobile RAM
+    if (isPaid) {
+      setSimStage(isSurprise ? "portrait" : "accepted");
+      setTriggerConfetti(true);
+      const confettiTimer = setTimeout(() => setTriggerConfetti(false), 2500);
+      return () => clearTimeout(confettiTimer);
+    }
+
     const runSurpriseCycle = () => {
       setSimStage("landing");
       setTriggerConfetti(false);
@@ -127,7 +138,7 @@ export default function AutoClickSimulatedPreview({
         setTriggerConfetti(true);
       }, 2200));
 
-      timers.push(setTimeout(() => runGenericCycle(), 6000));
+      timers.push(setTimeout(() => runGenericCycle(), 7000));
     };
 
     if (isSurprise) {
@@ -139,7 +150,7 @@ export default function AutoClickSimulatedPreview({
     return () => {
       timers.forEach((t) => clearTimeout(t));
     };
-  }, [isSurprise]);
+  }, [isSurprise, isPaid]);
 
   const handleCopy = () => {
     if (publishedUrl) {
@@ -172,7 +183,18 @@ export default function AutoClickSimulatedPreview({
   const isDarkCanvas = isSurprise && simStage !== "landing";
 
   return (
-    <div className="w-full flex flex-col items-center select-none animate-in fade-in duration-300">
+    <div className="w-full flex flex-col items-center select-none animate-in fade-in duration-300 relative">
+      {/* Top Close [ X ] Button if provided */}
+      {onClose && (
+        <button
+          onClick={onClose}
+          className="absolute -top-1 sm:top-0 right-0 sm:right-1 text-slate-400 hover:text-slate-700 p-2 rounded-full hover:bg-slate-100 transition z-40 cursor-pointer"
+          title="Close preview"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      )}
+
       {/* Confetti Trigger on Click Simulation */}
       {triggerConfetti && <CanvasConfetti />}
 
@@ -246,7 +268,7 @@ export default function AutoClickSimulatedPreview({
                             className="absolute inset-0 w-[300%] h-[300%] bg-black text-white text-[7px] font-black leading-[7px] tracking-tighter overflow-hidden select-none pointer-events-none break-all text-justify p-0 origin-top-left z-0"
                             style={{ fontFamily: "monospace", transform: "scale(0.33333)" }}
                           >
-                            {((patternText || "love you").trim() + "  ").repeat(1500)}
+                            {((patternText || "love you").trim() + "  ").repeat(180)}
                           </div>
                           <img
                             src={photoUrl || "/demos/surprise/cute_woman.png"}
@@ -324,20 +346,35 @@ export default function AutoClickSimulatedPreview({
                   </AnimatePresence>
                 ) : isBirthday ? (
                   /* Birthday Cover / Landing simulation (Matches BirthdayTemplate Stage 0) */
-                  <div className="space-y-2 px-1 text-center">
+                  <div className="space-y-2 px-1 text-center flex flex-col items-center">
+                    {photoUrl ? (
+                      <div className="relative w-20 h-20 rounded-2xl overflow-hidden shadow-lg border-2 border-rose-400/50 mx-auto">
+                        <img
+                          src={photoUrl}
+                          alt="Birthday Person"
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-1 right-1 text-xs">🎂</div>
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-500/30 to-pink-500/30 border border-rose-400/40 text-rose-300 flex items-center justify-center mx-auto shadow-md text-2xl">
+                        🎂
+                      </div>
+                    )}
+
                     <h4 className="text-xs sm:text-sm font-bold text-white font-serif tracking-tight drop-shadow-md">
-                      {displayTitle} ❤️
+                      {displayTitle}
                     </h4>
 
-                    <p className="text-[9px] sm:text-[10px] text-rose-100/90 font-medium leading-relaxed px-1">
-                      {displayQuestion}
+                    <p className="text-[10px] text-rose-200/90 font-medium leading-tight">
+                      For: <span className="font-bold text-white">{displayRecipient}</span>
                     </p>
 
                     {simStage === "accepted" ? (
                       <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="bg-gradient-to-r from-rose-500/30 to-pink-500/30 backdrop-blur-md border border-rose-400/40 p-1.5 rounded-lg text-center space-y-0.5"
+                        className="bg-gradient-to-r from-rose-500/30 to-pink-500/30 backdrop-blur-md border border-rose-400/40 p-2 rounded-xl text-center space-y-0.5 w-full"
                       >
                         <div className="text-[10px] font-black text-rose-200 flex items-center justify-center gap-1">
                           🎉 Birthday Celebration! 🎉
@@ -497,22 +534,39 @@ export default function AutoClickSimulatedPreview({
                   </div>
 
                   {publishedUrl && (
-                    <div className="flex gap-2 pt-1">
-                      <button
-                        onClick={handleCopy}
-                        className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl border border-slate-700 transition flex items-center justify-center gap-1.5"
-                      >
-                        {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4 text-slate-400" />}
-                        {copied ? "Copied!" : "Copy Link"}
-                      </button>
-                      {onShareFreeLink && (
-                        <button
-                          onClick={onShareFreeLink}
-                          className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-emerald-900/40"
+                    <div className="space-y-2 pt-1">
+                      {/* Direct URL text box for clear visibility & easy manual copy */}
+                      <div className="bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 space-y-1">
+                        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">
+                          Your Live Surprise Link:
+                        </span>
+                        <div
+                          onClick={handleCopy}
+                          className="bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-800 font-mono text-[11px] text-rose-300 break-all select-all cursor-pointer hover:border-rose-500/40 transition"
+                          title="Click to copy"
                         >
-                          WhatsApp 🚀
+                          {publishedUrl}
+                        </div>
+                      </div>
+
+                      {/* Action buttons matching Picture 2 */}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleCopy}
+                          className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl border border-slate-700 transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                        >
+                          {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4 text-slate-400" />}
+                          {copied ? "Copied!" : "Copy Link"}
                         </button>
-                      )}
+                        {onShareFreeLink && (
+                          <button
+                            onClick={onShareFreeLink}
+                            className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-emerald-900/40 cursor-pointer"
+                          >
+                            WhatsApp 🚀
+                          </button>
+                        )}
+                      </div>
                     </div>
                   )}
                 </>

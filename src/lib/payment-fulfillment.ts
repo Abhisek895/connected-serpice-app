@@ -20,6 +20,7 @@ import crypto from "crypto";
 import { sendPaymentSuccessEmail } from "@/lib/email";
 import { creditReferrer } from "@/lib/referral";
 import { getOrCreateGuestUser } from "@/lib/guest-user";
+import { getRazorpay, hasValidRazorpayKeys } from "@/lib/razorpay";
 
 // ─── Slug Prefix Map ─────────────────────────────────────────────────────────
 
@@ -137,8 +138,54 @@ export async function fulfillPayment(
     throw new Error(`Payment record not found for orderId: ${razorpayOrderId}`);
   }
 
-  // ── 2. Idempotency: already fulfilled? Return existing result ──────────────
+  // ── 2. Auto-discover buyerEmail from Razorpay API if missing ─────────────
+  let buyerEmail = payment.buyerEmail?.trim() || null;
+  if (!buyerEmail && razorpayPaymentId && !razorpayPaymentId.startsWith("mock_") && !razorpayPaymentId.startsWith("guest_free_") && hasValidRazorpayKeys()) {
+    try {
+      const rzp = getRazorpay();
+      const rzpPayment = await (rzp.payments as any).fetch(razorpayPaymentId);
+      if (rzpPayment?.email) {
+        buyerEmail = String(rzpPayment.email).trim().toLowerCase();
+        await prisma.payment.update({
+          where: { id: payment.id },
+          data: { buyerEmail },
+        });
+        payment.buyerEmail = buyerEmail;
+      }
+    } catch (e) {
+      console.warn("[fulfillPayment] Could not fetch customer email from Razorpay API:", e);
+    }
+  }
+
+  // ── 3. Idempotency: already fulfilled? Return existing result (and ensure email sent) ──
   if (payment.fulfillment) {
+    // If email was never recorded as sent, attempt sending now
+    if (!payment.fulfillment.emailSentAt && buyerEmail) {
+      try {
+        const demoId = payment.demoId || "surprise";
+        const customTitle = CLASS_DEFAULTS[demoId]?.title || "Your Surprise Page";
+        const envUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
+        const appUrl =
+          envUrl && !envUrl.includes("loca.lt") && !envUrl.includes("localhost")
+            ? envUrl
+            : "https://connected-serpice-app.vercel.app";
+
+        await sendPaymentSuccessEmail({
+          to: buyerEmail,
+          templateTitle: customTitle,
+          shareUrl: `${appUrl}${payment.fulfillment.shareUrl}`,
+        });
+
+        await prisma.paymentFulfillment.update({
+          where: { id: payment.fulfillment.id },
+          data: { emailSentAt: new Date() },
+        });
+        console.log(`[fulfillPayment] Idempotent recovery: email sent to ${buyerEmail}`);
+      } catch (retryMailErr) {
+        console.warn("[fulfillPayment] Idempotent email retry failed:", retryMailErr);
+      }
+    }
+
     return {
       isNew: false,
       shareUrl: payment.fulfillment.shareUrl,
@@ -147,7 +194,7 @@ export async function fulfillPayment(
     };
   }
 
-  // ── 3. Mark payment SUCCESS (if not already) ───────────────────────────────
+  // ── 4. Mark payment SUCCESS (if not already) ───────────────────────────────
   if (payment.status !== "SUCCESS") {
     await prisma.payment.update({
       where: { id: payment.id },
@@ -158,7 +205,7 @@ export async function fulfillPayment(
     });
   }
 
-  // ── 4. Resolve demoId + userId + theme ────────────────────────────────────
+  // ── 5. Resolve demoId + userId + theme ────────────────────────────────────
   const demoId = payment.demoId || "surprise";
 
   let theme = await prisma.theme.findUnique({ where: { name: demoId } });
@@ -168,14 +215,14 @@ export async function fulfillPayment(
     });
   }
 
-  // ── 5. Resolve user — smart linking to registered account or guest ──────────
+  // ── 6. Resolve user — smart linking to registered account or guest ──────────
   let targetUserId = payment.userId;
   const guestUser = await getOrCreateGuestUser();
 
   // If buyerEmail belongs to an already registered user, automatically attach event & payment to their account!
-  if (payment.buyerEmail) {
+  if (buyerEmail) {
     const existingUser = await prisma.user.findUnique({
-      where: { email: payment.buyerEmail.toLowerCase().trim() },
+      where: { email: buyerEmail.toLowerCase().trim() },
     });
     if (existingUser && existingUser.id !== guestUser.id) {
       targetUserId = existingUser.id;
@@ -270,8 +317,8 @@ export async function fulfillPayment(
   }
 
   // ── 12. Send confirmation email ────────────────────────────────────────────
-  // Resolve recipient email: either payment.buyerEmail or target user's registered account email
-  let recipientEmail = payment.buyerEmail?.trim() || null;
+  // Resolve recipient email: either discovered buyerEmail, payment.buyerEmail, or target user's registered account email
+  let recipientEmail = buyerEmail || payment.buyerEmail?.trim() || null;
   if (!recipientEmail && targetUserId && targetUserId !== guestUser?.id) {
     try {
       const userRecord = await prisma.user.findUnique({
@@ -307,10 +354,16 @@ export async function fulfillPayment(
         ? envUrl
         : "https://connected-serpice-app.vercel.app";
 
+    const displayTitle =
+      (finalCustomData as any)?.title ||
+      CLASS_DEFAULTS[demoId]?.title ||
+      theme.title ||
+      "Happy Birthday!";
+
     try {
       await sendPaymentSuccessEmail({
         to: recipientEmail,
-        templateTitle: theme.title || demoId,
+        templateTitle: displayTitle,
         shareUrl: `${appUrl}${shareUrl}`,
         expiresAt,
       });

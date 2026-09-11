@@ -92,48 +92,59 @@ export async function sendPaymentSuccessEmail(opts: {
 
   const text = `Payment Successful! 💖
 
-Hi! Thank you for your payment. Your surprise page "${title}" has been created and published successfully!
+Hi! Thank you for your payment. Your surprise page "${title}" has been created and is live now!
 
-Here is your live surprise link:
+Your Live Surprise Link:
 ${fullShareUrl}
 ${expiryText}
 
 You can copy this link and send it directly to your special someone via WhatsApp, Instagram, or SMS.
 
-Thank you for choosing OurStory!
-— OurStory Team 💖
+Made with 💖 by OurStory • If you have any questions, simply reply directly to this email.
 `;
 
   const html = `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8" /></head>
-<body style="font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.6; color: #1e293b; background-color: #ffffff; padding: 20px; max-width: 560px;">
-  <p style="font-size: 18px; font-weight: bold; color: #e11d48; margin-bottom: 14px;">
-    Payment Successful! 💖
-  </p>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #1e293b; background-color: #f8fafc; padding: 24px 12px; margin: 0;">
+  <div style="max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 18px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.06); border: 1px solid #ffe4e6;">
+    <div style="background: linear-gradient(135deg, #e11d48, #f43f5e); padding: 20px 24px; text-align: center;">
+      <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -0.02em;">
+        Payment Successful! 💖
+      </h1>
+    </div>
 
-  <p style="margin-bottom: 14px;">
-    Hi! Thank you for your payment. Your surprise page <strong>"${title}"</strong> has been created and is live now!
-  </p>
+    <div style="padding: 24px 24px 28px;">
+      <p style="font-size: 15px; color: #334155; margin-top: 0; margin-bottom: 16px;">
+        Hi! Thank you for your payment. Your surprise page <strong>"${title}"</strong> has been created and is live now!
+      </p>
 
-  <div style="margin: 20px 0; padding: 16px 18px; background-color: #fff1f2; border: 1px solid #fecdd3; border-radius: 10px;">
-    <strong style="color: #9f1239; font-size: 13px; text-transform: uppercase; letter-spacing: .05em;">Your Live Surprise Link:</strong><br/>
-    <a href="${fullShareUrl}" style="display: inline-block; margin-top: 8px; color: #e11d48; font-size: 16px; font-weight: bold; word-break: break-all; text-decoration: underline;">
-      ${fullShareUrl}
-    </a>
+      <div style="margin: 24px 0; padding: 20px; background-color: #fff1f2; border: 1.5px solid #fecdd3; border-radius: 14px; text-align: center;">
+        <div style="color: #9f1239; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px;">
+          Your Live Surprise Link:
+        </div>
+        <a href="${fullShareUrl}" style="display: block; color: #e11d48; font-size: 15px; font-weight: 700; word-break: break-all; text-decoration: underline; margin-bottom: 16px;">
+          ${fullShareUrl}
+        </a>
+
+        <a href="${fullShareUrl}" target="_blank" style="display: inline-block; padding: 12px 26px; background-color: #e11d48; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 800; border-radius: 12px; box-shadow: 0 4px 12px rgba(225, 29, 72, 0.35);">
+          🌸 Open My Gift Link
+        </a>
+      </div>
+
+      <p style="font-size: 14px; color: #475569; margin-bottom: 16px;">
+        You can copy this link and send it directly to your special someone via WhatsApp, Instagram, or SMS.
+      </p>
+
+      ${opts.expiresAt ? `<p style="font-size: 13px; color: #64748b; margin-bottom: 16px;">⏳ This link is active until <strong>${new Date(opts.expiresAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</strong>.</p>` : ""}
+
+      <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 24px 0 20px;" />
+
+      <p style="font-size: 12px; color: #94a3b8; margin: 0; text-align: center;">
+        Made with 💖 by OurStory • If you have any questions, simply reply directly to this email.
+      </p>
+    </div>
   </div>
-
-  <p style="margin-bottom: 14px;">
-    You can copy this link and send it directly to your special someone via WhatsApp, Instagram, or SMS.
-  </p>
-
-  ${opts.expiresAt ? `<p style="font-size: 13px; color: #64748b; margin-bottom: 14px;">This link is active until ${new Date(opts.expiresAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}.</p>` : ""}
-
-  <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-
-  <p style="font-size: 12px; color: #94a3b8; margin: 0;">
-    Made with 💖 by OurStory • If you have any questions, simply reply directly to this email.
-  </p>
 </body>
 </html>`;
 
