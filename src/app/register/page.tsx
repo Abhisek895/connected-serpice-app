@@ -165,9 +165,19 @@ export default function RegisterPage() {
 
         {/* Error Alert */}
         {error && (
-          <div className="mb-5 p-3.5 bg-rose-50 border border-rose-200 rounded-2xl flex items-center gap-3 text-rose-700 text-xs font-medium">
-            <AlertCircle className="w-5 h-5 text-rose-500 flex-shrink-0" />
-            <span>{error}</span>
+          <div className="mb-5 p-3.5 bg-rose-50 border border-rose-200 rounded-2xl flex items-center justify-between gap-3 text-rose-700 text-xs font-medium">
+            <div className="flex items-center gap-2.5">
+              <AlertCircle className="w-5 h-5 text-rose-500 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+            {error.toLowerCase().includes("already exists") && (
+              <Link
+                href={`/login?email=${encodeURIComponent(email)}&redirect=/dashboard`}
+                className="whitespace-nowrap px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-[11px] transition shrink-0"
+              >
+                Sign In →
+              </Link>
+            )}
           </div>
         )}
 

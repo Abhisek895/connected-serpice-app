@@ -294,6 +294,19 @@ export default function GuestCustomizeFlow({
       } else if (action === "customize" || action === "builder") {
         setViewState("customize");
       }
+
+      // Check if there was an in-flight payment order (e.g. after returning from mobile UPI app)
+      const pendingOrder = sessionStorage.getItem(`ourstory_pending_${demo.id}`);
+      if (pendingOrder) {
+        try {
+          const { orderId } = JSON.parse(pendingOrder);
+          if (orderId && !orderId.startsWith("FREE")) {
+            setPollingForLink(true);
+            setIsProcessing(true);
+            pollForFulfillment(orderId);
+          }
+        } catch (e) { }
+      }
     }
   }, [tmpl, demo.id]);
 
@@ -476,6 +489,11 @@ export default function GuestCustomizeFlow({
       const data = await res.json();
       if (!data.success) throw new Error(data.message || "Failed to create order");
 
+      // Store in-flight order so mobile tab reload/app switch can recover it
+      if (typeof window !== "undefined" && data.orderId) {
+        sessionStorage.setItem(`ourstory_pending_${demo.id}`, JSON.stringify({ orderId: data.orderId }));
+      }
+
       if (data.orderId === "FREE" || data.amount === 0) {
         await createGuestEvent("FREE", "", "", source, campaign, customDataSnapshot);
         return;
@@ -515,8 +533,30 @@ export default function GuestCustomizeFlow({
           );
         },
         modal: {
-          ondismiss: () => {
+          ondismiss: async () => {
+            // On mobile Android, UPI app switches can fire ondismiss.
+            // Check if payment was actually completed before showing cancelled modal!
+            setIsProcessing(true);
+            setPollingForLink(true);
+            try {
+              const res = await fetch(`/api/payment/status?orderId=${encodeURIComponent(data.orderId)}`);
+              const stat = await res.json();
+              if (stat.fulfilled && stat.shareUrl) {
+                const fullUrl = `${window.location.origin}${stat.shareUrl}`;
+                if (typeof window !== "undefined") {
+                  sessionStorage.removeItem(`ourstory_pending_${demo.id}`);
+                }
+                setPublishedUrl(fullUrl);
+                setPollingForLink(false);
+                setIsProcessing(false);
+                return;
+              }
+            } catch { }
+            if (typeof window !== "undefined") {
+              sessionStorage.removeItem(`ourstory_pending_${demo.id}`);
+            }
             setIsProcessing(false);
+            setPollingForLink(false);
             setError(null);
             setShowPaymentCancelledPushModal(true);
           },
@@ -576,6 +616,7 @@ export default function GuestCustomizeFlow({
         if (data.slug && typeof document !== "undefined") {
           document.cookie = `ourstory_guest_claim_slug=${data.slug}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax`;
           localStorage.setItem("ourstory_guest_claim_slug", data.slug);
+          sessionStorage.removeItem(`ourstory_pending_${demo.id}`);
         }
         setPublishedUrl(fullUrl);
         return;
@@ -621,6 +662,9 @@ export default function GuestCustomizeFlow({
 
         if (data.fulfilled && data.shareUrl) {
           const fullUrl = `${window.location.origin}${data.shareUrl}`;
+          if (typeof window !== "undefined") {
+            sessionStorage.removeItem(`ourstory_pending_${demo.id}`);
+          }
           setPublishedUrl(fullUrl);
           setPollingForLink(false);
           setIsProcessing(false);
@@ -695,13 +739,13 @@ export default function GuestCustomizeFlow({
             </div>
             <div className="flex items-center gap-2">
               <Link
-                href={`/login${publishedUrl.includes("/p/") ? `?redirect=/dashboard` : ""}`}
+                href={`/login?redirect=/dashboard${buyerEmail ? `&email=${encodeURIComponent(buyerEmail)}` : ""}${publishedUrl.includes("/p/") ? `&claimSlug=${encodeURIComponent(publishedUrl.split("/p/")[1])}` : ""}`}
                 className="whitespace-nowrap px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition cursor-pointer"
               >
                 Sign In
               </Link>
               <Link
-                href={`/register${publishedUrl.includes("/p/") ? `?claimSlug=${encodeURIComponent(publishedUrl.split("/p/")[1])}` : ""}`}
+                href={`/register${publishedUrl.includes("/p/") ? `?claimSlug=${encodeURIComponent(publishedUrl.split("/p/")[1])}` : ""}${buyerEmail ? `&email=${encodeURIComponent(buyerEmail)}` : ""}`}
                 className="whitespace-nowrap px-4 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer"
               >
                 Create Account ➔

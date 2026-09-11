@@ -16,7 +16,7 @@ export default async function DashboardPage() {
   const dbUser = await prisma.user.findUnique({ where: { id: userId } });
   const isPremiumUser = dbUser?.plan === "PREMIUM" || dbUser?.role === "super_admin";
 
-  // ── Auto-claim any guest event in cookies ─────────────────────────────────
+  // ── Auto-claim any guest event in cookies & auto-reconcile pending payments ─
   if (userId) {
     try {
       const cookieStore = await cookies();
@@ -53,8 +53,41 @@ export default async function DashboardPage() {
           }
         }
       }
+
+      // Auto-reconcile any PENDING payments created in the last 24h with Razorpay
+      const { getRazorpay, hasValidRazorpayKeys } = await import("@/lib/razorpay");
+      const { fulfillPayment } = await import("@/lib/payment-fulfillment");
+
+      if (hasValidRazorpayKeys()) {
+        const pendingPayments = await prisma.payment.findMany({
+          where: {
+            OR: [
+              { userId },
+              ...(dbUser?.email ? [{ buyerEmail: dbUser.email.toLowerCase().trim() }] : []),
+            ],
+            status: "PENDING",
+            createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+          },
+          take: 3,
+        });
+
+        if (pendingPayments.length > 0) {
+          const razorpay = getRazorpay();
+          for (const p of pendingPayments) {
+            if (!p.razorpayOrderId.startsWith("guest_mock_") && !p.razorpayOrderId.startsWith("free_")) {
+              try {
+                const rzpPayments = await razorpay.orders.fetchPayments(p.razorpayOrderId);
+                const captured = rzpPayments?.items?.find((item: any) => item.status === "captured");
+                if (captured) {
+                  await fulfillPayment(p.razorpayOrderId, captured.id);
+                }
+              } catch (e) { }
+            }
+          }
+        }
+      }
     } catch (claimErr) {
-      console.error("Dashboard auto-claim error:", claimErr);
+      console.error("Dashboard auto-claim / reconciliation error:", claimErr);
     }
   }
 
