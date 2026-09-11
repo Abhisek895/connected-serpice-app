@@ -500,12 +500,19 @@ export default function SystemHealthPage() {
 
           <div className="bg-[#0a0f1e] border border-slate-800 rounded-xl p-4 space-y-2">
             <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-              <Send className="w-3.5 h-3.5 text-rose-400" /> Customer Email Receipt Preview
+              <Send className="w-3.5 h-3.5 text-rose-400" /> Customer Email Receipt Preview (Simple Clean Text)
             </h4>
-            <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-[11px] font-mono text-slate-300 space-y-1">
+            <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 text-[11px] font-mono text-slate-300 space-y-1.5">
               <p><span className="text-slate-500">From:</span> OurStory &lt;vibepass1233@gmail.com&gt;</p>
-              <p><span className="text-slate-500">Subject:</span> Payment Successful! Your Surprise is live 🎉</p>
-              <p className="text-rose-400 font-bold mt-1">Button: [ 🌸 Open My Gift Link ]</p>
+              <p><span className="text-slate-500">Subject:</span> Payment Successful! Your Surprise Link is Live 🎉</p>
+              <div className="p-2.5 rounded bg-slate-950 border border-slate-800 text-slate-200 text-xs space-y-1.5 font-sans">
+                <p className="font-bold text-rose-400">Payment Successful! 💖</p>
+                <p>Hi! Thank you for your payment. Your surprise page has been created and is live now!</p>
+                <p className="p-2 bg-rose-950/40 border border-rose-500/30 rounded text-rose-300 font-semibold break-all text-xs underline">
+                  https://connected-serpice-app.vercel.app/p/[user-created-link]
+                </p>
+                <p className="text-[11px] text-slate-400">You can copy this link and send it directly to your special someone via WhatsApp, Instagram, or SMS.</p>
+              </div>
               <p className="text-[10px] text-slate-400">Status: {emailDeliveryEnabled ? "🟢 Automatically sent after payment" : "🔴 Paused by admin"}</p>
             </div>
           </div>

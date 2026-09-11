@@ -79,74 +79,68 @@ export async function sendPaymentSuccessEmail(opts: {
   templateTitle?: string;
   expiresAt?: Date | null;
 }): Promise<void> {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://ourstory.app";
+  const envUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
+  const appUrl =
+    envUrl && !envUrl.includes("loca.lt") && !envUrl.includes("localhost")
+      ? envUrl
+      : "https://connected-serpice-app.vercel.app";
   const fullShareUrl = opts.shareUrl.startsWith("http") ? opts.shareUrl : `${appUrl}${opts.shareUrl}`;
-  const title = opts.templateTitle || "Your Surprise 💖";
-  const expiryNote = opts.expiresAt
-    ? `<p style="margin:0 0 8px;font-size:13px;color:#94a3b8;">This link is active until <strong style="color:#f43f5e;">${new Date(opts.expiresAt).toLocaleDateString("en-IN", { day:"numeric", month:"long", year:"numeric" })}</strong>.</p>`
+  const title = opts.templateTitle || "Your Surprise Page";
+  const expiryText = opts.expiresAt
+    ? `\nThis link is active until ${new Date(opts.expiresAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}.`
     : "";
 
-  const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
-<body style="margin:0;padding:0;background:#f8fafc;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:32px 0;">
-    <tr><td align="center">
-      <table width="520" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 4px 24px rgba(244,63,94,0.08);border:1px solid #fce7f3;max-width:520px;width:100%;">
+  const text = `Payment Successful! 💖
 
-        <!-- Header gradient bar -->
-        <tr><td style="height:5px;background:linear-gradient(90deg,#f43f5e,#ec4899,#fb923c);"></td></tr>
+Hi! Thank you for your payment. Your surprise page "${title}" has been created and published successfully!
 
-        <!-- Logo + Hero -->
-        <tr><td style="padding:36px 36px 0;text-align:center;">
-          <p style="margin:0 0 6px;font-size:28px;font-weight:800;color:#f43f5e;font-family:Georgia,serif;">OurStory 💖</p>
-          <p style="margin:0 0 28px;font-size:13px;color:#94a3b8;font-weight:500;">Digital Memory Pages</p>
-          <div style="font-size:56px;line-height:1;margin-bottom:20px;">🎉</div>
-          <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0f172a;line-height:1.3;">Payment Successful!</h1>
-          <p style="margin:0 0 6px;font-size:15px;color:#475569;font-weight:500;">Your <strong style="color:#f43f5e;">${title}</strong> is live and ready to share.</p>
-        </td></tr>
+Here is your live surprise link:
+${fullShareUrl}
+${expiryText}
 
-        <!-- Share Link Card -->
-        <tr><td style="padding:28px 36px;">
-          <div style="background:linear-gradient(135deg,#fff1f2,#fdf2f8);border:2px dashed #fda4af;border-radius:16px;padding:20px 24px;text-align:center;">
-            <p style="margin:0 0 12px;font-size:12px;font-weight:700;color:#be123c;text-transform:uppercase;letter-spacing:.08em;">🔗 Your Shareable Gift Link</p>
-            <p style="margin:0 0 16px;font-size:13px;color:#64748b;word-break:break-all;">${fullShareUrl}</p>
-            ${expiryNote}
-            <a href="${fullShareUrl}"
-               style="display:inline-block;background:linear-gradient(135deg,#f43f5e,#ec4899);color:#ffffff;font-size:15px;font-weight:800;padding:14px 32px;border-radius:12px;text-decoration:none;box-shadow:0 4px 14px rgba(244,63,94,0.35);letter-spacing:.01em;">
-              🌸 Open My Gift Link
-            </a>
-          </div>
-        </td></tr>
+You can copy this link and send it directly to your special someone via WhatsApp, Instagram, or SMS.
 
-        <!-- Instructions -->
-        <tr><td style="padding:0 36px 28px;">
-          <div style="background:#f8fafc;border-radius:14px;padding:18px 20px;">
-            <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#334155;">📋 How to share:</p>
-            <ol style="margin:0;padding-left:20px;color:#64748b;font-size:13px;line-height:1.8;">
-              <li>Tap <strong>"Open My Gift Link"</strong> above to preview it</li>
-              <li>Copy the link and send it via WhatsApp, Instagram DM, or SMS</li>
-              <li>Watch your recipient's reaction in real-time ✨</li>
-            </ol>
-          </div>
-        </td></tr>
+Thank you for choosing OurStory!
+— OurStory Team 💖
+`;
 
-        <!-- Footer -->
-        <tr><td style="padding:20px 36px 32px;text-align:center;border-top:1px solid #f1f5f9;">
-          <p style="margin:0 0 6px;font-size:12px;color:#94a3b8;">Made with 💖 by OurStory</p>
-          <p style="margin:0;font-size:11px;color:#cbd5e1;">If you have any issues, reply to this email and we'll help you out.</p>
-        </td></tr>
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8" /></head>
+<body style="font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.6; color: #1e293b; background-color: #ffffff; padding: 20px; max-width: 560px;">
+  <p style="font-size: 18px; font-weight: bold; color: #e11d48; margin-bottom: 14px;">
+    Payment Successful! 💖
+  </p>
 
-      </table>
-    </td></tr>
-  </table>
+  <p style="margin-bottom: 14px;">
+    Hi! Thank you for your payment. Your surprise page <strong>"${title}"</strong> has been created and is live now!
+  </p>
+
+  <div style="margin: 20px 0; padding: 16px 18px; background-color: #fff1f2; border: 1px solid #fecdd3; border-radius: 10px;">
+    <strong style="color: #9f1239; font-size: 13px; text-transform: uppercase; letter-spacing: .05em;">Your Live Surprise Link:</strong><br/>
+    <a href="${fullShareUrl}" style="display: inline-block; margin-top: 8px; color: #e11d48; font-size: 16px; font-weight: bold; word-break: break-all; text-decoration: underline;">
+      ${fullShareUrl}
+    </a>
+  </div>
+
+  <p style="margin-bottom: 14px;">
+    You can copy this link and send it directly to your special someone via WhatsApp, Instagram, or SMS.
+  </p>
+
+  ${opts.expiresAt ? `<p style="font-size: 13px; color: #64748b; margin-bottom: 14px;">This link is active until ${new Date(opts.expiresAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}.</p>` : ""}
+
+  <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+
+  <p style="font-size: 12px; color: #94a3b8; margin: 0;">
+    Made with 💖 by OurStory • If you have any questions, simply reply directly to this email.
+  </p>
 </body>
 </html>`;
 
   await sendMail({
     to: opts.to,
-    subject: `🎉 Your gift link is ready — ${title}`,
+    subject: `Payment Successful! Your Surprise Link is Live 🎉`,
+    text,
     html,
   });
 }
