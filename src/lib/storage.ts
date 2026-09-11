@@ -1,5 +1,5 @@
-import { put } from "@vercel/blob";
-import { writeFile, mkdir } from "fs/promises";
+import { put, del } from "@vercel/blob";
+import { writeFile, mkdir, unlink } from "fs/promises";
 import path from "path";
 
 export interface StorageUploadResult {
@@ -28,28 +28,39 @@ export async function uploadToStorage(
   ).toLowerCase();
   const uniqueName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
   const pathName = `${folder}/${uniqueName}`;
-  const cleanContentType =
-    mimeType ||
-    (ext === "mp3"
-      ? "audio/mpeg"
-      : ext === "webp"
-      ? "image/webp"
-      : ext === "png"
-      ? "image/png"
-      : "image/jpeg");
+  
+  // Standardize audio and image MIME types so browsers (especially iOS Safari) stream without error
+  let cleanContentType = mimeType;
+  if (!cleanContentType || cleanContentType === "application/octet-stream" || cleanContentType === "audio/mp3") {
+    if (ext === "mp3") cleanContentType = "audio/mpeg";
+    else if (ext === "m4a") cleanContentType = "audio/mp4";
+    else if (ext === "wav") cleanContentType = "audio/wav";
+    else if (ext === "ogg") cleanContentType = "audio/ogg";
+    else if (ext === "webp") cleanContentType = "image/webp";
+    else if (ext === "png") cleanContentType = "image/png";
+    else cleanContentType = "image/jpeg";
+  }
 
-  // ── 1. Vercel Blob Storage (detects standard or custom prefixed tokens) ──
+  // ── 1. Vercel Blob Storage (supports both modern Vercel OIDC and BLOB_READ_WRITE_TOKEN) ──
   const blobToken =
     process.env.BLOB_READ_WRITE_TOKEN ||
     Object.entries(process.env).find(([k]) => k.endsWith("_READ_WRITE_TOKEN"))?.[1];
 
-  if (blobToken) {
+  const hasBlobConfig =
+    Boolean(blobToken) ||
+    Boolean(process.env.BLOB_STORE_ID) ||
+    Object.keys(process.env).some((k) => k.endsWith("_STORE_ID"));
+
+  if (hasBlobConfig) {
     try {
-      const blob = await put(pathName, buffer, {
+      const options: any = {
         access: "public",
         contentType: cleanContentType,
-        token: blobToken,
-      });
+      };
+      if (blobToken) {
+        options.token = blobToken;
+      }
+      const blob = await put(pathName, buffer, options);
       return {
         success: true,
         url: blob.url,
@@ -144,3 +155,39 @@ export async function uploadToStorage(
       "Cloud storage is not configured on this server. Please enable Vercel Blob in your Vercel Dashboard (Storage -> Create Blob) or set BLOB_READ_WRITE_TOKEN / CLOUDINARY_URL in your environment variables.",
   };
 }
+
+/**
+ * Automatically deletes a file from Vercel Blob Cloud Storage or local filesystem
+ */
+export async function deleteFromStorage(url: string): Promise<boolean> {
+  if (!url) return false;
+
+  // 1. Vercel Blob URL deletion
+  if (url.includes(".blob.vercel-storage.com")) {
+    try {
+      const blobToken =
+        process.env.BLOB_READ_WRITE_TOKEN ||
+        Object.entries(process.env).find(([k]) => k.endsWith("_READ_WRITE_TOKEN"))?.[1];
+
+      await del(url, blobToken ? { token: blobToken } : undefined);
+      return true;
+    } catch (err: any) {
+      console.error("[Storage] Vercel Blob delete failed:", err);
+      return false;
+    }
+  }
+
+  // 2. Local filesystem deletion
+  if (url.startsWith("/uploads/")) {
+    try {
+      const filePath = path.join(process.cwd(), "public", url);
+      await unlink(filePath);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
+}
+

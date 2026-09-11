@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { uploadToStorage } from "@/lib/storage";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
@@ -8,6 +10,16 @@ export async function POST(req: Request) {
 
     if (!file) {
       return NextResponse.json({ success: false, message: "No file provided" }, { status: 400 });
+    }
+
+    if (file.size > 4.5 * 1024 * 1024) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `File size (${(file.size / (1024 * 1024)).toFixed(1)} MB) exceeds 4.5 MB limit. Please select a smaller file.`,
+        },
+        { status: 413 }
+      );
     }
 
     const bytes = await file.arrayBuffer();

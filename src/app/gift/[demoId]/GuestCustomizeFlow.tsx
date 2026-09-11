@@ -309,9 +309,15 @@ export default function GuestCustomizeFlow({
     try {
       const isAudio = file.type.startsWith("audio/") || fieldKey.toLowerCase().includes("audio");
 
-      // Validate audio file size (max 8MB)
-      if (isAudio && file.size > 8 * 1024 * 1024) {
-        throw new Error("Audio file exceeds 8MB limit. Please choose a smaller MP3 clip.");
+      // Validate file size (max 4.5MB hard limit for Vercel Serverless request body)
+      const MAX_FILE_SIZE = 4.5 * 1024 * 1024;
+      if (file.size > MAX_FILE_SIZE) {
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+        throw new Error(
+          isAudio
+            ? `Audio file (${sizeMb} MB) exceeds the 4.5 MB server limit. Please select an MP3 under 4.5 MB or compress your audio file.`
+            : `File (${sizeMb} MB) exceeds the 4.5 MB server limit. Please select a smaller file.`
+        );
       }
 
       // Pre-compress images on client to ~80KB WebP
@@ -326,9 +332,20 @@ export default function GuestCustomizeFlow({
         method: "POST",
         body: uploadFormData,
       });
-      const data = await res.json();
 
-      if (data.success && data.url) {
+      // Guard against non-JSON responses from Vercel edge proxy (e.g. 413 Request Entity Too Large)
+      if (res.status === 413) {
+        throw new Error(`File is too large for the server (${(uploadFile.size / (1024 * 1024)).toFixed(1)} MB). Vercel has a hard 4.5 MB limit.`);
+      }
+
+      let data: any;
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error(`Upload failed (server responded with code ${res.status}). Please ensure your file is under 4.5 MB.`);
+      }
+
+      if (data?.success && data?.url) {
         setFormValues((prev) => ({ ...prev, [fieldKey]: data.url }));
         setFileStatuses((prev) => ({ ...prev, [fieldKey]: "done" }));
         return;
@@ -350,7 +367,7 @@ export default function GuestCustomizeFlow({
       }
 
       // For audio: Do NOT fallback to multi-MB Base64 string that crashes server actions
-      throw new Error(data.message || "Failed to upload audio to cloud storage.");
+      throw new Error(data?.message || "Failed to upload audio to cloud storage.");
     } catch (err: any) {
       console.error("Upload error:", err);
       setError(err.message || "File upload failed.");

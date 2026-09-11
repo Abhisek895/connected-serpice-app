@@ -2,6 +2,7 @@
 
 import { getCurrentUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { deleteFromStorage } from "@/lib/storage";
 
 export async function checkPaymentAccess(demoId: string) {
   const { userId } = await getCurrentUser();
@@ -300,12 +301,30 @@ export async function deleteEventAction(eventId: string) {
   const { userId } = await getCurrentUser();
 
   const event = await prisma.event.findFirst({
-    where: { id: eventId, userId }
+    where: { id: eventId, userId },
+    include: { media: true }
   });
 
   if (!event) return { success: false, error: "Unauthorized or not found" };
 
-  // Delete related responses and media to prevent SQLite foreign key constraint errors
+  // 1. Collect all cloud media URLs for this event to clean up storage
+  const urlsToDelete: string[] = [];
+  event.media?.forEach((m) => {
+    if (m.url) urlsToDelete.push(m.url);
+  });
+
+  if (event.customData) {
+    try {
+      const data = JSON.parse(event.customData);
+      Object.values(data).forEach((val) => {
+        if (typeof val === "string" && (val.includes(".blob.vercel-storage.com") || val.startsWith("/uploads/"))) {
+          urlsToDelete.push(val);
+        }
+      });
+    } catch {}
+  }
+
+  // 2. Delete related responses and media records in database
   await prisma.response.deleteMany({
     where: { eventId }
   });
@@ -318,6 +337,9 @@ export async function deleteEventAction(eventId: string) {
     where: { id: eventId }
   });
 
+  // 3. Delete files from Vercel Blob cloud storage asynchronously
+  await Promise.allSettled(urlsToDelete.map((u) => deleteFromStorage(u)));
+
   return { success: true };
 }
 
@@ -326,13 +348,29 @@ export async function deleteAllEventsAction() {
 
   const userEvents = await prisma.event.findMany({
     where: { userId },
-    select: { id: true }
+    include: { media: true }
   });
 
   const eventIds = userEvents.map((e) => e.id);
 
   if (eventIds.length > 0) {
-    // Delete related responses and media to prevent SQLite foreign key constraint errors
+    const urlsToDelete: string[] = [];
+    userEvents.forEach((ev) => {
+      ev.media?.forEach((m) => {
+        if (m.url) urlsToDelete.push(m.url);
+      });
+      if (ev.customData) {
+        try {
+          const data = JSON.parse(ev.customData);
+          Object.values(data).forEach((val) => {
+            if (typeof val === "string" && (val.includes(".blob.vercel-storage.com") || val.startsWith("/uploads/"))) {
+              urlsToDelete.push(val);
+            }
+          });
+        } catch {}
+      }
+    });
+
     await prisma.response.deleteMany({
       where: { eventId: { in: eventIds } }
     });
@@ -344,6 +382,9 @@ export async function deleteAllEventsAction() {
     await prisma.event.deleteMany({
       where: { userId }
     });
+
+    // Delete files from Vercel Blob cloud storage asynchronously
+    await Promise.allSettled(urlsToDelete.map((u) => deleteFromStorage(u)));
   }
 
   return { success: true };
