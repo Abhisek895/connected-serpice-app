@@ -15,6 +15,7 @@ import type { TemplateClass, TemplateField } from "@/app/dashboard/templateConfi
 import LivePhonePreview from "@/components/ui/LivePhonePreview";
 import AutoClickSimulatedPreview from "@/components/ui/AutoClickSimulatedPreview";
 import { loadRazorpayScript } from "@/hooks/useRazorpay";
+import { compressImage } from "@/lib/clientImageCompressor";
 
 // Map demoId → icon client-side (icons are functions, can't be serialized server→client)
 const DEMO_ICONS: Record<string, LucideIcon> = {
@@ -306,8 +307,21 @@ export default function GuestCustomizeFlow({
     setError(null);
 
     try {
+      const isAudio = file.type.startsWith("audio/") || fieldKey.toLowerCase().includes("audio");
+
+      // Validate audio file size (max 8MB)
+      if (isAudio && file.size > 8 * 1024 * 1024) {
+        throw new Error("Audio file exceeds 8MB limit. Please choose a smaller MP3 clip.");
+      }
+
+      // Pre-compress images on client to ~80KB WebP
+      let uploadFile = file;
+      if (!isAudio && file.type.startsWith("image/")) {
+        uploadFile = await compressImage(file, { maxWidth: 1280, maxHeight: 1280, quality: 0.82 });
+      }
+
       const uploadFormData = new FormData();
-      uploadFormData.append("file", file);
+      uploadFormData.append("file", uploadFile);
       const res = await fetch("/api/upload", {
         method: "POST",
         body: uploadFormData,
@@ -320,16 +334,23 @@ export default function GuestCustomizeFlow({
         return;
       }
 
-      // Client-side fallback
-      const reader = new FileReader();
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => reject(new Error("Failed to read file"));
-        reader.readAsDataURL(file);
-      });
+      // Safe Fallback:
+      // For images: Compressed to ~80KB, Data URL is safe and won't exceed gateway limits.
+      if (!isAudio) {
+        const reader = new FileReader();
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error("Failed to read image file"));
+          reader.readAsDataURL(uploadFile);
+        });
 
-      setFormValues((prev) => ({ ...prev, [fieldKey]: dataUrl }));
-      setFileStatuses((prev) => ({ ...prev, [fieldKey]: "done" }));
+        setFormValues((prev) => ({ ...prev, [fieldKey]: dataUrl }));
+        setFileStatuses((prev) => ({ ...prev, [fieldKey]: "done" }));
+        return;
+      }
+
+      // For audio: Do NOT fallback to multi-MB Base64 string that crashes server actions
+      throw new Error(data.message || "Failed to upload audio to cloud storage.");
     } catch (err: any) {
       console.error("Upload error:", err);
       setError(err.message || "File upload failed.");

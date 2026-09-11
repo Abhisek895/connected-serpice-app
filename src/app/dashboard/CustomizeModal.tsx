@@ -21,6 +21,7 @@ import CanvasConfetti from "@/components/ui/CanvasConfetti";
 import LivePhonePreview from "@/components/ui/LivePhonePreview";
 import AutoClickSimulatedPreview from "@/components/ui/AutoClickSimulatedPreview";
 import CheckoutModal from "./CheckoutModal";
+import { compressImage } from "@/lib/clientImageCompressor";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -285,9 +286,22 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
     setError(null);
 
     try {
-      // 1. Try uploading to /api/upload endpoint first (saves clean file to /uploads/ directory)
+      const isAudio = file.type.startsWith("audio/") || fieldKey.toLowerCase().includes("audio");
+
+      // Validate audio file size (max 8MB)
+      if (isAudio && file.size > 8 * 1024 * 1024) {
+        throw new Error("Audio file exceeds 8MB limit. Please choose a smaller MP3 clip.");
+      }
+
+      // Pre-compress images on client to ~80KB WebP
+      let uploadFile = file;
+      if (!isAudio && file.type.startsWith("image/")) {
+        uploadFile = await compressImage(file, { maxWidth: 1280, maxHeight: 1280, quality: 0.82 });
+      }
+
+      // 1. Try uploading to cloud storage via /api/upload endpoint
       const uploadFormData = new FormData();
-      uploadFormData.append("file", file);
+      uploadFormData.append("file", uploadFile);
       const res = await fetch("/api/upload", {
         method: "POST",
         body: uploadFormData,
@@ -300,16 +314,25 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
         return;
       }
 
-      // 2. Fallback to client-side Data URL if API upload fails
-      const reader = new FileReader();
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => reject(new Error("Failed to read audio/image file."));
-        reader.readAsDataURL(file);
-      });
+      // 2. Safe Fallback:
+      // For images: The file is already compressed to ~80KB, so Base64 Data URL is completely safe
+      // and will never trigger a 413 Payload Too Large error.
+      if (!isAudio) {
+        const reader = new FileReader();
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error("Failed to read image file."));
+          reader.readAsDataURL(uploadFile);
+        });
 
-      setFormValues((prev) => ({ ...prev, [fieldKey]: dataUrl }));
-      setFileStatuses((prev) => ({ ...prev, [fieldKey]: "done" }));
+        setFormValues((prev) => ({ ...prev, [fieldKey]: dataUrl }));
+        setFileStatuses((prev) => ({ ...prev, [fieldKey]: "done" }));
+        return;
+      }
+
+      // For audio: Do NOT fallback to multi-MB Base64 which crashes Server Actions with 413.
+      // Instead, surface the exact server error clearly to the user.
+      throw new Error(data.message || "Failed to upload audio to cloud storage.");
     } catch (err: any) {
       console.error("Upload error:", err);
       setError(err.message || "File upload failed.");
