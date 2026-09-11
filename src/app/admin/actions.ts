@@ -754,4 +754,46 @@ export async function updateAdminPremiumUpgradePrice({
   }
 }
 
+// ─── Post-Payment Email Delivery Settings ────────────────────────────────────
+export async function getAdminEmailDeliverySetting() {
+  await checkAuth();
+  try {
+    const setting = await prisma.systemSetting.findUnique({
+      where: { key: "email_send_link_on_payment" },
+    });
+    return {
+      success: true,
+      enabled: setting ? setting.value !== "false" : true, // default true
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      enabled: true,
+      error: error.message,
+    };
+  }
+}
+
+export async function updateAdminEmailDeliverySetting(enabled: boolean) {
+  await checkAuth();
+  try {
+    await prisma.systemSetting.upsert({
+      where: { key: "email_send_link_on_payment" },
+      update: {
+        value: enabled ? "true" : "false",
+        description: "Whether to automatically email the gift link to the buyer upon payment success",
+      },
+      create: {
+        key: "email_send_link_on_payment",
+        value: enabled ? "true" : "false",
+        description: "Whether to automatically email the gift link to the buyer upon payment success",
+      },
+    });
+    return { success: true, enabled };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to update email delivery setting" };
+  }
+}
+
+
 

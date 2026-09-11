@@ -5,10 +5,12 @@ import {
   Activity, CheckCircle, Loader2, ShieldAlert, Gift, Save,
   CheckCircle2, AlertCircle, Tag, Crown, Zap, Database,
   HardDrive, Cpu, Server, RefreshCw, Copy, Check, Code, ExternalLink,
+  Mail, Send,
 } from "lucide-react";
 import {
   getAdminSystemHealth, getAdminReferralSettings, updateAdminReferralSettings,
   getAdminPricingSettings, updateAdminPricingSettings, updateAdminPremiumUpgradePrice,
+  getAdminEmailDeliverySetting, updateAdminEmailDeliverySetting,
 } from "@/app/admin/actions";
 
 export default function SystemHealthPage() {
@@ -19,6 +21,11 @@ export default function SystemHealthPage() {
   const [showRawJson, setShowRawJson] = useState(false);
   const [rawJsonData, setRawJsonData] = useState<any>(null);
   const [copiedApiUrl, setCopiedApiUrl] = useState(false);
+
+  // Email Delivery on Payment State
+  const [emailDeliveryEnabled, setEmailDeliveryEnabled] = useState<boolean>(true);
+  const [isUpdatingEmailDelivery, setIsUpdatingEmailDelivery] = useState<boolean>(false);
+  const [emailDeliveryMessage, setEmailDeliveryMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Referral Settings State
   const [rewardType, setRewardType] = useState<"FIXED" | "PERCENTAGE">("FIXED");
@@ -47,8 +54,9 @@ export default function SystemHealthPage() {
       getAdminSystemHealth(),
       getAdminReferralSettings(),
       getAdminPricingSettings(),
+      getAdminEmailDeliverySetting(),
     ])
-      .then(([healthData, settingsData, pricingData]) => {
+      .then(([healthData, settingsData, pricingData, emailData]) => {
         setHealth(healthData);
         if (settingsData.success && settingsData.settings) {
           setRewardType((settingsData.settings.rewardType as "FIXED" | "PERCENTAGE") || "FIXED");
@@ -65,6 +73,9 @@ export default function SystemHealthPage() {
           if (pricingData.settings.enabled !== undefined) {
             setPricingEnabled(pricingData.settings.enabled);
           }
+        }
+        if (emailData && emailData.success) {
+          setEmailDeliveryEnabled(emailData.enabled);
         }
       })
       .catch((e) => setError(e.message))
@@ -178,6 +189,29 @@ export default function SystemHealthPage() {
       setSaveMessage({ type: "error", text: err.message || "An error occurred." });
     } finally {
       setIsSavingSettings(false);
+    }
+  };
+
+  const handleToggleEmailDelivery = async (newVal: boolean) => {
+    setIsUpdatingEmailDelivery(true);
+    setEmailDeliveryMessage(null);
+    try {
+      const res = await updateAdminEmailDeliverySetting(newVal);
+      if (res.success) {
+        setEmailDeliveryEnabled(newVal);
+        setEmailDeliveryMessage({
+          type: "success",
+          text: newVal
+            ? "Link email delivery ENABLED! Customers will automatically receive their gift link via email upon successful payment."
+            : "Link email delivery STOPPED! Automated gift link emails are disabled. (You can turn it back on with 1 click anytime).",
+        });
+      } else {
+        setEmailDeliveryMessage({ type: "error", text: res.error || "Failed to update email setting." });
+      }
+    } catch (err: any) {
+      setEmailDeliveryMessage({ type: "error", text: err.message || "An error occurred." });
+    } finally {
+      setIsUpdatingEmailDelivery(false);
     }
   };
 
@@ -372,6 +406,111 @@ export default function SystemHealthPage() {
           </pre>
         </div>
       )}
+
+      {/* ── Post-Payment Link Email Delivery Settings (1-Click Stop/Enable) ── */}
+      <div className="bg-[#111827] border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800 mb-5">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+              emailDeliveryEnabled ? "bg-rose-500/10 border border-rose-500/20 text-rose-400" : "bg-slate-800 border border-slate-700 text-slate-400"
+            }`}>
+              <Mail className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-bold text-white">Customer Post-Payment Link Email Delivery 📧</h3>
+                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold flex items-center gap-1.5 ${
+                  emailDeliveryEnabled
+                    ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"
+                    : "bg-rose-500/15 text-rose-400 border border-rose-500/20"
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${emailDeliveryEnabled ? "bg-emerald-400 animate-pulse" : "bg-rose-400"}`} />
+                  <span>{emailDeliveryEnabled ? "ACTIVE (EMAILS SENDING)" : "STOPPED (NO EMAILS)"}</span>
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Automatically sends an email with the live gift link to the buyer's Gmail / registered email address immediately after payment is confirmed.
+              </p>
+            </div>
+          </div>
+
+          {/* 1-Click Master Toggle Button */}
+          <div className="flex items-center gap-2">
+            {emailDeliveryEnabled ? (
+              <button
+                type="button"
+                onClick={() => handleToggleEmailDelivery(false)}
+                disabled={isUpdatingEmailDelivery}
+                className="px-4 py-2.5 bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/40 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm cursor-pointer disabled:opacity-50"
+              >
+                {isUpdatingEmailDelivery ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-rose-400" />
+                ) : (
+                  <ShieldAlert className="w-4 h-4 text-rose-400" />
+                )}
+                <span>Stop Sending Emails (1-Click)</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => handleToggleEmailDelivery(true)}
+                disabled={isUpdatingEmailDelivery}
+                className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer disabled:opacity-50"
+              >
+                {isUpdatingEmailDelivery ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4 text-white" />
+                )}
+                <span>Enable Email Delivery (1-Click)</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Feedback Alert */}
+        {emailDeliveryMessage && (
+          <div className={`mb-5 p-4 rounded-xl border flex items-center gap-3 text-xs font-semibold ${
+            emailDeliveryMessage.type === "success"
+              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+              : "bg-rose-500/10 border-rose-500/20 text-rose-400"
+          }`}>
+            {emailDeliveryMessage.type === "success" ? (
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+            ) : (
+              <AlertCircle className="w-4 h-4 shrink-0" />
+            )}
+            <span>{emailDeliveryMessage.text}</span>
+          </div>
+        )}
+
+        {/* Explanation & Customer Experience Preview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-[#0a0f1e] border border-slate-800 rounded-xl p-4 space-y-2">
+            <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-amber-400" /> How It Works
+            </h4>
+            <ul className="text-xs text-slate-400 space-y-1.5 list-disc pl-4">
+              <li>Works for <strong>both guest buyers</strong> (who type their email at checkout) and <strong>registered logged-in users</strong>.</li>
+              <li>Delivered instantly via SMTP to the user's Gmail address upon payment capture.</li>
+              <li>Contains the full, clickable surprise link (e.g. <code>https://connected-serpice-app.vercel.app/p/birthday-xyz</code>).</li>
+              <li>If you click <strong>"Stop Sending Emails"</strong>, the backend immediately halts all post-payment email dispatch.</li>
+            </ul>
+          </div>
+
+          <div className="bg-[#0a0f1e] border border-slate-800 rounded-xl p-4 space-y-2">
+            <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+              <Send className="w-3.5 h-3.5 text-rose-400" /> Customer Email Receipt Preview
+            </h4>
+            <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-[11px] font-mono text-slate-300 space-y-1">
+              <p><span className="text-slate-500">From:</span> OurStory &lt;vibepass1233@gmail.com&gt;</p>
+              <p><span className="text-slate-500">Subject:</span> Payment Successful! Your Surprise is live 🎉</p>
+              <p className="text-rose-400 font-bold mt-1">Button: [ 🌸 Open My Gift Link ]</p>
+              <p className="text-[10px] text-slate-400">Status: {emailDeliveryEnabled ? "🟢 Automatically sent after payment" : "🔴 Paused by admin"}</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Referral & Wallet Settings Controls */}
       <div className="bg-[#111827] border border-slate-800 rounded-2xl p-6 shadow-xl">

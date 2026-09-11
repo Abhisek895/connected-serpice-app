@@ -270,30 +270,63 @@ export async function fulfillPayment(
   }
 
   // ── 12. Send confirmation email ────────────────────────────────────────────
-  const buyerEmail = payment.buyerEmail;
-  if (buyerEmail) {
+  // Resolve recipient email: either payment.buyerEmail or target user's registered account email
+  let recipientEmail = payment.buyerEmail?.trim() || null;
+  if (!recipientEmail && targetUserId && targetUserId !== guestUser?.id) {
+    try {
+      const userRecord = await prisma.user.findUnique({
+        where: { id: targetUserId },
+        select: { email: true },
+      });
+      if (userRecord?.email) {
+        recipientEmail = userRecord.email.trim();
+      }
+    } catch (e) {
+      // ignore lookup error
+    }
+  }
+
+  // Check if admin has enabled sending the link email on payment in System Health
+  let isEmailDeliveryEnabled = true;
+  try {
+    const emailSetting = await prisma.systemSetting.findUnique({
+      where: { key: "email_send_link_on_payment" },
+    });
+    if (emailSetting) {
+      isEmailDeliveryEnabled = emailSetting.value !== "false";
+    }
+  } catch (e) {
+    // Default to true if setting cannot be fetched
+    isEmailDeliveryEnabled = true;
+  }
+
+  if (recipientEmail && isEmailDeliveryEnabled) {
+    const envUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
     const appUrl =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      process.env.NEXTAUTH_URL ||
-      "https://ourstory.app";
+      envUrl && !envUrl.includes("loca.lt") && !envUrl.includes("localhost")
+        ? envUrl
+        : "https://connected-serpice-app.vercel.app";
 
     try {
       await sendPaymentSuccessEmail({
-        to: buyerEmail,
+        to: recipientEmail,
         templateTitle: theme.title || demoId,
         shareUrl: `${appUrl}${shareUrl}`,
         expiresAt,
       });
 
-      // Mark email sent
+      // Mark email sent in DB
       await prisma.paymentFulfillment.update({
         where: { id: fulfillment.id },
         data: { emailSentAt: new Date() },
       });
+      console.log(`[fulfillPayment] Link email successfully sent to ${recipientEmail}`);
     } catch (mailErr) {
       console.error("[fulfillPayment] email send error:", mailErr);
       // Non-fatal — link is still created, user can recover from dashboard
     }
+  } else if (!isEmailDeliveryEnabled) {
+    console.log(`[fulfillPayment] Post-payment email delivery is disabled by admin. Skipped sending to ${recipientEmail}`);
   }
 
   return {
