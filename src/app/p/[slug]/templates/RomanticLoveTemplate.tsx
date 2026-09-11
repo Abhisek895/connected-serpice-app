@@ -17,11 +17,14 @@ export type ProposalClientProps = {
   photoUrl?: string;
   audioUrl?: string;
   _photo?: string;
+  _photo2?: string;
+  _photo3?: string;
   _audio?: string;
   demoId?: string;
   recipientName?: string;
   dodgeMessages?: string;
   patternText?: string;
+  customData?: Record<string, any>;
   media: { id: string; url: string; type: string }[];
 };
 

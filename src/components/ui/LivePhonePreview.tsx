@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Heart, Music, Image as ImageIcon, MessageSquare } from "lucide-react";
 
 interface LivePhonePreviewProps {
@@ -26,7 +26,28 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
   const acceptBtn = formValues["acceptBtn"] || defaultData["acceptBtn"] || (isBirthday ? "Love ❤️" : "Yes! 😍");
   const rejectBtn = formValues["rejectBtn"] || defaultData["rejectBtn"] || (isBirthday ? "Hate 💔" : "No 🙈");
 
-  const photoUrl = formValues["_photo"] || formValues["_photo1"] || defaultData["_photo"] || defaultData["photo"];
+  const userBirthdayPhotos = [
+    formValues["_photo"],
+    formValues["photoUrl"],
+    formValues["_photo1"],
+    formValues["_photo2"],
+    formValues["_photo3"],
+  ].filter(Boolean) as string[];
+
+  const [bdaySlideIndex, setBdaySlideIndex] = useState(0);
+  useEffect(() => {
+    if (userBirthdayPhotos.length <= 1) return;
+    const interval = setInterval(() => {
+      setBdaySlideIndex((idx) => (idx + 1) % userBirthdayPhotos.length);
+    }, 2800);
+    return () => clearInterval(interval);
+  }, [userBirthdayPhotos.length]);
+
+  const activeBdayPhoto = userBirthdayPhotos.length > 0
+    ? userBirthdayPhotos[bdaySlideIndex % userBirthdayPhotos.length]
+    : defaultData["_photo"] || defaultData["photo"] || "/demos/birthday-wish/s0.jpeg";
+
+  const photoUrl = userBirthdayPhotos[0] || formValues["_photo"] || formValues["_photo1"] || defaultData["_photo"] || defaultData["photo"];
 
   const isStep2 = currentStep === 1;
 
@@ -119,9 +140,9 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
                 {/* 1. Photo Container — CLEAN with NO text overlay */}
                 <div className="relative w-full h-[130px] sm:h-[140px] rounded-xl overflow-hidden shadow-md bg-slate-950">
                   <img
-                    src={photoUrl || "/demos/birthday-wish/s0.jpeg"}
+                    src={activeBdayPhoto}
                     alt="Birthday Photo"
-                    className="w-full h-full object-cover object-[center_35%]"
+                    className="w-full h-full object-cover object-[center_35%] transition-opacity duration-500"
                   />
                 </div>
 

@@ -92,7 +92,14 @@ export default function BirthdayTemplate({
   rejectBtn,
   loveMessage,
   recipientName,
-  media,
+  media = [],
+  photoUrl,
+  audioUrl,
+  _photo,
+  _photo2,
+  _photo3,
+  _audio,
+  customData,
 }: ProposalClientProps) {
   // 0 = entry, 1 = card, 2 = hate
   const [stage, setStage] = useState<0 | 1 | 2>(0);
@@ -108,13 +115,25 @@ export default function BirthdayTemplate({
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   useEffect(() => {
-    audioRef.current = new Audio("/demos/birthday-wish/hbd.mp3");
     return () => { audioRef.current?.pause(); };
   }, []);
 
-  // Media
-  const uploadedImages = media.filter((m) => m.type === "IMAGE").map((m) => m.url);
-  const uploadedAudio = media.find((m) => m.type === "AUDIO");
+  // Media resolution (prioritizes user uploaded slideshow photos & music)
+  const customPhotos: string[] = [];
+
+  const p1 = customData?._photo || customData?.photoUrl || customData?._photo1 || _photo || photoUrl;
+  const p2 = customData?._photo2 || _photo2;
+  const p3 = customData?._photo3 || _photo3;
+
+  if (p1 && typeof p1 === "string" && p1.trim()) customPhotos.push(p1.trim());
+  if (p2 && typeof p2 === "string" && p2.trim()) customPhotos.push(p2.trim());
+  if (p3 && typeof p3 === "string" && p3.trim()) customPhotos.push(p3.trim());
+
+  const uploadedImages = (media || []).filter((m) => m.type === "IMAGE").map((m) => m.url);
+  uploadedImages.forEach((img) => {
+    if (img && !customPhotos.includes(img)) customPhotos.push(img);
+  });
+
   const defaultPhotos = [
     "/demos/birthday-wish/s0.jpeg",
     "/demos/birthday-wish/s1.jpeg",
@@ -123,8 +142,16 @@ export default function BirthdayTemplate({
     "/demos/birthday-wish/s4.jpeg",
     "/demos/birthday-wish/s5.jpeg",
   ];
-  const photos = uploadedImages.length > 0 ? uploadedImages : defaultPhotos;
-  const audioSrc = uploadedAudio ? uploadedAudio.url : "/demos/birthday-wish/hbd.mp3";
+
+  const photos = customPhotos.length > 0 ? customPhotos : defaultPhotos;
+
+  const uploadedAudio = (media || []).find((m) => m.type === "AUDIO");
+  const audioSrc =
+    customData?.audioUrl ||
+    customData?._audio ||
+    audioUrl ||
+    _audio ||
+    (uploadedAudio ? uploadedAudio.url : "/demos/birthday-wish/hbd.mp3");
 
   const activeSlide = useSlideshow(photos, stage === 1);
   const confettiRef = useConfetti(stage === 1);
@@ -144,8 +171,11 @@ export default function BirthdayTemplate({
   const handleLove = () => {
     setStage(1);
     recordResponseAction(slug, "ACCEPTED");
-    const audio = new Audio(audioSrc);
-    audio.play().catch(() => {});
+    try {
+      const audio = new Audio(audioSrc);
+      audioRef.current = audio;
+      audio.play().catch(() => {});
+    } catch {}
   };
 
   const handleHate = () => {

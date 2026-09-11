@@ -47,7 +47,12 @@ function initFormValues(tmpl: TemplateClass, prefill: Record<string, any>): Reco
   const out: Record<string, string> = {};
   for (const step of tmpl.steps) {
     for (const field of step.fields) {
-      out[field.key] = prefill[field.key] ?? prefill[field.key === "_photo" ? "photoUrl" : field.key === "_audio" ? "audioUrl" : field.key] ?? tmpl.defaultData[field.key] ?? "";
+      out[field.key] =
+        prefill[field.key] ??
+        (field.key === "_photo" ? (prefill["photoUrl"] ?? prefill["_photo1"]) : undefined) ??
+        (field.key === "_audio" ? prefill["audioUrl"] : undefined) ??
+        tmpl.defaultData[field.key] ??
+        "";
     }
   }
   return out;
@@ -144,16 +149,22 @@ function FieldInput({
   if (field.type === "file-image" || field.type === "file-audio") {
     const isImage = field.type === "file-image";
     const Icon = isImage ? ImageIcon : Music;
+    const hasValue = Boolean(value && typeof value === "string" && value.trim() && value !== "undefined");
+    const isDone = fileStatus === "done" || hasValue;
+
     const statusText =
       fileStatus === "uploading"
         ? "Uploading…"
-        : fileStatus === "done"
-          ? "✓ Uploaded!"
+        : isDone
+          ? isImage
+            ? "✓ Photo Uploaded"
+            : "✓ Audio Attached"
           : isImage
             ? "Choose Photo"
             : "Choose Audio";
+
     const statusColor =
-      fileStatus === "done"
+      isDone
         ? "text-emerald-600 font-bold"
         : fileStatus === "uploading"
           ? "text-amber-600"
@@ -162,36 +173,66 @@ function FieldInput({
             : "text-slate-600";
 
     return (
-      <div>
-        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+      <div className="space-y-1.5">
+        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
           {field.label}
         </label>
-        <label
-          className={`relative flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed cursor-pointer transition ${fileStatus === "done"
-            ? "border-emerald-300 bg-emerald-50"
-            : isImage
-              ? "border-rose-200 bg-rose-50/50 hover:border-rose-400 hover:bg-rose-50"
-              : "border-slate-200 bg-slate-50 hover:border-slate-300"
-            } ${isLoading ? "opacity-50 pointer-events-none" : ""}`}
-        >
-          {fileStatus === "uploading" ? (
-            <Loader2 className="w-5 h-5 animate-spin text-amber-500 flex-shrink-0" />
-          ) : (
-            <Icon className={`w-5 h-5 flex-shrink-0 ${isImage ? "text-rose-500" : "text-slate-500"}`} />
+
+        <div className="flex items-center gap-2.5">
+          {/* If image and hasValue, show thumbnail preview! */}
+          {isImage && hasValue && (
+            <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-emerald-300 shadow-sm shrink-0 bg-slate-900">
+              <img src={value} alt="Uploaded thumbnail" className="w-full h-full object-cover" />
+            </div>
           )}
-          <span className={`text-sm ${statusColor}`}>{statusText}</span>
-          <input
-            type="file"
-            accept={field.accept}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            disabled={isLoading}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) onFileChange?.(file, field.key);
-            }}
-          />
-        </label>
-        {field.hint && <p className="text-[11px] text-slate-400 mt-1">{field.hint}</p>}
+
+          <label
+            className={`relative flex-1 flex items-center gap-3 px-4 py-2.5 rounded-xl border-2 border-dashed cursor-pointer transition ${
+              isDone
+                ? "border-emerald-300 bg-emerald-50/70 hover:bg-emerald-50"
+                : isImage
+                  ? "border-rose-200 bg-rose-50/50 hover:border-rose-400 hover:bg-rose-50"
+                  : "border-slate-200 bg-slate-50 hover:border-slate-300"
+            } ${isLoading ? "opacity-50 pointer-events-none" : ""}`}
+          >
+            {fileStatus === "uploading" ? (
+              <Loader2 className="w-5 h-5 animate-spin text-amber-500 flex-shrink-0" />
+            ) : (
+              <Icon className={`w-5 h-5 flex-shrink-0 ${isDone ? "text-emerald-600" : isImage ? "text-rose-500" : "text-slate-500"}`} />
+            )}
+            <div className="flex-1 min-w-0">
+              <span className={`text-xs sm:text-sm block truncate ${statusColor}`}>{statusText}</span>
+              {hasValue && (
+                <span className="text-[10px] text-slate-400 font-normal block">Tap to replace</span>
+              )}
+            </div>
+
+            <input
+              type="file"
+              accept={field.accept}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              disabled={isLoading}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) onFileChange?.(file, field.key);
+              }}
+            />
+          </label>
+
+          {/* Remove / Reset button if custom file was selected */}
+          {hasValue && (
+            <button
+              type="button"
+              onClick={() => onChange?.("")}
+              title="Remove and use default"
+              className="px-2.5 py-2.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold transition shrink-0"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {field.hint && <p className="text-[11px] text-slate-400">{field.hint}</p>}
       </div>
     );
   }
@@ -261,6 +302,12 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
       getEventCustomData(editEventId).then((res) => {
         if (res.success) {
           setFormValues(initFormValues(tmpl, res.customData));
+          const statuses: Record<string, "idle" | "uploading" | "done"> = {};
+          if (res.customData?._photo || res.customData?.photoUrl || res.customData?._photo1) statuses["_photo"] = "done";
+          if (res.customData?._photo2) statuses["_photo2"] = "done";
+          if (res.customData?._photo3) statuses["_photo3"] = "done";
+          if (res.customData?._audio || res.customData?.audioUrl) statuses["_audio"] = "done";
+          setFileStatuses(statuses);
         } else {
           setFormValues(initFormValues(tmpl, {}));
         }
