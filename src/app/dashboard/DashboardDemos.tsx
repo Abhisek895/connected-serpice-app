@@ -93,6 +93,17 @@ export default function DashboardDemos({
   const [pendingTitle, setPendingTitle] = useState<string>("");
   const [appliedCouponCode, setAppliedCouponCode] = useState<string>("");
 
+  useEffect(() => {
+    if (selectedDemo) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [selectedDemo]);
+
   const handleActionClick = (demoId: string, action: "instant" | "builder") => {
     const actionType = action === "instant" ? "instant" : "customize";
     updateUrlParam(demoId, actionType);
@@ -396,18 +407,24 @@ export default function DashboardDemos({
       {/* Instant Use Title Modal */}
       <AnimatePresence>
         {selectedDemo && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4 pt-10 sm:pt-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto"
-          >
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            {/* Full-screen backdrop covering top to bottom seamlessly */}
             <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: -10 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: -10 }}
-              className="relative bg-white rounded-3xl p-6 shadow-2xl max-w-sm w-full border border-slate-100 my-2 sm:my-auto"
-            >
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 w-full h-full min-h-screen min-h-[100dvh] bg-slate-950/80 backdrop-blur-md"
+              onClick={handleCloseInstantTitleModal}
+            />
+
+            {/* Modal positioning container */}
+            <div className="relative min-h-[100dvh] w-full flex items-center justify-center p-4 py-8 -translate-y-8 sm:translate-y-0 pointer-events-none">
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0, y: -10 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: -10 }}
+                className="relative bg-white rounded-3xl p-6 shadow-2xl max-w-sm w-full border border-slate-100 pointer-events-auto my-auto"
+              >
               {/* Close Button */}
               <button
                 type="button"
@@ -488,7 +505,8 @@ export default function DashboardDemos({
                 </div>
               </form>
             </motion.div>
-          </motion.div>
+          </div>
+        </div>
         )}
       </AnimatePresence>
 
