@@ -3,12 +3,10 @@
 import { useState, useEffect } from "react";
 import OnboardingProgressBar from "@/components/ui/OnboardingProgressBar";
 import OnboardingTourEngine from "@/components/ui/OnboardingTourEngine";
-import { Compass, HelpCircle, X } from "lucide-react";
 
 export default function DashboardTourClient({ children }: { children: React.ReactNode }) {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [isTourActive, setIsTourActive] = useState<boolean>(false);
-  const [bannerDismissed, setBannerDismissed] = useState<boolean>(false);
   const [mounted, setMounted] = useState<boolean>(false);
 
   useEffect(() => {
@@ -53,26 +51,6 @@ export default function DashboardTourClient({ children }: { children: React.Reac
 
   return (
     <>
-      {/* Quick Launch Guidance Banner if tour is inactive */}
-      {!isTourActive && !bannerDismissed && (
-        <div className="flex justify-end mb-4 items-center gap-2">
-          <button
-            onClick={handleStartTour}
-            className="px-4 py-2 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white rounded-2xl text-xs font-extrabold shadow-md shadow-rose-200 transition flex items-center gap-2 group cursor-pointer"
-          >
-            <Compass className="w-4 h-4 text-white group-hover:rotate-45 transition-transform" />
-            <span>🎓 Launch New User Guidance Tour</span>
-          </button>
-          <button
-            onClick={() => setBannerDismissed(true)}
-            className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition"
-            title="Dismiss tour banner"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
       {/* Onboarding Checklist & Spotlight Tour */}
       {isTourActive && (
         <>
