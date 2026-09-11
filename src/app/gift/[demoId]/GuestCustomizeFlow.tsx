@@ -16,6 +16,7 @@ import LivePhonePreview from "@/components/ui/LivePhonePreview";
 import AutoClickSimulatedPreview from "@/components/ui/AutoClickSimulatedPreview";
 import { loadRazorpayScript } from "@/hooks/useRazorpay";
 import { compressImage } from "@/lib/clientImageCompressor";
+import ImageCropModal from "@/components/ImageCropModal";
 
 // Map demoId → icon client-side (icons are functions, can't be serialized server→client)
 const DEMO_ICONS: Record<string, LucideIcon> = {
@@ -214,6 +215,11 @@ export default function GuestCustomizeFlow({
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
   const [buyerEmail, setBuyerEmail] = useState(""); // for link delivery email
   const [pollingForLink, setPollingForLink] = useState(false); // recovery poller state
+  const [cropTarget, setCropTarget] = useState<{
+    file: File;
+    fieldKey: string;
+    objectUrl: string;
+  } | null>(null);
 
   const Icon = DEMO_ICONS[demo.id] ?? Heart;
   const totalSteps = tmpl.steps.length;
@@ -302,13 +308,11 @@ export default function GuestCustomizeFlow({
     });
   };
 
-  const handleFileChange = async (file: File, fieldKey: string) => {
+  const performFileUpload = async (file: File, fieldKey: string, isAudio: boolean) => {
     setFileStatuses((prev) => ({ ...prev, [fieldKey]: "uploading" }));
     setError(null);
 
     try {
-      const isAudio = file.type.startsWith("audio/") || fieldKey.toLowerCase().includes("audio");
-
       // Validate file size (max 4.5MB hard limit for Vercel Serverless request body)
       const MAX_FILE_SIZE = 4.5 * 1024 * 1024;
       if (file.size > MAX_FILE_SIZE) {
@@ -373,6 +377,20 @@ export default function GuestCustomizeFlow({
       setError(err.message || "File upload failed.");
       setFileStatuses((prev) => ({ ...prev, [fieldKey]: "idle" }));
     }
+  };
+
+  const handleFileChange = async (file: File, fieldKey: string) => {
+    const isAudio = file.type.startsWith("audio/") || fieldKey.toLowerCase().includes("audio");
+
+    // For images: Open the interactive crop modal immediately so user can crop before upload!
+    if (!isAudio && file.type.startsWith("image/")) {
+      const objectUrl = URL.createObjectURL(file);
+      setCropTarget({ file, fieldKey, objectUrl });
+      return;
+    }
+
+    // For audio and other files, proceed directly
+    await performFileUpload(file, fieldKey, isAudio);
   };
 
   const { data: session, status: sessionStatus } = useSession();
@@ -1580,6 +1598,24 @@ export default function GuestCustomizeFlow({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {cropTarget && (
+        <ImageCropModal
+          imageSrc={cropTarget.objectUrl}
+          originalFileName={cropTarget.file.name}
+          initialAspect={1}
+          onCancel={() => {
+            URL.revokeObjectURL(cropTarget.objectUrl);
+            setCropTarget(null);
+          }}
+          onComplete={async (_blob, croppedFile) => {
+            const { fieldKey, objectUrl } = cropTarget;
+            URL.revokeObjectURL(objectUrl);
+            setCropTarget(null);
+            await performFileUpload(croppedFile, fieldKey, false);
+          }}
+        />
+      )}
     </>
   );
 }

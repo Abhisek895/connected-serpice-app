@@ -5,6 +5,7 @@ import { createDraftEvent, updateEventCustomData, uploadMedia, publishEvent, che
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
+import ImageCropModal from "@/components/ImageCropModal"
 
 function BuilderWizard() {
   const router = useRouter()
@@ -25,6 +26,7 @@ function BuilderWizard() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [premiumUpgradePrice, setPremiumUpgradePrice] = useState(5000)
+  const [cropTarget, setCropTarget] = useState<{ file: File; objectUrl: string } | null>(null)
 
   useEffect(() => {
     fetch("/api/system/pricing")
@@ -161,10 +163,17 @@ function BuilderWizard() {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
     if (!e.target.files || !e.target.files[0]) return;
+    const file = e.target.files[0];
+
+    if (type === "image") {
+      const objectUrl = URL.createObjectURL(file);
+      setCropTarget({ file, objectUrl });
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {
-      const file = e.target.files[0];
       const reader = new FileReader();
       const dataUrl = await new Promise<string>((resolve, reject) => {
         reader.onload = () => resolve(reader.result as string);
@@ -177,7 +186,27 @@ function BuilderWizard() {
       setError("Failed to process media file.");
     }
     setIsLoading(false);
-  }
+  };
+
+  const handleCropComplete = async (croppedBlob: Blob, croppedFile: File) => {
+    if (cropTarget?.objectUrl) URL.revokeObjectURL(cropTarget.objectUrl);
+    setCropTarget(null);
+    setIsLoading(true);
+    setError(null);
+    try {
+      const reader = new FileReader();
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("Failed to read cropped image."));
+        reader.readAsDataURL(croppedFile);
+      });
+      setPhotoUrl(dataUrl);
+    } catch (err: any) {
+      console.error(err);
+      setError("Failed to process cropped photo.");
+    }
+    setIsLoading(false);
+  };
 
   const stepVariants = {
     initial: { opacity: 0, y: 20 },
@@ -449,6 +478,18 @@ function BuilderWizard() {
         )}
       </div>
 
+      {cropTarget && (
+        <ImageCropModal
+          imageSrc={cropTarget.objectUrl}
+          originalFileName={cropTarget.file.name}
+          initialAspect={1}
+          onCancel={() => {
+            URL.revokeObjectURL(cropTarget.objectUrl);
+            setCropTarget(null);
+          }}
+          onComplete={handleCropComplete}
+        />
+      )}
     </div>
   )
 }

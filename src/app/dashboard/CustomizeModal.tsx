@@ -22,6 +22,7 @@ import LivePhonePreview from "@/components/ui/LivePhonePreview";
 import AutoClickSimulatedPreview from "@/components/ui/AutoClickSimulatedPreview";
 import CheckoutModal from "./CheckoutModal";
 import { compressImage } from "@/lib/clientImageCompressor";
+import ImageCropModal from "@/components/ImageCropModal";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -222,6 +223,11 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
   const [isEventPaid, setIsEventPaid] = useState(false);
   const [needsPayment, setNeedsPayment] = useState(false);
   const [checkingPayment, setCheckingPayment] = useState(true);
+  const [cropTarget, setCropTarget] = useState<{
+    file: File;
+    fieldKey: string;
+    objectUrl: string;
+  } | null>(null);
 
   const demoItem = demos.find((d) => d.id === demoId);
 
@@ -281,13 +287,11 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
     setFormValues((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleFileChange = async (file: File, fieldKey: string) => {
+  const performFileUpload = async (file: File, fieldKey: string, isAudio: boolean) => {
     setFileStatuses((prev) => ({ ...prev, [fieldKey]: "uploading" }));
     setError(null);
 
     try {
-      const isAudio = file.type.startsWith("audio/") || fieldKey.toLowerCase().includes("audio");
-
       // Validate file size (max 4.5MB hard limit for Vercel Serverless request body)
       const MAX_FILE_SIZE = 4.5 * 1024 * 1024;
       if (file.size > MAX_FILE_SIZE) {
@@ -348,13 +352,26 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
       }
 
       // For audio: Do NOT fallback to multi-MB Base64 which crashes Server Actions with 413.
-      // Instead, surface the exact server error clearly to the user.
       throw new Error(data?.message || "Failed to upload audio to cloud storage.");
     } catch (err: any) {
       console.error("Upload error:", err);
       setError(err.message || "File upload failed.");
       setFileStatuses((prev) => ({ ...prev, [fieldKey]: "idle" }));
     }
+  };
+
+  const handleFileChange = async (file: File, fieldKey: string) => {
+    const isAudio = file.type.startsWith("audio/") || fieldKey.toLowerCase().includes("audio");
+
+    // For images: Open the interactive crop modal immediately so user can crop before upload!
+    if (!isAudio && file.type.startsWith("image/")) {
+      const objectUrl = URL.createObjectURL(file);
+      setCropTarget({ file, fieldKey, objectUrl });
+      return;
+    }
+
+    // For audio and other files, proceed directly
+    await performFileUpload(file, fieldKey, isAudio);
   };
 
   const handleSubmit = async () => {
@@ -662,6 +679,24 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
             setIsEventPaid(true);
             setNeedsPayment(false);
             handleSubmit();
+          }}
+        />
+      )}
+
+      {cropTarget && (
+        <ImageCropModal
+          imageSrc={cropTarget.objectUrl}
+          originalFileName={cropTarget.file.name}
+          initialAspect={1}
+          onCancel={() => {
+            URL.revokeObjectURL(cropTarget.objectUrl);
+            setCropTarget(null);
+          }}
+          onComplete={async (_blob, croppedFile) => {
+            const { fieldKey, objectUrl } = cropTarget;
+            URL.revokeObjectURL(objectUrl);
+            setCropTarget(null);
+            await performFileUpload(croppedFile, fieldKey, false);
           }}
         />
       )}
