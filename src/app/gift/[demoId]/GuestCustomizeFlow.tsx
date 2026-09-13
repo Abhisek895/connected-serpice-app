@@ -1115,16 +1115,22 @@ export default function GuestCustomizeFlow({
             <button
               onClick={handlePayment}
               disabled={isProcessing || pollingForLink}
-              className="w-full py-4 px-4 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-rose-200 transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+              className="w-full py-4 px-4 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:via-pink-600 hover:to-rose-700 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-rose-200 hover:shadow-rose-300 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer group"
             >
               {pollingForLink ? (
-                <><Loader2 className="w-5 h-5 animate-spin" /> Confirming Payment…</>
+                <><Loader2 className="w-5 h-5 animate-spin" /> Confirming Your Love Link… 💖</>
               ) : isProcessing ? (
-                <><Loader2 className="w-5 h-5 animate-spin" /> Processing Payment...</>
+                <><Loader2 className="w-5 h-5 animate-spin" /> Preparing Your Romantic Surprise... 💌</>
               ) : finalPriceINR === 0 ? (
-                "🚀 Activate 1-Day Free Pass (₹0)"
+                <>
+                  <Heart className="w-4 h-4 fill-white text-white group-hover:scale-110 transition-transform" />
+                  <span>Tell Her You Love Her 💖 · Free 1-Day Pass (₹0)</span>
+                </>
               ) : (
-                `Pay ₹${finalPriceINR.toFixed(2)} & Activate Link`
+                <>
+                  <Heart className="w-4 h-4 fill-white text-white group-hover:scale-110 transition-transform" />
+                  <span>Tell Her You Love Her 💖 · Pay ₹${finalPriceINR.toFixed(2)}</span>
+                </>
               )}
             </button>
 
