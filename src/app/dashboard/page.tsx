@@ -134,7 +134,7 @@ export default async function DashboardPage() {
         {/* ── Saved Events OR Empty State ── */}
         {events.length > 0 ? (
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
                   <span>My Saved Links & Events 💌</span>
