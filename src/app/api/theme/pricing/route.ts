@@ -1,13 +1,22 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+type ActiveCouponItem = {
+  code: string;
+  discountType: string;
+  discountValue: number;
+  expiresAt: Date | null;
+  maxUses: number | null;
+  usedCount: number;
+};
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const demoId = searchParams.get("demoId")?.trim();
 
     // Fetch active coupons directly from DB
-    const rawCoupons = await prisma.coupon.findMany({
+    const rawCoupons: ActiveCouponItem[] = await prisma.coupon.findMany({
       where: { isActive: true },
       select: {
         code: true,
@@ -22,12 +31,12 @@ export async function GET(req: Request) {
 
     const now = new Date();
     const activeCoupons = rawCoupons
-      .filter((c) => {
+      .filter((c: ActiveCouponItem) => {
         if (c.expiresAt && now > c.expiresAt) return false;
         if (c.maxUses && c.usedCount >= c.maxUses) return false;
         return true;
       })
-      .map((c) => ({
+      .map((c: ActiveCouponItem) => ({
         code: c.code,
         discountType: c.discountType,
         discountValue: c.discountValue,
