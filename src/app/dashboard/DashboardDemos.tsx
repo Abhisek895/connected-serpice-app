@@ -313,7 +313,6 @@ export default function DashboardDemos({
           {activeDemos.map((demo) => {
             const Icon = demo.icon;
             const isLoadingThis = loadingId === demo.id;
-            const isPaid = (demo.price ?? 0) > 0;
 
             return (
               <motion.div
@@ -343,15 +342,6 @@ export default function DashboardDemos({
                       <span className={`text-[9px] leading-[12px] px-2 py-1 rounded-full uppercase font-bold tracking-wider shadow-sm flex items-center gap-1 ${demo.badgeColor}`}>
                         <Icon className="w-2.5 h-2.5" /> {demo.badge}
                       </span>
-                      {isPaid ? (
-                        <span className="text-[9px] leading-[12px] px-2 py-1 rounded-full uppercase font-bold tracking-wider shadow-sm bg-amber-400 text-amber-900 border border-amber-300">
-                          ₹{((demo.price ?? 0) / 100).toFixed(0)} / {demo.durationDays}d
-                        </span>
-                      ) : (
-                        <span className="text-[9px] leading-[12px] px-2 py-1 rounded-full uppercase font-bold tracking-wider shadow-sm bg-emerald-500/90 text-white border border-emerald-400/50">
-                          Free
-                        </span>
-                      )}
                     </div>
                   </div>
 
@@ -585,7 +575,6 @@ export default function DashboardDemos({
                 publishedUrl={previewModalData.url}
                 isPaid={previewModalData.isPaid}
                 isPremiumUser={isPremiumUser}
-                onClose={() => setPreviewModalData(null)}
                 onShareFreeLink={() => {
                   const text = `Hey! I made a special surprise link for you... Tap here to open 💖\n${previewModalData.url}`;
                   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
