@@ -14,3 +14,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   - Brand mark & User Portal: `<Heart className="... fill-rose-500 text-rose-500" />` or `<Heart />`.
   - Templates & surprises: `<Heart />`, `<Gift />`, `<Star />`, or `<Flame />`.
   - Special offers & speed: `<Zap />` or `<Tag />`.
+
+# Strict Project Architecture Rule: 100% Parity Between Demos & Created Links (`/p/[slug]`)
+- **MANDATORY**: For EVERY template in the application (not only birthday, but every single theme/template for everyone):
+  - The live demo (`/demos/[template-id]/`) and the post-creation generated recipient link (`/p/[slug]/templates/[Template].tsx`) **MUST BE 100% IDENTICAL** in visual styling, layout, typography, animations, background gradients, particle effects, and interactive flow.
+  - Any change, refinement, or feature made to a demo must be immediately and identically synchronized to its corresponding template in `/p/[slug]/templates/` (and live previews in `LivePhonePreview.tsx` and `AutoClickSimulatedPreview.tsx`).
+

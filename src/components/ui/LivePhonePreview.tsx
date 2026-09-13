@@ -133,11 +133,11 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
                 </span>
               </div>
             </div>
-          ) : isStep2 && isBirthday ? (
+          ) : isBirthday ? (
             <div className="relative z-10 h-full w-full flex flex-col justify-center items-center py-2 px-1">
-              {/* Glass Card Container (Matches Real Birthday Card) */}
-              <div className="w-full bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-2 sm:p-2.5 shadow-2xl flex flex-col items-center text-center space-y-2">
-                {/* 1. Photo Container — CLEAN with NO text overlay */}
+              {/* Glass Card Container (Matches Real Birthday Card & Photos) */}
+              <div className="w-full bg-rose-950/40 backdrop-blur-xl border border-rose-300/30 rounded-2xl p-2 sm:p-2.5 shadow-2xl flex flex-col items-center text-center space-y-2">
+                {/* 1. Photo Container */}
                 <div className="relative w-full h-[130px] sm:h-[140px] rounded-xl overflow-hidden shadow-md bg-slate-950">
                   <img
                     src={activeBdayPhoto}
@@ -147,53 +147,22 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
                 </div>
 
                 {/* 2. Heading BELOW photo box */}
-                <h4 className="text-xs font-bold text-white font-serif tracking-tight leading-snug px-1">
-                  Happy Birthday, <span className="text-pink-400 font-extrabold">{displayRecipient} 🦋 💖</span>
+                <h4 className="text-xs font-bold text-white font-serif tracking-tight leading-snug px-1 text-left w-full">
+                  Happy Birthday, <span className="text-rose-300 font-extrabold">{displayRecipient} ✨</span> 🦋 💖
                 </h4>
 
                 {/* 3. Subtitle BELOW heading */}
-                <p className="text-[9px] text-rose-200/80 font-medium italic">
+                <p className="text-[9px] text-rose-100/90 font-medium text-left w-full">
                   A little surprise from someone who truly cares…
                 </p>
 
-                {/* 4. Read My Message Button or Letter Reveal */}
-                {showLetterPreview ? (
-                  <div
-                    onClick={() => setShowLetterPreview(false)}
-                    className="w-full bg-white/95 backdrop-blur-md text-slate-900 rounded-xl p-2 text-center shadow-xl border border-white/60 cursor-pointer animate-in zoom-in-95 duration-200"
-                  >
-                    <span className="text-[8.5px] font-extrabold text-rose-500 uppercase tracking-wider block mb-0.5">💌 Message for you</span>
-                    <p className="text-[9.5px] font-medium italic leading-snug line-clamp-4">"{displayMessage}"</p>
-                    <span className="text-[7.5px] text-slate-400 mt-1 font-bold block">(Tap to close)</span>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setShowLetterPreview(true)}
-                    className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-pink-400 via-rose-500 to-pink-500 text-white font-bold text-[9.5px] shadow-lg shadow-pink-500/30 hover:scale-105 transition active:scale-95 cursor-pointer mt-0.5"
-                  >
-                    Read My Message 💌
-                  </button>
-                )}
-              </div>
-            </div>
-          ) : isBirthday ? (
-            /* Birthday Step 1 / Entry Screen (Matches Real BirthdayTemplate Stage 0) */
-            <div className="relative z-10 my-auto space-y-4 px-2 text-center">
-              <h4 className="text-xl font-bold text-white font-serif tracking-tight drop-shadow-md">
-                {displayTitle} ❤️
-              </h4>
-
-              <p className="text-xs text-rose-100/90 font-medium leading-relaxed px-1">
-                {displayQuestion}
-              </p>
-
-              <div className="flex gap-2 justify-center pt-2">
-                <span className="px-4 py-2 text-xs rounded-xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-rose-500/40 tracking-wide">
-                  {acceptBtn}
-                </span>
-                <span className="px-4 py-2 text-xs rounded-xl font-semibold bg-white/10 text-white border border-white/20 backdrop-blur-sm">
-                  {rejectBtn}
-                </span>
+                {/* 4. Live Message Box */}
+                <div className="w-full bg-white/5 rounded-lg p-1.5 text-left border border-white/10">
+                  <p className="text-[9.5px] text-white font-medium leading-relaxed">
+                    {displayMessage}
+                    <span className="animate-pulse text-white/80"> |</span>
+                  </p>
+                </div>
               </div>
             </div>
           ) : isApology ? (

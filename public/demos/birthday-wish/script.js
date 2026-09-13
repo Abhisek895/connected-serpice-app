@@ -1,41 +1,21 @@
 // Elements
-const entry = document.getElementById('entry');
 const card = document.getElementById('card');
-const hateMsg = document.getElementById('hateMsg');
 const song = document.getElementById('song');
 const messageEl = document.getElementById('message');
-const msgBtn = document.getElementById('msgBtn');
+const musicBtn = document.getElementById('musicBtn');
+const musicIcon = document.getElementById('musicIcon');
 
-const mainMessage = "Happy Birthday! 🎂✨I hope today makes you smile as much as you make everyone around you smile. You deserve all the happiness, good food, and unforgettable moments today. Stay the amazing person you are.And...I hope I get to steal a little of your time to celebrate with you someday. 😉❤️";
+// Message matching user photo
+const mainMessage = "My all your dreams come true. You deserve all the happiness in the world! 🎉";
 
-// Love button
-document.getElementById('loveBtn').addEventListener('click', () => {
-  entry.style.display = 'none';
-  card.style.display = 'block';
-  song.play();
-  startConfetti();
-  startSlideshow();
-});
-// Hate button
-document.getElementById('hateBtn').addEventListener('click', () => {
-  entry.style.display = 'none';
-  hateMsg.classList.add('show');
-});
-
-// Show message
-msgBtn.addEventListener('click', () => {
-  msgBtn.style.display = 'none';
-  typeText(mainMessage, messageEl);
-  messageEl.classList.add('show');
-});
-
-// Typing effect
-async function typeText(text, el, speed = 30) {
-  el.textContent = "";
+// ─── Typewriter Effect ────────────────────────────────────────────────────────
+async function typeText(text, el, speed = 32) {
+  el.innerHTML = '<span class="cursor">|</span>';
   let i = 0;
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const intv = setInterval(() => {
-      el.textContent += text.charAt(i);
+      const current = text.substring(0, i + 1);
+      el.innerHTML = current + '<span class="cursor">|</span>';
       i++;
       if (i >= text.length) {
         clearInterval(intv);
@@ -45,43 +25,117 @@ async function typeText(text, el, speed = 30) {
   });
 }
 
-// Confetti
+// ─── Soft Falling Confetti Flakes (Matches Reference Photos) ──────────────────
 const confettiCanvas = document.getElementById('confetti');
 const ctx = confettiCanvas.getContext('2d');
+
 function resizeCanvas() {
-  confettiCanvas.width = innerWidth;
-  confettiCanvas.height = innerHeight;
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-const confettiPieces = Array.from({ length: 150 }).map(() => ({
-  x: Math.random() * innerWidth,
-  y: Math.random() * innerHeight,
-  vy: 1 + Math.random() * 2,
-  size: 5 + Math.random() * 6,
-  color: ['#ff9cc6', '#ffd6e8', '#ff6b9a', '#ffffff'][Math.floor(Math.random() * 4)]
+const confettiPieces = Array.from({ length: 90 }).map(() => ({
+  x: Math.random() * window.innerWidth,
+  y: Math.random() * window.innerHeight,
+  vy: 0.8 + Math.random() * 1.4,
+  vx: (Math.random() - 0.5) * 0.4,
+  width: 4 + Math.random() * 5,
+  height: 3 + Math.random() * 4,
+  color: ['#ffffff', '#ffd1dc', '#fca5a5', '#ff9cc6', '#ffe4e6'][Math.floor(Math.random() * 5)],
+  opacity: 0.35 + Math.random() * 0.55,
+  rotation: Math.random() * 360,
+  vr: (Math.random() - 0.5) * 1.5,
 }));
 
 function drawConfetti() {
-  ctx.clearRect(0, 0, innerWidth, innerHeight);
-  confettiPieces.forEach(p => {
+  ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+  confettiPieces.forEach((p) => {
     p.y += p.vy;
-    if (p.y > innerHeight) p.y = -10;
+    p.x += p.vx;
+    p.rotation += p.vr;
+
+    if (p.y > confettiCanvas.height) {
+      p.y = -10;
+      p.x = Math.random() * confettiCanvas.width;
+    }
+    if (p.x > confettiCanvas.width) p.x = 0;
+    if (p.x < 0) p.x = confettiCanvas.width;
+
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate((p.rotation * Math.PI) / 180);
     ctx.fillStyle = p.color;
-    ctx.fillRect(p.x, p.y, p.size, p.size * 0.6);
+    ctx.globalAlpha = p.opacity;
+    ctx.fillRect(-p.width / 2, -p.height / 2, p.width, p.height);
+    ctx.restore();
   });
   requestAnimationFrame(drawConfetti);
 }
-function startConfetti() { drawConfetti(); }
 
-// Slideshow
-let current = 0;
+// ─── Photo Slideshow ──────────────────────────────────────────────────────────
+let currentSlide = 0;
 function startSlideshow() {
   const slides = document.querySelectorAll('.photo-slider img');
+  if (slides.length <= 1) return;
   setInterval(() => {
-    slides[current].classList.remove('active');
-    current = (current + 1) % slides.length;
-    slides[current].classList.add('active');
+    slides[currentSlide].classList.remove('active');
+    currentSlide = (currentSlide + 1) % slides.length;
+    slides[currentSlide].classList.add('active');
   }, 3000);
 }
+
+// ─── Music Control & Smooth Autoplay Handling ─────────────────────────────────
+let isPlaying = false;
+
+function playAudio() {
+  if (!song) return;
+  song.play().then(() => {
+    isPlaying = true;
+    if (musicIcon) musicIcon.textContent = '🎵';
+  }).catch(() => {
+    isPlaying = false;
+    if (musicIcon) musicIcon.textContent = '🔇';
+  });
+}
+
+function toggleMusic(e) {
+  if (e) e.stopPropagation();
+  if (!song) return;
+  if (isPlaying) {
+    song.pause();
+    isPlaying = false;
+    if (musicIcon) musicIcon.textContent = '🔇';
+  } else {
+    song.play().then(() => {
+      isPlaying = true;
+      if (musicIcon) musicIcon.textContent = '🎵';
+    }).catch(() => {});
+  }
+}
+
+if (musicBtn) {
+  musicBtn.addEventListener('click', toggleMusic);
+}
+
+// Unlock audio on first user tap/click anywhere if blocked by browser policy
+const unlockAudio = () => {
+  if (!isPlaying) {
+    playAudio();
+  }
+  window.removeEventListener('click', unlockAudio);
+  window.removeEventListener('touchstart', unlockAudio);
+};
+window.addEventListener('click', unlockAudio, { once: true });
+window.addEventListener('touchstart', unlockAudio, { once: true });
+
+// ─── Initialization ───────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  drawConfetti();
+  startSlideshow();
+  setTimeout(() => {
+    typeText(mainMessage, messageEl, 30);
+  }, 400);
+  playAudio();
+});

@@ -1,15 +1,25 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useRef, useCallback } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { recordResponseAction } from "../actions"
-import type { ProposalClientProps } from "./RomanticLoveTemplate"
-import OurStoryWatermark from "./OurStoryWatermark"
+import { useState, useEffect, useRef, useCallback } from "react";
+import { recordResponseAction } from "../actions";
+import type { ProposalClientProps } from "./RomanticLoveTemplate";
+import OurStoryWatermark from "./OurStoryWatermark";
 
-// ─── Canvas Confetti ──────────────────────────────────────────────────────────
-type Piece = { x: number; y: number; vy: number; size: number; color: string };
+// ─── Soft Falling Fairy Confetti Canvas (Matches Demo & Reference Photos) ────
+type Piece = {
+  x: number;
+  y: number;
+  vy: number;
+  vx: number;
+  width: number;
+  height: number;
+  color: string;
+  opacity: number;
+  rotation: number;
+  vr: number;
+};
 
-function useConfetti(active: boolean) {
+function useConfetti(active = true) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pieces = useRef<Piece[]>([]);
   const raf = useRef<number>(0);
@@ -17,14 +27,32 @@ function useConfetti(active: boolean) {
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d")!;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
     pieces.current.forEach((p) => {
       p.y += p.vy;
-      if (p.y > canvas.height) p.y = -10;
+      p.x += p.vx;
+      p.rotation += p.vr;
+
+      if (p.y > canvas.height) {
+        p.y = -10;
+        p.x = Math.random() * canvas.width;
+      }
+      if (p.x > canvas.width) p.x = 0;
+      if (p.x < 0) p.x = canvas.width;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate((p.rotation * Math.PI) / 180);
       ctx.fillStyle = p.color;
-      ctx.fillRect(p.x, p.y, p.size, p.size * 0.6);
+      ctx.globalAlpha = p.opacity;
+      ctx.fillRect(-p.width / 2, -p.height / 2, p.width, p.height);
+      ctx.restore();
     });
+
     raf.current = requestAnimationFrame(draw);
   }, []);
 
@@ -32,19 +60,27 @@ function useConfetti(active: boolean) {
     if (!active) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
+
     const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     };
     resize();
     window.addEventListener("resize", resize);
-    pieces.current = Array.from({ length: 150 }).map(() => ({
+
+    pieces.current = Array.from({ length: 90 }).map(() => ({
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
-      vy: 1 + Math.random() * 2,
-      size: 5 + Math.random() * 6,
-      color: ["#ff9cc6", "#ffd6e8", "#ff6b9a", "#ffffff"][Math.floor(Math.random() * 4)],
+      vy: 0.8 + Math.random() * 1.4,
+      vx: (Math.random() - 0.5) * 0.4,
+      width: 4 + Math.random() * 5,
+      height: 3 + Math.random() * 4,
+      color: ["#ffffff", "#ffd1dc", "#fca5a5", "#ff9cc6", "#ffe4e6"][Math.floor(Math.random() * 5)],
+      opacity: 0.35 + Math.random() * 0.55,
+      rotation: Math.random() * 360,
+      vr: (Math.random() - 0.5) * 1.5,
     }));
+
     raf.current = requestAnimationFrame(draw);
     return () => {
       cancelAnimationFrame(raf.current);
@@ -55,15 +91,15 @@ function useConfetti(active: boolean) {
   return canvasRef;
 }
 
-// ─── Typewriter ───────────────────────────────────────────────────────────────
-function useTypewriter(text: string, active: boolean, speed = 28) {
+// ─── Smooth Typewriter Hook ──────────────────────────────────────────────────
+function useTypewriter(text: string, active = true, speed = 32) {
   const [displayed, setDisplayed] = useState("");
   useEffect(() => {
     if (!active || !text) return;
     setDisplayed("");
     let i = 0;
     const iv = setInterval(() => {
-      setDisplayed((prev) => prev + text.charAt(i));
+      setDisplayed(text.substring(0, i + 1));
       i++;
       if (i >= text.length) clearInterval(iv);
     }, speed);
@@ -72,24 +108,21 @@ function useTypewriter(text: string, active: boolean, speed = 28) {
   return displayed;
 }
 
-// ─── Slideshow ────────────────────────────────────────────────────────────────
-function useSlideshow(photos: string[], active: boolean, interval = 3000) {
+// ─── Photo Slideshow Hook ────────────────────────────────────────────────────
+function useSlideshow(photos: string[], interval = 3000) {
   const [current, setCurrent] = useState(0);
   useEffect(() => {
-    if (!active || photos.length <= 1) return;
+    if (photos.length <= 1) return;
     const iv = setInterval(() => setCurrent((c) => (c + 1) % photos.length), interval);
     return () => clearInterval(iv);
-  }, [active, photos.length, interval]);
+  }, [photos.length, interval]);
   return current;
 }
 
-// ─── BirthdayTemplate ─────────────────────────────────────────────────────────
+// ─── BirthdayTemplate Component ──────────────────────────────────────────────
 export default function BirthdayTemplate({
   slug,
   title,
-  question,
-  acceptBtn,
-  rejectBtn,
   loveMessage,
   recipientName,
   media = [],
@@ -101,26 +134,18 @@ export default function BirthdayTemplate({
   _audio,
   customData,
 }: ProposalClientProps) {
-  // 0 = entry, 1 = card, 2 = hate
-  const [stage, setStage] = useState<0 | 1 | 2>(0);
-  const [showMessage, setShowMessage] = useState(false);
   const hasViewedRef = useRef(false);
 
   useEffect(() => {
     if (!hasViewedRef.current) {
       recordResponseAction(slug, "VIEWED");
+      recordResponseAction(slug, "ACCEPTED");
       hasViewedRef.current = true;
     }
   }, [slug]);
 
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  useEffect(() => {
-    return () => { audioRef.current?.pause(); };
-  }, []);
-
   // Media resolution (prioritizes user uploaded slideshow photos & music)
   const customPhotos: string[] = [];
-
   const p1 = customData?._photo || customData?.photoUrl || customData?._photo1 || _photo || photoUrl;
   const p2 = customData?._photo2 || _photo2;
   const p3 = customData?._photo3 || _photo3;
@@ -153,319 +178,329 @@ export default function BirthdayTemplate({
     _audio ||
     (uploadedAudio ? uploadedAudio.url : "/demos/birthday-wish/hbd.mp3");
 
-  const activeSlide = useSlideshow(photos, stage === 1);
-  const confettiRef = useConfetti(stage === 1);
+  const activeSlide = useSlideshow(photos, 3000);
+  const confettiRef = useConfetti(true);
 
+  const displayRecipient = recipientName || "Someone Special";
   const displayMessage =
     loveMessage ||
-    "Happy Birthday! 🎂✨ I hope today makes you smile as much as you make everyone around you smile. You deserve all the happiness, good food, and unforgettable moments today. Stay the amazing person you are. And...I hope I get to steal a little of your time to celebrate with you someday. 😉❤️";
+    "My all your dreams come true. You deserve all the happiness in the world! 🎉";
 
-  const typedMessage = useTypewriter(displayMessage, showMessage);
+  const typedMessage = useTypewriter(displayMessage, true, 30);
 
-  const displayRecipient = recipientName || "My Love";
-  const displayTitle = title || "Happy Birthday";
-  const displayQuestion = question || "Wishing you the happiest birthday! 🎂";
-  const displayAcceptBtn = acceptBtn || "Love ❤️";
-  const displayRejectBtn = rejectBtn || "Hate 💔";
+  // Audio Playback & Toggle
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  const handleLove = () => {
-    setStage(1);
-    recordResponseAction(slug, "ACCEPTED");
-    try {
-      const audio = new Audio(audioSrc);
-      audioRef.current = audio;
-      audio.play().catch(() => {});
-    } catch {}
-  };
+  const startAudio = useCallback(() => {
+    if (!audioRef.current) return;
+    audioRef.current
+      .play()
+      .then(() => setIsPlaying(true))
+      .catch(() => setIsPlaying(false));
+  }, []);
 
-  const handleHate = () => {
-    setStage(2);
-    recordResponseAction(slug, "REJECTED");
-  };
+  const toggleMusic = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!audioRef.current) return;
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        startAudio();
+      }
+    },
+    [isPlaying, startAudio]
+  );
+
+  useEffect(() => {
+    const audio = new Audio(audioSrc);
+    audio.loop = true;
+    audioRef.current = audio;
+
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => setIsPlaying(true))
+        .catch(() => {
+          setIsPlaying(false);
+          const unlock = () => {
+            audio.play().then(() => setIsPlaying(true)).catch(() => {});
+            window.removeEventListener("click", unlock);
+            window.removeEventListener("touchstart", unlock);
+          };
+          window.addEventListener("click", unlock, { once: true });
+          window.addEventListener("touchstart", unlock, { once: true });
+        });
+    }
+
+    return () => {
+      audio.pause();
+      audioRef.current = null;
+    };
+  }, [audioSrc]);
 
   return (
     <>
-      {/* Global styles injected inline */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@300;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Poppins:wght@300;400;500;600;700&display=swap');
 
-        .bday-body {
+        .bday-page {
           min-height: 100vh;
-          padding: 20px 0;
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px 16px;
           font-family: 'Poppins', sans-serif;
-          background: 
-            radial-gradient(circle at 20% 20%, rgba(255, 77, 143, 0.45), transparent 55%),
-            radial-gradient(circle at 80% 25%, rgba(255, 180, 80, 0.35), transparent 55%),
-            radial-gradient(circle at 50% 80%, rgba(180, 70, 255, 0.4), transparent 60%),
-            linear-gradient(135deg, #33082b 0%, #520f3c 35%, #350a54 70%, #1a062d 100%);
-          animation: bdayBgShift 10s ease-in-out infinite alternate;
-          color: #fff6fa;
+          background: radial-gradient(ellipse at 50% 25%, #851838 0%, #4a071c 55%, #1f010b 100%);
+          color: #ffffff;
           overflow-x: hidden;
-          overflow-y: auto;
           position: relative;
-        }
-        @keyframes bdayBgShift {
-          0% { filter: hue-rotate(0deg) brightness(1); }
-          50% { filter: hue-rotate(15deg) brightness(1.15); }
-          100% { filter: hue-rotate(30deg) brightness(1.05); }
+          box-sizing: border-box;
+          -webkit-font-smoothing: antialiased;
         }
 
-        .bday-entry {
+        .bday-confetti {
           position: fixed;
           inset: 0;
-          background: rgba(15, 4, 18, 0.65);
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          z-index: 20;
-          text-align: center;
-          backdrop-filter: blur(14px);
-          animation: bdayFadeIn 1s ease forwards;
-        }
-        @keyframes bdayFadeIn {
-          from { opacity: 0; transform: scale(0.96); }
-          to { opacity: 1; transform: scale(1); }
-        }
-        .bday-entry h2 {
-          color: #fff6fa;
-          font-size: 26px;
-          margin-bottom: 20px;
-          font-family: 'Playfair Display', serif;
-        }
-        .bday-btn {
-          display: inline-flex;
-          justify-content: center;
-          align-items: center;
-          padding: 12px 18px;
-          border-radius: 12px;
-          font-weight: 600;
-          border: none;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          margin: 8px;
-          font-size: 16px;
-        }
-        .bday-btn-primary {
-          background: linear-gradient(90deg, #ff6b9a, #ffa8d6);
-          color: #2c0f1c;
-          box-shadow: 0 0 15px rgba(255,107,154,0.4);
-        }
-        .bday-btn-primary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 0 30px rgba(255,107,154,0.6);
-        }
-        .bday-btn-ghost {
-          background: rgba(255,255,255,0.1);
-          border: 1px solid rgba(255,255,255,0.15);
-          color: #fff;
-        }
-        .bday-btn-ghost:hover {
-          background: rgba(255,255,255,0.15);
-          transform: translateY(-2px);
+          width: 100%;
+          height: 100%;
+          pointer-events: none;
+          z-index: 1;
         }
 
-        .bday-card {
-          width: 100%;
-          max-width: 720px;
-          background: rgba(255, 255, 255, 0.09);
-          backdrop-filter: blur(20px) saturate(160%);
-          border-radius: 24px;
-          box-shadow: 0 15px 50px rgba(255, 77, 143, 0.35), 0 0 90px rgba(255, 105, 180, 0.2);
-          padding: 26px;
+        .bday-music-btn {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          z-index: 100;
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.15);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          color: #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          font-size: 18px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+          transition: transform 0.2s ease, background 0.2s ease;
+        }
+        .bday-music-btn:hover {
+          transform: scale(1.08);
+          background: rgba(255, 255, 255, 0.25);
+        }
+        .bday-music-btn:active {
+          transform: scale(0.95);
+        }
+
+        .bday-card-container {
           position: relative;
           z-index: 2;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          overflow: hidden;
-          text-align: center;
-          animation: bdayFadeIn 1.5s ease forwards;
+          width: 100%;
+          max-width: 680px;
+          background: rgba(225, 29, 72, 0.22);
+          backdrop-filter: blur(24px) saturate(180%);
+          -webkit-backdrop-filter: blur(24px) saturate(180%);
+          border-radius: 28px;
+          border: 1px solid rgba(255, 180, 200, 0.28);
+          box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 40px rgba(225, 29, 72, 0.35);
+          padding: 26px;
+          box-sizing: border-box;
+          animation: bdayCardFadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
           margin: 24px auto;
         }
-        .bday-slideshow {
+
+        @keyframes bdayCardFadeIn {
+          from {
+            opacity: 0;
+            transform: scale(0.96) translateY(12px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+
+        .bday-photo-slider {
           width: 100%;
           height: 280px;
-          border-radius: 18px;
+          border-radius: 20px;
           overflow: hidden;
           position: relative;
-          box-shadow: 0 0 24px rgba(0,0,0,0.4);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
           margin-bottom: 20px;
+          background: #150208;
         }
-        .bday-slide {
+
+        .bday-slide-img {
           position: absolute;
           inset: 0;
           width: 100%;
           height: 100%;
           object-fit: cover;
-          object-position: 50% 35%;
+          object-position: center 30%;
           opacity: 0;
-          transition: opacity 1.5s ease-in-out, transform 5s ease-in-out;
-          transform: scale(1.1);
+          transition: opacity 1.5s ease-in-out, transform 6s ease-in-out;
+          transform: scale(1.06);
         }
-        .bday-slide.active {
+
+        .bday-slide-img.active {
           opacity: 1;
           transform: scale(1);
         }
-        .bday-card h1 {
+
+        .bday-heading {
           font-family: 'Playfair Display', serif;
-          font-size: 30px;
-          color: #fff;
-          margin-bottom: 6px;
+          font-size: 28px;
+          font-weight: 700;
+          color: #ffffff;
+          margin-bottom: 8px;
+          line-height: 1.3;
+          text-align: left;
+          letter-spacing: -0.2px;
         }
-        .bday-card .name { color: #ff6b9a; }
+
+        .bday-name {
+          color: #fca5a5;
+          font-weight: 700;
+        }
+
         .bday-subtitle {
           font-size: 15px;
-          color: rgba(255,255,255,0.85);
-          margin-bottom: 10px;
+          color: rgba(255, 255, 255, 0.9);
+          margin-bottom: 16px;
+          text-align: left;
+          font-weight: 400;
+          line-height: 1.4;
         }
-        .bday-message {
+
+        .bday-message-box {
           font-size: 16px;
           line-height: 1.6;
-          color: rgba(255,255,255,0.95);
-          min-height: 100px;
-          margin-top: 8px;
+          color: #ffffff;
           text-align: left;
+          min-height: 52px;
+          font-weight: 500;
           white-space: pre-wrap;
+          word-break: break-word;
         }
-        .bday-hate {
-          position: fixed;
-          inset: 0;
-          background: rgba(0,0,0,0.85);
-          color: #fff;
-          font-size: 26px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          z-index: 30;
-          text-align: center;
-          padding: 20px;
-          font-family: 'Playfair Display', serif;
-          animation: bdayFadeIn 0.8s ease forwards;
+
+        .bday-cursor {
+          display: inline-block;
+          font-weight: 300;
+          margin-left: 2px;
+          color: rgba(255, 255, 255, 0.8);
+          animation: bdayBlink 0.9s step-start infinite;
+        }
+
+        @keyframes bdayBlink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
         }
 
         @media (max-width: 640px) {
-          .bday-card { padding: 18px; max-width: 100%; }
-          .bday-slideshow { height: 200px; }
-          .bday-entry h2 { font-size: 22px; }
-          .bday-card h1 { font-size: 24px; text-align: left; }
-          .bday-subtitle { text-align: left; }
-          .bday-message { font-size: 15px; text-align: left; }
+          .bday-page {
+            padding: 16px 12px;
+          }
+          .bday-card-container {
+            padding: 18px;
+            border-radius: 24px;
+            max-width: 100%;
+          }
+          .bday-photo-slider {
+            height: 220px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+          }
+          .bday-heading {
+            font-size: 24px;
+            line-height: 1.28;
+          }
+          .bday-subtitle {
+            font-size: 14px;
+            margin-bottom: 14px;
+          }
+          .bday-message-box {
+            font-size: 15px;
+            line-height: 1.55;
+          }
+          .bday-music-btn {
+            top: 14px;
+            right: 14px;
+            width: 38px;
+            height: 38px;
+            font-size: 16px;
+          }
         }
-        @media (max-width: 480px) {
-          .bday-slideshow { height: 180px; }
-          .bday-card h1 { font-size: 22px; }
+
+        @media (max-width: 380px) {
+          .bday-photo-slider {
+            height: 190px;
+          }
+          .bday-heading {
+            font-size: 22px;
+          }
+          .bday-message-box {
+            font-size: 14px;
+          }
         }
       `}</style>
 
-      <div className="bday-body">
-        {/* Canvas confetti */}
-        <canvas
-          ref={confettiRef}
-          style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 1 }}
-        />
+      <div className="bday-page">
+        {/* Soft Falling Confetti Canvas */}
+        <canvas ref={confettiRef} className="bday-confetti" />
 
-        {/* Entry screen */}
-        <AnimatePresence>
-          {stage === 0 && (
-            <motion.div
-              className="bday-entry"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <h2>{displayTitle} ❤️</h2>
-              <p style={{ color: "rgba(255,255,255,0.7)", marginBottom: 20, fontSize: 15 }}>
-                {displayQuestion}
-              </p>
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
-                <button className="bday-btn bday-btn-primary" onClick={handleLove}>
-                  {displayAcceptBtn}
-                </button>
-                <button className="bday-btn bday-btn-ghost" onClick={handleHate}>
-                  {displayRejectBtn}
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Music Control Button */}
+        <button
+          className="bday-music-btn"
+          onClick={toggleMusic}
+          aria-label="Toggle Music"
+          title="Toggle Music"
+        >
+          {isPlaying ? "🎵" : "🔇"}
+        </button>
 
-        {/* Birthday card */}
-        <AnimatePresence>
-          {stage === 1 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1 }}
-              style={{ display: "flex", justifyContent: "center", padding: "0 16px" }}
-            >
-              <div className="bday-card">
-                {/* Slideshow */}
-                <div className="bday-slideshow">
-                  {photos.map((src, i) => (
-                    <img
-                      key={src}
-                      src={src}
-                      className={`bday-slide ${i === activeSlide ? "active" : ""}`}
-                      alt={`Birthday photo ${i + 1}`}
-                    />
-                  ))}
-                </div>
+        {/* Glassmorphic Card (Matches Demo & Reference Photos) */}
+        <div className="bday-card-container">
+          {/* Photo Slideshow */}
+          <div className="bday-photo-slider">
+            {photos.map((src, i) => (
+              <img
+                key={src + i}
+                src={src}
+                className={`bday-slide-img ${i === activeSlide ? "active" : ""}`}
+                alt={`Birthday photo ${i + 1}`}
+              />
+            ))}
+          </div>
 
-                <h1>
-                  Happy Birthday, <span className="name">{displayRecipient} 🦋</span> 💖
-                </h1>
-                <div className="bday-subtitle">A little surprise from someone who truly cares…</div>
+          {/* Heading */}
+          <h1 className="bday-heading">
+            Happy Birthday, <span className="bday-name">{displayRecipient} ✨</span> 🦋 💖
+          </h1>
 
-                {!showMessage ? (
-                  <button
-                    className="bday-btn bday-btn-primary"
-                    style={{ marginTop: 12 }}
-                    onClick={() => setShowMessage(true)}
-                  >
-                    Read My Message 💌
-                  </button>
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bday-message"
-                    style={{ marginTop: 16 }}
-                  >
-                    {typedMessage}
-                    <span style={{ opacity: 0.5 }}>|</span>
-                  </motion.div>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          {/* Subtitle */}
+          <div className="bday-subtitle">
+            A little surprise from someone who truly cares…
+          </div>
 
-        {/* Hate screen */}
-        <AnimatePresence>
-          {stage === 2 && (
-            <motion.div
-              className="bday-hate"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              <div>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>💔</div>
-                Why 💔 !!!!!!!!!!!!!!!!!!
-                <div style={{ marginTop: 24 }}>
-                  <button
-                    className="bday-btn bday-btn-primary"
-                    onClick={() => setStage(0)}
-                  >
-                    Try again 🥺
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          {/* Typewriter Message */}
+          <div className="bday-message-box">
+            {typedMessage}
+            <span className="bday-cursor">|</span>
+          </div>
+        </div>
+
+        {/* OurStory viral watermark badge */}
+        <OurStoryWatermark variant="dark" templateId="birthday-wish" />
       </div>
-
-      {/* OurStory viral watermark badge */}
-      <OurStoryWatermark variant="dark" templateId="birthday-wish" />
     </>
   );
 }
