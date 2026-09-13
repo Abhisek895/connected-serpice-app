@@ -34,13 +34,14 @@ export default async function DashboardPage() {
           });
 
           if (guestEvent && guestEvent.userId === guestUser.id) {
-            // Transfer event
+            // Step 1: Transfer event ownership to the logged-in user
             await prisma.event.update({
               where: { id: guestEvent.id },
               data: { userId },
             });
 
-            // Transfer payment
+            // Step 2: Transfer the payment record(s) to the logged-in user
+            // Try via customData.razorpayOrderId first (stored by fulfillPayment)
             try {
               const customData = JSON.parse(guestEvent.customData || "{}");
               if (customData.razorpayOrderId) {
@@ -50,7 +51,25 @@ export default async function DashboardPage() {
                 });
               }
             } catch (e) { }
+
+            // Step 3: Transfer via PaymentFulfillment join (more reliable path)
+            // This handles cases where customData.razorpayOrderId is absent
+            try {
+              const fulfillment = await prisma.paymentFulfillment.findUnique({
+                where: { eventId: guestEvent.id },
+                select: { paymentId: true },
+              });
+              if (fulfillment?.paymentId) {
+                await prisma.payment.update({
+                  where: { id: fulfillment.paymentId },
+                  data: { userId },
+                });
+              }
+            } catch (e) {
+              console.error("Dashboard auto-claim: PaymentFulfillment transfer failed:", e);
+            }
           }
+
         }
       }
     } catch (claimErr) {

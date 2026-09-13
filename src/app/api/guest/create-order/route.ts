@@ -100,7 +100,9 @@ export async function POST(req: Request) {
         await prisma.coupon.update({ where: { id: couponId }, data: { usedCount: { increment: 1 } } });
       }
 
-      return NextResponse.json({ success: true, amount: 0, orderId: "FREE" });
+      // Return the real orderId (not the literal "FREE") so the client can
+      // pass it to /api/guest/create-event and /api/payment/status polling.
+      return NextResponse.json({ success: true, amount: 0, orderId, isFree: true });
     }
 
     // Create Razorpay order

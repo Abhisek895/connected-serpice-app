@@ -384,8 +384,10 @@ export default function GuestCustomizeFlow({
       const data = await res.json();
       if (!data.success) throw new Error(data.message || "Failed to create order");
 
-      if (data.orderId === "FREE" || data.amount === 0) {
-        await createGuestEvent("FREE", "", "", source, campaign, customDataSnapshot);
+      if (data.amount === 0) {
+        // Pass the real orderId (e.g. guest_free_xxx) — not the literal "FREE" —
+        // so create-event can do a direct DB lookup and the poller works correctly.
+        await createGuestEvent(data.orderId, "", "", source, campaign, customDataSnapshot);
         return;
       }
 
@@ -490,8 +492,9 @@ export default function GuestCustomizeFlow({
       }
 
       if (!data.success) {
-        // 🔄 Verify failed — start polling /api/payment/status as fallback
-        if (orderId !== "FREE" && !orderId.startsWith("guest_free_")) {
+        // 🔄 Create-event failed — start polling /api/payment/status as fallback
+        // This catches cases where the webhook fulfills the payment server-side
+        if (orderId && !orderId.startsWith("guest_free_") && orderId !== "FREE") {
           setPollingForLink(true);
           await pollForFulfillment(orderId);
           return;
