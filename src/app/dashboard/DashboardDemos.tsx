@@ -9,6 +9,7 @@ import { TEMPLATE_CLASSES } from "./templateConfig";
 import { demos } from "./demoConfig";
 import CheckoutModal from "./CheckoutModal";
 import CustomizeModal from "./CustomizeModal";
+import AutoClickSimulatedPreview from "@/components/ui/AutoClickSimulatedPreview";
 
 type ThemePricingItem = {
   name: string;
@@ -43,6 +44,13 @@ export default function DashboardDemos({
 
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
   const [publishedTitle, setPublishedTitle] = useState<string | null>(null);
+  const [previewModalData, setPreviewModalData] = useState<{
+    demoId: string;
+    url: string;
+    title: string;
+    recipientName: string;
+    isPaid: boolean;
+  } | null>(null);
   const [copied, setCopied] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [customizeModalDemoId, setCustomizeModalDemoId] = useState<string | null>(null);
@@ -94,7 +102,7 @@ export default function DashboardDemos({
   const [appliedCouponCode, setAppliedCouponCode] = useState<string>("");
 
   useEffect(() => {
-    if (selectedDemo) {
+    if (selectedDemo || previewModalData) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -102,7 +110,7 @@ export default function DashboardDemos({
     return () => {
       document.body.style.overflow = "";
     };
-  }, [selectedDemo]);
+  }, [selectedDemo, previewModalData]);
 
   const handleActionClick = (demoId: string, action: "instant" | "builder") => {
     const actionType = action === "instant" ? "instant" : "customize";
@@ -133,7 +141,7 @@ export default function DashboardDemos({
     const finalTitle = customTitle.trim() || demo?.title || "Special Proposal ✨";
     setPendingTitle(finalTitle);
 
-    if (demo && demo.price && demo.price > 0) {
+    if (demo && demo.price && demo.price > 0 && !isPremiumUser) {
       // Step 2 SECOND: Open Secure Checkout Modal with title already captured!
       setCheckoutModal({
         demoId: demo.id,
@@ -143,7 +151,7 @@ export default function DashboardDemos({
         action: "instant"
       });
     } else {
-      // If free template, create immediately
+      // If free template or premium user, create immediately
       handleInstantUse(demoId, finalTitle, "");
     }
   };
@@ -166,10 +174,14 @@ export default function DashboardDemos({
     try {
       const tmplClass = TEMPLATE_CLASSES.find((t) => t.id === demo.id);
       const activeCoupon = couponCodeOverride !== undefined ? couponCodeOverride : appliedCouponCode;
+      const derivedRecipient = customTitle
+        ? customTitle.replace(/^(For|Surprise for)\s+/i, "").trim() || "Someone Special ✨"
+        : "Someone Special ✨";
+
       const res = await createInstantEventFromTemplate(
         "Romantic",
-        tmplClass?.defaultData.title,
-        "Someone Special ✨",
+        customTitle || tmplClass?.defaultData.title,
+        derivedRecipient,
         demo.id,
         {
           internalTitle: customTitle,
@@ -180,10 +192,17 @@ export default function DashboardDemos({
       setAppliedCouponCode("");
       if (res.success && res.customUrl) {
         const finalUrl = `${window.location.origin}${res.customUrl}`;
+        const finalTitle = customTitle || demo.title;
         setPublishedUrl(finalUrl);
-        setPublishedTitle(customTitle || demo.title);
+        setPublishedTitle(finalTitle);
+        setPreviewModalData({
+          demoId: demo.id,
+          url: finalUrl,
+          title: finalTitle,
+          recipientName: derivedRecipient,
+          isPaid: true,
+        });
         router.refresh();
-        setTimeout(() => { setPublishedUrl(null); setPublishedTitle(null); }, 8000);
       }
     } catch (err: any) {
       console.error("Instant use failed:", err);
@@ -262,7 +281,7 @@ export default function DashboardDemos({
 
         {/* Published Link Banner */}
         <AnimatePresence>
-          {publishedUrl && (
+          {publishedUrl && !previewModalData && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -534,6 +553,46 @@ export default function DashboardDemos({
             onClose={() => setCheckoutModal(null)}
             onSuccess={handlePaymentSuccess}
           />
+        )}
+      </AnimatePresence>
+
+      {/* 🌸 Instant Use Live Recipient Experience Simulated Preview Modal */}
+      <AnimatePresence>
+        {previewModalData && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto w-screen h-screen">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-white rounded-3xl p-4 sm:p-5 max-w-2xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-rose-100 relative my-auto"
+            >
+              <button
+                onClick={() => setPreviewModalData(null)}
+                className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition z-30 cursor-pointer"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <AutoClickSimulatedPreview
+                demoId={previewModalData.demoId}
+                formValues={{
+                  ...(TEMPLATE_CLASSES.find((t) => t.id === previewModalData.demoId)?.defaultData || {}),
+                  title: previewModalData.title,
+                  recipientName: previewModalData.recipientName,
+                }}
+                defaultData={TEMPLATE_CLASSES.find((t) => t.id === previewModalData.demoId)?.defaultData || {}}
+                publishedUrl={previewModalData.url}
+                isPaid={previewModalData.isPaid}
+                isPremiumUser={isPremiumUser}
+                onClose={() => setPreviewModalData(null)}
+                onShareFreeLink={() => {
+                  const text = `Hey! I made a special surprise link for you... Tap here to open 💖\n${previewModalData.url}`;
+                  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
+                }}
+              />
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </>
