@@ -37,6 +37,12 @@ export default function CheckoutModal({
   const userObj = session?.user as any;
   const isPremiumAccount = Boolean(isPremiumUser) || userObj?.plan === "PREMIUM" || userObj?.role === "super_admin";
 
+  // Live admin pricing & content states (self-hydrated from database)
+  const [livePrice, setLivePrice] = useState<number>(originalPrice);
+  const [liveDurationDays, setLiveDurationDays] = useState<number>(durationDays);
+  const [liveTemplateTitle, setLiveTemplateTitle] = useState<string>(templateName);
+  const [activeCoupons, setActiveCoupons] = useState<Array<{ code: string; discountType: string; discountValue: number }>>([]);
+
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [useWallet, setUseWallet] = useState<boolean>(true);
   const [couponCode, setCouponCode] = useState(isPremiumAccount ? "PREMIUM_FREE" : "");
@@ -49,6 +55,34 @@ export default function CheckoutModal({
   const [isFree1Eligible, setIsFree1Eligible] = useState<boolean | null>(null);
   // Referral attribution — read from cookie set by ReferralTracker
   const [referredByCode, setReferredByCode] = useState<string | null>(null);
+
+  // Fetch live pricing and duration set by admin from DB on mount
+  useEffect(() => {
+    if (!demoId) return;
+
+    fetch(`/api/theme/pricing?demoId=${encodeURIComponent(demoId)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          if (typeof data.price === "number") {
+            setLivePrice(data.price);
+            if (!isPremiumAccount && couponStatus !== "valid") {
+              setFinalPrice(data.price);
+            }
+          }
+          if (typeof data.durationDays === "number") {
+            setLiveDurationDays(data.durationDays);
+          }
+          if (data.title) {
+            setLiveTemplateTitle(data.title);
+          }
+          if (Array.isArray(data.activeCoupons)) {
+            setActiveCoupons(data.activeCoupons);
+          }
+        }
+      })
+      .catch(() => {});
+  }, [demoId, isPremiumAccount, couponStatus]);
 
   // Fetch wallet balance + read referral cookie on mount
   useEffect(() => {
@@ -67,9 +101,9 @@ export default function CheckoutModal({
       .catch(() => { });
   }, [isPremiumAccount]);
 
-  const originalPriceINR = originalPrice / 100;
+  const originalPriceINR = livePrice / 100;
   const priceAfterCouponPaise = isPremiumAccount ? 0 : finalPrice;
-  const discountINR = (originalPrice - priceAfterCouponPaise) / 100;
+  const discountINR = (livePrice - priceAfterCouponPaise) / 100;
 
   // Wallet deduction calculation (in paise)
   const isWalletActive = useWallet && walletBalance > 0 && !isPremiumAccount && priceAfterCouponPaise > 0;
@@ -110,11 +144,12 @@ export default function CheckoutModal({
           setCouponCode("FREE100%");
         } else {
           setIsFree1Eligible(false);
-          setCouponCode("LOVE2026");
+          // If FREE100% is not eligible, keep couponCode empty or use first active coupon
+          setCouponCode("");
         }
       } catch (e) {
         setIsFree1Eligible(false);
-        setCouponCode("LOVE2026");
+        setCouponCode("");
       }
     }
     checkFree1Eligibility();
@@ -125,7 +160,7 @@ export default function CheckoutModal({
 
     if (couponCode.length < 3) {
       setCouponStatus("idle");
-      setFinalPrice(originalPrice);
+      setFinalPrice(livePrice);
       setCouponMessage("");
       return;
     }
@@ -135,7 +170,7 @@ export default function CheckoutModal({
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [couponCode, isPremiumAccount]);
+  }, [couponCode, isPremiumAccount, livePrice]);
 
   async function validateCoupon() {
     setCouponStatus("validating");
@@ -153,12 +188,12 @@ export default function CheckoutModal({
         setCouponMessage(data.message || "Coupon applied successfully!");
       } else {
         setCouponStatus("invalid");
-        setFinalPrice(originalPrice);
+        setFinalPrice(livePrice);
         setCouponMessage(data.message);
       }
     } catch (err) {
       setCouponStatus("invalid");
-      setFinalPrice(originalPrice);
+      setFinalPrice(livePrice);
       setCouponMessage("Failed to validate coupon");
     }
   }
@@ -363,7 +398,7 @@ export default function CheckoutModal({
               <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-rose-500" /> Secure Checkout
               </h2>
-              <p className="text-sm font-semibold text-rose-600 mt-0.5">{templateName}</p>
+              <p className="text-sm font-semibold text-rose-600 mt-0.5">{liveTemplateTitle || templateName}</p>
             </div>
             <button
               onClick={onClose}
@@ -405,7 +440,7 @@ export default function CheckoutModal({
                     type="text"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                    placeholder="Enter code (e.g. LOVE2026)"
+                    placeholder="Enter code (e.g. SPECIAL50)"
                     className="w-full pl-4 pr-10 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all uppercase placeholder:normal-case font-black text-slate-900 text-sm tracking-wide"
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -431,7 +466,10 @@ export default function CheckoutModal({
                     </button>
                   )}
 
-                  {["LOVE2026", "SPECIAL50", "OURSTORY"].map((code) => (
+                  {(activeCoupons.length > 0
+                    ? activeCoupons.map((c) => c.code)
+                    : ["SPECIAL50", "LOVE2026", "OURSTORY"]
+                  ).map((code) => (
                     <button
                       key={code}
                       type="button"
@@ -516,7 +554,7 @@ export default function CheckoutModal({
                 {couponMessage.includes("Premium Member") ? (
                   <>Includes <strong>Full Access for Premium Member ∞</strong> + instant link publishing.</>
                 ) : (
-                  <>Includes full access for <strong>{["FREE100%", "FREE100", "FREE1"].includes(couponCode) ? 1 : durationDays} days</strong> + instant link publishing.</>
+                  <>Includes full access for <strong>{["FREE100%", "FREE100", "FREE1"].includes(couponCode) ? 1 : liveDurationDays} days</strong> + instant link publishing.</>
                 )}
               </p>
             </div>

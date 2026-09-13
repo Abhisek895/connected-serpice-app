@@ -75,14 +75,22 @@ export async function POST(req: Request) {
     // We fetch the theme to get the original price if demoId is provided
     let finalPrice = null;
     let originalPrice = null;
+    let durationDays = null;
 
     if (demoId) {
-      const theme = await prisma.theme.findUnique({
+      let theme = await prisma.theme.findUnique({
         where: { name: demoId },
       });
 
+      if (!theme) {
+        theme = await prisma.theme.findUnique({
+          where: { id: demoId },
+        });
+      }
+
       if (theme) {
         originalPrice = theme.price;
+        durationDays = theme.durationDays;
         if (coupon.discountType === "PERCENT" || coupon.discountType === "PERCENTAGE") {
           const discount = Math.floor((originalPrice * coupon.discountValue) / 100);
           finalPrice = Math.max(0, originalPrice - discount);
@@ -99,6 +107,7 @@ export async function POST(req: Request) {
       discountType: coupon.discountType,
       discountValue: coupon.discountValue,
       originalPrice,
+      durationDays,
       finalPrice,
       message: "Coupon applied successfully!"
     });

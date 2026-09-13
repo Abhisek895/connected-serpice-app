@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     }
 
     if (!theme) {
-      return NextResponse.json({ success: false, message: "Template not found" }, { status: 404 });
+      return NextResponse.json({ success: false, message: "Template not found in database" }, { status: 404 });
     }
 
     let finalAmount = theme.price;

@@ -242,11 +242,16 @@ export default function GuestCustomizeFlow({
   const [showPaymentCancelledPushModal, setShowPaymentCancelledPushModal] = useState(false);
   const isPaymentHandledRef = useRef(false);
 
+  // Live pricing & coupon state
+  const [liveThemePrice, setLiveThemePrice] = useState<number>(demo.price ?? 2100);
+  const [liveThemeDuration, setLiveThemeDuration] = useState<number>(demo.durationDays ?? 7);
+  const [activeCoupons, setActiveCoupons] = useState<Array<{ code: string; discountType: string; discountValue: number }>>([]);
+
   // Coupon & Payment state
-  const [couponCode, setCouponCode] = useState("LOVE2026");
+  const [couponCode, setCouponCode] = useState("");
   const [couponStatus, setCouponStatus] = useState<"idle" | "validating" | "valid" | "invalid">("idle");
   const [couponMessage, setCouponMessage] = useState("");
-  const [finalPrice, setFinalPrice] = useState(0);
+  const [finalPrice, setFinalPrice] = useState(demo.price ?? 2100);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
@@ -283,7 +288,26 @@ export default function GuestCustomizeFlow({
     }
 
     setFormValues(vals);
-    setFinalPrice(0);
+    setFinalPrice(demo.price ?? 2100);
+
+    // Fetch live admin price, duration & active coupons from DB
+    fetch(`/api/theme/pricing?demoId=${encodeURIComponent(demo.id)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          if (typeof data.price === "number") {
+            setLiveThemePrice(data.price);
+            setFinalPrice(data.price);
+          }
+          if (typeof data.durationDays === "number") {
+            setLiveThemeDuration(data.durationDays);
+          }
+          if (Array.isArray(data.activeCoupons)) {
+            setActiveCoupons(data.activeCoupons);
+          }
+        }
+      })
+      .catch(() => {});
 
     // Sync URL action parameter
     if (typeof window !== "undefined") {
@@ -315,13 +339,13 @@ export default function GuestCustomizeFlow({
   useEffect(() => {
     if (couponCode.length < 3) {
       setCouponStatus("idle");
-      setFinalPrice(demo.price ?? 0);
+      setFinalPrice(liveThemePrice);
       setCouponMessage("");
       return;
     }
     const timer = setTimeout(validateCoupon, 400);
     return () => clearTimeout(timer);
-  }, [couponCode, demo.price]);
+  }, [couponCode, liveThemePrice]);
 
   async function validateCoupon() {
     setCouponStatus("validating");
@@ -338,12 +362,12 @@ export default function GuestCustomizeFlow({
         setCouponMessage(data.message || "Coupon applied successfully!");
       } else {
         setCouponStatus("invalid");
-        setFinalPrice(demo.price ?? 0);
+        setFinalPrice(liveThemePrice);
         setCouponMessage(data.message || "Invalid coupon");
       }
     } catch {
       setCouponStatus("invalid");
-      setFinalPrice(demo.price ?? 0);
+      setFinalPrice(liveThemePrice);
       setCouponMessage("Failed to validate coupon");
     }
   }
@@ -715,7 +739,7 @@ export default function GuestCustomizeFlow({
     return poll();
   }
 
-  const origPriceINR = (demo.price ?? 0) / 100;
+  const origPriceINR = liveThemePrice / 100;
   const finalPriceINR = finalPrice / 100;
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -1006,7 +1030,10 @@ export default function GuestCustomizeFlow({
               </div>
 
               <div className="flex flex-wrap gap-1.5 pt-1">
-                {["LOVE2026", "SPECIAL50", "OURSTORY"].map((code) => (
+                {(activeCoupons.length > 0
+                  ? activeCoupons.map((c) => c.code)
+                  : ["SPECIAL50", "LOVE2026", "OURSTORY"]
+                ).map((code) => (
                   <button
                     key={code}
                     type="button"
@@ -1061,7 +1088,7 @@ export default function GuestCustomizeFlow({
               </div>
 
               <p className="text-xs text-slate-500 text-center bg-slate-50 py-2.5 rounded-xl border border-slate-100 font-medium">
-                Includes full access for <strong>{demo.durationDays ?? 14} days</strong> + instant link publishing.
+                Includes full access for <strong>{liveThemeDuration ?? 7} days</strong> + instant link publishing.
               </p>
             </div>
 

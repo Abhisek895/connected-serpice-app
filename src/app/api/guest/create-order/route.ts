@@ -29,28 +29,13 @@ export async function POST(req: Request) {
     // Auto-provision the GUEST system user on the fly if missing (guarantees zero crashes)
     const guestUser = await getOrCreateGuestUser();
 
-    // Find or auto-provision the template/theme
+    // Find the template/theme in database
     let theme = await prisma.theme.findUnique({ where: { name: demoId } });
     if (!theme) {
-      const TEMPLATE_PRICES: Record<string, number> = {
-        "she-cant-say-no": 2500,
-        "surprise": 2100,
-        "birthday-wish": 2100,
-        "nasamajh-lakri": 3400,
-        "date-planner": 1500,
-        "jalpaiguri-planner": 1500,
-      };
-      theme = await prisma.theme.upsert({
-        where: { name: demoId },
-        update: {},
-        create: {
-          name: demoId,
-          price: TEMPLATE_PRICES[demoId] || 2100,
-          durationDays: 7,
-          isPremium: true,
-          isActive: true,
-        },
-      });
+      theme = await prisma.theme.findUnique({ where: { id: demoId } });
+    }
+    if (!theme) {
+      return NextResponse.json({ success: false, message: "Template not found in database" }, { status: 404 });
     }
 
     let finalAmount = theme.price;

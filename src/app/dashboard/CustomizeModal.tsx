@@ -36,6 +36,15 @@ export type CustomizeModalProps = {
   /** The slug of the event being edited (for showing the share URL) */
   editSlug?: string;
   isPremiumUser?: boolean;
+  themePricing?: Array<{
+    name: string;
+    price: number;
+    durationDays: number;
+    isActive: boolean;
+    title?: string | null;
+    description?: string | null;
+    thumbnailUrl?: string | null;
+  }>;
   onClose: () => void;
 };
 
@@ -244,7 +253,7 @@ function FieldInput({
 // CustomizeModal — main component
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiumUser, onClose }: CustomizeModalProps) {
+export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiumUser, themePricing, onClose }: CustomizeModalProps) {
   const router = useRouter();
   const tmpl = getTemplateClass(demoId);
 
@@ -272,6 +281,26 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
 
   const demoItem = demos.find((d) => d.id === demoId);
 
+  // Live admin pricing state (from props or auto-fetched from DB)
+  const initialDbPricing = themePricing?.find((t) => t.name === demoId);
+  const [liveThemePrice, setLiveThemePrice] = useState<number>(initialDbPricing?.price ?? demoItem?.price ?? 2100);
+  const [liveThemeDuration, setLiveThemeDuration] = useState<number>(initialDbPricing?.durationDays ?? demoItem?.durationDays ?? 7);
+  const [liveThemeTitle, setLiveThemeTitle] = useState<string>(initialDbPricing?.title ?? demoItem?.title ?? tmpl?.title ?? "Special Proposal");
+
+  useEffect(() => {
+    if (!demoId) return;
+    fetch(`/api/theme/pricing?demoId=${encodeURIComponent(demoId)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          if (typeof data.price === "number") setLiveThemePrice(data.price);
+          if (typeof data.durationDays === "number") setLiveThemeDuration(data.durationDays);
+          if (data.title) setLiveThemeTitle(data.title);
+        }
+      })
+      .catch(() => {});
+  }, [demoId]);
+
   // Pre-fill form when editing an existing event & check payment gate
   useEffect(() => {
     if (!tmpl) return;
@@ -287,7 +316,7 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
         return;
       }
       const hasPaid = await checkPaymentAccess(demoId);
-      const requiresPayment = (demoItem?.price ?? 0) > 0 && !hasPaid;
+      const requiresPayment = liveThemePrice > 0 && !hasPaid;
       if (isMounted) {
         setNeedsPayment(requiresPayment);
         setIsEventPaid(hasPaid);
@@ -526,9 +555,9 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
           {showCheckoutModal && (
             <CheckoutModal
               demoId={demoId}
-              templateName={tmpl.title || "Custom Proposal"}
-              originalPrice={19900}
-              durationDays={3650}
+              templateName={liveThemeTitle}
+              originalPrice={liveThemePrice}
+              durationDays={liveThemeDuration}
               isPremiumUser={isPremiumUser}
               onClose={() => setShowCheckoutModal(false)}
               onSuccess={() => {
@@ -716,9 +745,9 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
       {showCheckoutModal && demoItem && (
         <CheckoutModal
           demoId={demoId}
-          templateName={demoItem.title}
-          originalPrice={demoItem.price ?? 7900}
-          durationDays={demoItem.durationDays ?? 14}
+          templateName={liveThemeTitle}
+          originalPrice={liveThemePrice}
+          durationDays={liveThemeDuration}
           isPremiumUser={isPremiumUser}
           onClose={() => setShowCheckoutModal(false)}
           onSuccess={() => {

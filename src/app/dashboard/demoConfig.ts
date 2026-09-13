@@ -29,8 +29,8 @@ export const demos: DemoItem[] = [
     icon: Heart,
     borderColor: "border-rose-200",
     hasInstantUse: false,
-    price: 7900,
-    durationDays: 14
+    price: 2100,
+    durationDays: 7
   },
   {
     id: "birthday-wish",

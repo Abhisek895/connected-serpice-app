@@ -515,6 +515,8 @@ export default function DashboardDemos({
         {customizeModalDemoId && (
           <CustomizeModal
             demoId={customizeModalDemoId}
+            themePricing={themePricing}
+            isPremiumUser={isPremiumUser}
             onClose={handleCloseCustomize}
           />
         )}
