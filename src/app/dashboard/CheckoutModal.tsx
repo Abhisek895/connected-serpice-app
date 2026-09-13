@@ -593,7 +593,7 @@ export default function CheckoutModal({
               ) : (
                 <>
                   <Heart className="w-4 h-4 fill-white text-white group-hover:scale-110 transition-transform" />
-                  <span>Tell Her You Love Her 💖</span>
+                  <span>Tell Them You Love Them 💖</span>
                 </>
               )}
             </button>
