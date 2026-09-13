@@ -141,10 +141,11 @@ export default function CheckoutModal({
         }
         if (data.valid) {
           setIsFree1Eligible(true);
-          setCouponCode("FREE100%");
+          // Keep couponCode empty so the actual admin-configured price (e.g. ₹21 / 7d) displays by default!
+          // The user can click the FREE100% coupon chip if they want to claim the free trial pass.
+          setCouponCode("");
         } else {
           setIsFree1Eligible(false);
-          // If FREE100% is not eligible, keep couponCode empty or use first active coupon
           setCouponCode("");
         }
       } catch (e) {
@@ -593,7 +594,14 @@ export default function CheckoutModal({
               ) : (
                 <>
                   <Heart className="w-4 h-4 fill-white text-white group-hover:scale-110 transition-transform" />
-                  <span>Tell Them You Love Them 💖</span>
+                  <span>
+                    Tell Them You Love Them 💖
+                    {couponMessage.includes("Premium Member")
+                      ? " · Free for Premium ∞"
+                      : totalToPayINR === 0
+                        ? " · Free Pass (₹0)"
+                        : ` · ₹${totalToPayINR.toFixed(0)} / ${liveDurationDays}d`}
+                  </span>
                 </>
               )}
             </button>

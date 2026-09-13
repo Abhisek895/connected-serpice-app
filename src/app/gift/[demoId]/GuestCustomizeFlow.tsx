@@ -1124,7 +1124,12 @@ export default function GuestCustomizeFlow({
               ) : (
                 <>
                   <Heart className="w-4 h-4 fill-white text-white group-hover:scale-110 transition-transform" />
-                  <span>Tell Them You Love Them 💖</span>
+                  <span>
+                    Tell Them You Love Them 💖
+                    {finalPriceINR === 0
+                      ? " · Free Pass (₹0)"
+                      : ` · ₹${finalPriceINR.toFixed(0)} / ${liveThemeDuration}d`}
+                  </span>
                 </>
               )}
             </button>

@@ -7,9 +7,8 @@ import type { Metadata } from "next";
 
 type Params = { demoId: string };
 
-export async function generateStaticParams() {
-  return demos.map((d) => ({ demoId: d.id }));
-}
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { demoId } = await params;

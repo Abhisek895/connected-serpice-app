@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
 
 async function checkAuth() {
   const session = await getServerSession(authOptions);
@@ -491,6 +492,15 @@ export async function upsertThemePricing(
       thumbnailUrl: content?.thumbnailUrl,
     }
   });
+
+  try {
+    revalidatePath("/dashboard");
+    revalidatePath(`/gift/${demoId}`);
+    revalidatePath("/admin/themes");
+  } catch (e) {
+    console.error("Failed to revalidate paths after theme upsert:", e);
+  }
+
   return { success: true, theme };
 }
 
