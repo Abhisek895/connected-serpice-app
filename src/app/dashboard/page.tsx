@@ -9,10 +9,14 @@ import DeleteAllButton from "./DeleteAllButton";
 import DashboardTourClient from "./DashboardTourClient";
 import Link from "next/link";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { Gift, ArrowRight } from "lucide-react";
 
 export default async function DashboardPage() {
   const { userId } = await getCurrentUser();
+  if (!userId) {
+    redirect("/login");
+  }
   const dbUser = await prisma.user.findUnique({ where: { id: userId } });
   const isPremiumUser = dbUser?.plan === "PREMIUM" || dbUser?.role === "super_admin";
 

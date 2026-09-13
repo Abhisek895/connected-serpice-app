@@ -25,6 +25,7 @@ export async function checkPaymentAccess(demoId: string) {
 
 export async function createDraftEvent(themeName: string) {
   const { userId } = await getCurrentUser();
+  if (!userId) return { success: false, error: "Unauthorized" };
 
   // Ensure theme exists
   let theme = await prisma.theme.findFirst({ where: { name: themeName } });
@@ -50,6 +51,7 @@ export async function createDraftEvent(themeName: string) {
 
 export async function updateEventCustomData(eventId: string, data: any) {
   const { userId } = await getCurrentUser();
+  if (!userId) return { success: false, error: "Unauthorized" };
 
   // Authorization Check: Ensure event belongs to user
   const event = await prisma.event.findFirst({
@@ -72,6 +74,7 @@ export async function updateEventCustomData(eventId: string, data: any) {
 
 export async function uploadMedia(eventId: string, formData: FormData) {
   const { userId } = await getCurrentUser();
+  if (!userId) return { success: false, error: "Unauthorized" };
 
   // Authorization Check: Ensure event belongs to user
   const event = await prisma.event.findFirst({
@@ -133,6 +136,7 @@ async function generateUserSlug(userId: string, demoId?: string): Promise<string
 
 export async function publishEvent(eventId: string) {
   const { userId } = await getCurrentUser();
+  if (!userId) return { success: false, error: "Unauthorized" };
 
   // Authorization Check: Ensure event belongs to user
   const existingEvent = await prisma.event.findFirst({
@@ -166,6 +170,7 @@ export async function publishEvent(eventId: string) {
 
 export async function createInstantEventFromTemplate(themeName: string, title?: string, recipientName?: string, demoId?: string, extraData?: any) {
   const { userId } = await getCurrentUser();
+  if (!userId) return { success: false, error: "Unauthorized" };
 
   const targetThemeName = demoId || themeName;
   let theme = await prisma.theme.findFirst({
@@ -299,17 +304,18 @@ export async function createInstantEventFromTemplate(themeName: string, title?: 
 
 export async function deleteEventAction(eventId: string) {
   const { userId } = await getCurrentUser();
+  if (!userId) return { success: false, error: "Unauthorized" };
 
-  const event = await prisma.event.findFirst({
+  const event = (await prisma.event.findFirst({
     where: { id: eventId, userId },
     include: { media: true }
-  });
+  })) as any;
 
   if (!event) return { success: false, error: "Unauthorized or not found" };
 
   // 1. Collect all cloud media URLs for this event to clean up storage
   const urlsToDelete: string[] = [];
-  event.media?.forEach((m) => {
+  event.media?.forEach((m: any) => {
     if (m.url) urlsToDelete.push(m.url);
   });
 
@@ -345,18 +351,19 @@ export async function deleteEventAction(eventId: string) {
 
 export async function deleteAllEventsAction() {
   const { userId } = await getCurrentUser();
+  if (!userId) return { success: false, error: "Unauthorized" };
 
-  const userEvents = await prisma.event.findMany({
+  const userEvents = (await prisma.event.findMany({
     where: { userId },
     include: { media: true }
-  });
+  })) as any[];
 
   const eventIds = userEvents.map((e) => e.id);
 
   if (eventIds.length > 0) {
     const urlsToDelete: string[] = [];
-    userEvents.forEach((ev) => {
-      ev.media?.forEach((m) => {
+    userEvents.forEach((ev: any) => {
+      ev.media?.forEach((m: any) => {
         if (m.url) urlsToDelete.push(m.url);
       });
       if (ev.customData) {
@@ -392,6 +399,7 @@ export async function deleteAllEventsAction() {
 
 export async function toggleEventStatusAction(eventId: string) {
   const { userId } = await getCurrentUser();
+  if (!userId) return { success: false, error: "Unauthorized" };
 
   const event = await prisma.event.findFirst({
     where: { id: eventId, userId }
@@ -415,11 +423,12 @@ export async function toggleEventStatusAction(eventId: string) {
  */
 export async function getEventCustomData(eventId: string) {
   const { userId } = await getCurrentUser();
+  if (!userId) return { success: false, error: "Unauthorized" };
 
-  const event = await prisma.event.findFirst({
+  const event = (await prisma.event.findFirst({
     where: { id: eventId, userId },
     include: { media: true },
-  });
+  })) as any;
 
   if (!event) return { success: false, error: "Not found" };
 
@@ -433,7 +442,7 @@ export async function getEventCustomData(eventId: string) {
   return {
     success: true,
     customData,
-    media: event.media.map((m) => ({ id: m.id, url: m.url, type: m.type })),
+    media: ((event.media as any[]) || []).map((m: any) => ({ id: m.id, url: m.url, type: m.type })),
   };
 }
 
@@ -446,6 +455,7 @@ export async function updatePublishedEvent(
   overrides: Record<string, any>
 ) {
   const { userId } = await getCurrentUser();
+  if (!userId) return { success: false, error: "Unauthorized" };
 
   const event = await prisma.event.findFirst({
     where: { id: eventId, userId },

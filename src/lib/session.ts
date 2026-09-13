@@ -2,7 +2,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function getCurrentUser() {
+export async function getCurrentUser(): Promise<{
+  userId?: string;
+  email?: string;
+  name?: string;
+  image?: string | null;
+}> {
   const session = await getServerSession(authOptions);
   let userId = session?.user?.id;
   let email = session?.user?.email;
@@ -16,27 +21,10 @@ export async function getCurrentUser() {
     }
   }
 
-  // Safe fallback user for local development if unauthenticated
-  if (!userId) {
-    let dummyUser = await prisma.user.findFirst({ where: { email: "test@example.com" } });
-    if (!dummyUser) {
-      dummyUser = await prisma.user.create({
-        data: {
-          email: "test@example.com",
-          name: "Test User",
-          plan: "FREE"
-        },
-      });
-    }
-    userId = dummyUser.id;
-    email = dummyUser.email || "test@example.com";
-    name = dummyUser.name || "Test User";
-  }
-
   return {
-    userId,
-    email: email || "user@example.com",
-    name: name || "OurStory User",
-    image: image || null
+    userId: userId || undefined,
+    email: email || undefined,
+    name: name || undefined,
+    image: image || null,
   };
 }

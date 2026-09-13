@@ -229,6 +229,10 @@ export default function ReferralPage() {
   const fetchStats = useCallback(async () => {
     try {
       const res = await fetch("/api/referral/stats");
+      if (res.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
       if (res.ok) setStats(await res.json());
     } finally {
       setLoading(false);

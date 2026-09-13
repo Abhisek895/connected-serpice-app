@@ -4,23 +4,25 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import SettingsClient from "./SettingsClient";
 
+import { redirect } from "next/navigation";
+
 export default async function SettingsPage() {
   const session = await getServerSession(authOptions);
   let userId = session?.user?.id;
 
-  // Fallback to dummy user for local dev if not logged in
+  if (!userId && session?.user?.email) {
+    const dbUser = await prisma.user.findUnique({ where: { email: session.user.email } });
+    userId = dbUser?.id;
+  }
+
   if (!userId) {
-    const dummyUser = await prisma.user.findFirst({ where: { email: "test@example.com" } });
-    userId = dummyUser?.id;
+    redirect("/login");
   }
 
   // Fetch user data
-  let user = null;
-  if (userId) {
-    user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-  }
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
 
   // Fetch dynamic upgrade to premium price
   const premiumSetting = await prisma.systemSetting.findUnique({
@@ -28,10 +30,9 @@ export default async function SettingsPage() {
   });
   const premiumUpgradePrice = premiumSetting?.value ? parseInt(premiumSetting.value, 10) : 5000;
 
-  // Mock data if user is missing
   const userProps = {
-    displayName: user?.name || "Test User",
-    displayEmail: user?.email || "test@example.com",
+    displayName: user?.name || "User",
+    displayEmail: user?.email || "",
     plan: user?.plan || "FREE",
   };
 

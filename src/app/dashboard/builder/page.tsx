@@ -86,14 +86,19 @@ function BuilderWizard() {
         let currentId = eventId;
         if (!currentId) {
           const res = await createDraftEvent(theme);
-          if (res.success) {
+          if (res.success && res.eventId) {
             currentId = res.eventId;
             setEventId(res.eventId);
           } else {
-            setError("Failed to create draft event.");
+            setError(res.error || "Failed to create draft event.");
             setIsLoading(false);
             return;
           }
+        }
+        if (!currentId) {
+          setError("Failed to initialize event.");
+          setIsLoading(false);
+          return;
         }
         await updateEventCustomData(currentId, {
           title: title || "Proposal for Priya",
