@@ -269,7 +269,7 @@ export default async function Home({
             <div className="bg-white rounded-3xl p-6 sm:p-8 border border-rose-100 shadow-sm hover:shadow-xl hover:border-rose-300 transition-all duration-300 flex flex-col justify-between group">
               <div>
                 <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Sparkles className="w-6 h-6 fill-rose-400 text-rose-500" />
+                  <Heart className="w-6 h-6 fill-rose-500 text-rose-500" />
                 </div>
                 <span className="text-[11px] font-bold uppercase tracking-wider text-rose-500 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-100">
                   Trigger #1: The Contrast
