@@ -112,17 +112,10 @@ export default async function Home({
       {/* ========================================================= */}
       <main className="flex-1 flex flex-col items-center justify-center text-center px-4 sm:px-6 pt-6 sm:pt-10 pb-16 sm:pb-24 max-w-6xl mx-auto w-full">
 
-<<<<<<< HEAD
         {/* Top Emotional Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-rose-100/90 border border-rose-200 text-rose-600 text-xs sm:text-sm font-semibold mb-6 sm:mb-8 shadow-xs">
-          <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-500 fill-rose-400" />
+          <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-500 fill-rose-500" />
           <span>The Most Romantic Way To Propose &amp; Confess Your Love 💖</span>
-=======
-        {/* Top Badge */}
-        <div className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-rose-100/80 border border-rose-200/50 text-rose-600 text-xs sm:text-sm font-semibold mb-6 sm:mb-8 shadow-xs">
-          <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-500" />
-          <span>The #1 No-Code Digital Memory &amp; Proposal Builder</span>
->>>>>>> main
         </div>
 
         {/* Main Title */}
@@ -167,14 +160,9 @@ export default async function Home({
             <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
             <span><strong>99.4%</strong> &ldquo;She Said YES!&rdquo; Rate</span>
           </span>
-<<<<<<< HEAD
           <span className="flex items-center gap-1.5 bg-white/70 backdrop-blur-xs px-3 py-1.5 rounded-full border border-slate-200/60 shadow-2xs">
             <Zap className="w-4 h-4 text-rose-500" />
             <span>Live Reaction Tracker</span>
-=======
-          <span className="flex items-center gap-1.5">
-            <Activity className="w-4 h-4 text-rose-500" /> Real-time Reaction Tracker
->>>>>>> main
           </span>
         </div>
 
