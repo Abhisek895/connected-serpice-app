@@ -139,6 +139,8 @@ export default function SettingsClient({
           <User className="w-4 h-4" />
           Profile
         </button>
+        {/* Billing & Plan tab button commented out */}
+        {/*
         <button 
           onClick={() => setActiveTab("billing")}
           className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl font-semibold text-sm whitespace-nowrap transition ${
@@ -150,6 +152,7 @@ export default function SettingsClient({
           <CreditCard className="w-4 h-4" />
           Billing & Plan
         </button>
+        */}
         <button 
           onClick={() => setActiveTab("security")}
           className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl font-semibold text-sm whitespace-nowrap transition ${
@@ -231,7 +234,8 @@ export default function SettingsClient({
           </div>
         )}
 
-        {/* Billing Tab */}
+        {/* Billing Tab commented out */}
+        {/*
         {activeTab === "billing" && (
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden animate-in fade-in slide-in-from-right-4 duration-300">
              <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
@@ -283,6 +287,7 @@ export default function SettingsClient({
             </div>
           </div>
         )}
+        */}
 
         {/* Security Tab */}
         {activeTab === "security" && (
