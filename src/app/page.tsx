@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-<<<<<<< HEAD
 import {
   Heart,
-  Sparkles,
   Image as ImageIcon,
   Music,
   ArrowRight,
@@ -14,10 +12,9 @@ import {
   CheckCircle2,
   Smile,
   Volume2,
+  Award,
+  Activity,
 } from "lucide-react";
-=======
-import { Heart, Image as ImageIcon, Music, ArrowRight, ShieldCheck, Zap, Award, Rocket, Activity } from "lucide-react";
->>>>>>> main
 import type { Metadata } from "next";
 import { demos } from "@/app/dashboard/demoConfig";
 import { prisma } from "@/lib/prisma";
