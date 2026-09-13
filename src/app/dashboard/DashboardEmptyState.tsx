@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { Sparkles, ArrowRight, Heart, Link2 } from "lucide-react";
+import { ArrowRight, Heart, Link2, LayoutGrid } from "lucide-react";
 import ClaimGuestPageModal from "./ClaimGuestPageModal";
 
 export default function DashboardEmptyState() {
@@ -72,7 +72,7 @@ export default function DashboardEmptyState() {
           href="/dashboard"
           className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white font-bold rounded-2xl shadow-lg shadow-rose-300/40 hover:shadow-rose-300/60 hover:scale-[1.02] transition-all text-sm"
         >
-          <Sparkles className="w-4 h-4 fill-white" />
+          <LayoutGrid className="w-4 h-4" />
           Browse Templates
         </Link>
         <button

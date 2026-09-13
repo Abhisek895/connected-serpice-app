@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useRef } from "react";
-import { Tag, Loader2, Check, X, Edit3, Eye, Search, Sparkles, Upload, ImageIcon, Type, AlignLeft } from "lucide-react";
+import { Tag, Loader2, Check, X, Edit3, Eye, Search, Palette, Upload, ImageIcon, Type, AlignLeft } from "lucide-react";
 import { getAdminThemes, upsertThemePricing } from "@/app/admin/actions";
 import { demos } from "@/app/dashboard/demoConfig";
 import { motion, AnimatePresence } from "framer-motion";
@@ -168,12 +168,12 @@ export default function AdminThemesPage() {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-            <Tag className="w-6 h-6 text-indigo-400" /> Pricing &amp; Themes
+          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+            <Tag className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-400" /> Pricing &amp; Themes
           </h2>
-          <p className="text-slate-400 text-sm mt-1">
+          <p className="text-slate-400 text-xs sm:text-sm mt-1">
             Click any template to edit its price, title, description, and thumbnail.
           </p>
         </div>
@@ -197,12 +197,12 @@ export default function AdminThemesPage() {
       ) : filteredDemos.length === 0 ? (
         <div className="text-center py-16 text-slate-500 font-medium">No templates match your search.</div>
       ) : (
-        <div className="bg-[#0f172a] border border-slate-800/60 rounded-3xl p-6 relative overflow-hidden">
+        <div className="bg-[#0f172a] border border-slate-800/60 rounded-2xl sm:rounded-3xl p-4 sm:p-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 -translate-y-12 translate-x-12 w-64 h-64 bg-indigo-900/20 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative flex items-center gap-2 mb-5">
             <span className="bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 border border-indigo-500/20">
-              <Sparkles className="w-3.5 h-3.5" /> Explore Demos &amp; Template Actions 💖
+              <Palette className="w-3.5 h-3.5 text-indigo-400" /> Explore Demos &amp; Template Actions
             </span>
           </div>
 
@@ -326,22 +326,22 @@ export default function AdminThemesPage() {
             className="bg-[#111827] border border-indigo-500/40 rounded-2xl overflow-hidden shadow-xl shadow-indigo-500/5"
           >
             {/* Panel header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-[#0f172a]/50">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 border border-slate-700">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-800 bg-[#0f172a]/50">
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg overflow-hidden flex-shrink-0 border border-slate-700">
                   <img src={thumbnailPreview || selectedDemo.image} alt="" className="w-full h-full object-cover" />
                 </div>
-                <div>
-                  <h3 className="text-white font-bold text-sm">{editTitle || selectedDemo.title}</h3>
-                  <p className="text-slate-500 text-xs">Editing template content &amp; pricing</p>
+                <div className="min-w-0">
+                  <h3 className="text-white font-bold text-xs sm:text-sm truncate">{editTitle || selectedDemo.title}</h3>
+                  <p className="text-slate-500 text-[10px] sm:text-xs truncate">Editing template content &amp; pricing</p>
                 </div>
               </div>
-              <button onClick={() => setSelectedId(null)} className="p-2 hover:bg-slate-800 rounded-xl text-slate-400 hover:text-white transition">
+              <button onClick={() => setSelectedId(null)} className="p-1.5 sm:p-2 hover:bg-slate-800 rounded-xl text-slate-400 hover:text-white transition">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-6 space-y-6">
+            <div className="p-4 sm:p-6 space-y-5 sm:space-y-6">
 
               {/* ── CONTENT SECTION ── */}
               <div>

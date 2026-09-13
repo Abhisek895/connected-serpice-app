@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, Zap, Loader2, CheckCircle2, Copy, Edit3, Eye, X, ExternalLink } from "lucide-react";
+import { Zap, Loader2, CheckCircle2, Copy, Edit3, Eye, X, ExternalLink, Palette } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createInstantEventFromTemplate } from "./builder/actions";
 import { TEMPLATE_CLASSES } from "./templateConfig";
@@ -92,6 +92,17 @@ export default function DashboardDemos({
 
   const [pendingTitle, setPendingTitle] = useState<string>("");
   const [appliedCouponCode, setAppliedCouponCode] = useState<string>("");
+
+  useEffect(() => {
+    if (selectedDemo) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [selectedDemo]);
 
   const handleActionClick = (demoId: string, action: "instant" | "builder") => {
     const actionType = action === "instant" ? "instant" : "customize";
@@ -192,7 +203,7 @@ export default function DashboardDemos({
 
   return (
     <>
-      <div className="bg-gradient-to-r from-rose-50/60 via-purple-50/40 to-slate-50 border border-rose-100/80 rounded-3xl p-6 md:p-8 shadow-sm relative overflow-hidden mb-8 w-full">
+      <div className="bg-gradient-to-r from-rose-50/60 via-purple-50/40 to-slate-50 border border-rose-100/80 -mx-4 sm:mx-0 w-[calc(100%+2rem)] sm:w-full rounded-none sm:rounded-3xl border-x-0 sm:border p-4 sm:p-6 md:p-8 shadow-sm relative overflow-hidden mb-8">
 
         {/* Toast Notification */}
         <AnimatePresence>
@@ -216,7 +227,7 @@ export default function DashboardDemos({
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="bg-rose-100 text-rose-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 fill-rose-500" /> Pre-Configured Templates
+                <Palette className="w-3.5 h-3.5 text-rose-500" /> Pre-Configured Templates
               </span>
             </div>
             <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
@@ -229,7 +240,7 @@ export default function DashboardDemos({
             {/* Category Filter Tabs */}
             <div className="flex flex-wrap gap-2 mt-4">
               {[
-                { id: "all", label: "✨ All Templates" },
+                { id: "all", label: "🎨 All Templates" },
                 { id: "romantic", label: "❤️ Romantic Proposals" },
                 { id: "birthday", label: "🎂 Birthday Cards" },
                 { id: "planner", label: "🌸 Date Planners" },
@@ -396,46 +407,106 @@ export default function DashboardDemos({
       {/* Instant Use Title Modal */}
       <AnimatePresence>
         {selectedDemo && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md w-screen h-screen"
-          >
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            {/* Full-screen backdrop covering top to bottom seamlessly */}
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-3xl p-6 shadow-2xl max-w-sm w-full border border-slate-100"
-            >
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Give it a Title 🎀</h3>
-              <p className="text-sm text-slate-500 mb-4">What would you like to call this event?</p>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={instantModalTitle}
-                  onChange={(e) => setInstantModalTitle(e.target.value.slice(0, 60))}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-rose-400 focus:ring-4 focus:ring-rose-100 transition outline-none text-slate-800 mb-1"
-                  placeholder="e.g. For Sarah ❤️"
-                  autoFocus
-                />
-                <span className={`text-[10px] font-semibold absolute right-3 bottom-3.5 ${instantModalTitle.length >= 55 ? 'text-amber-500' : 'text-slate-400'}`}>
-                  {instantModalTitle.length}/60
-                </span>
-              </div>
-              <p className="text-xs text-slate-400 mb-5">Try: &quot;For Priya 💖&quot;, &quot;Surprise for Ananya ✨&quot;, &quot;For My Best Girl 🌸&quot;</p>
-              <div className="flex items-center gap-3">
-                <button onClick={handleCloseInstantTitleModal} className="flex-1 px-4 py-3 rounded-xl text-slate-600 font-bold bg-slate-100 hover:bg-slate-200 transition">Cancel</button>
-                <button
-                  onClick={() => handleTitleSubmit(selectedDemo, instantModalTitle)}
-                  disabled={instantModalTitle.trim().length === 0}
-                  className="flex-1 px-4 py-3 rounded-xl text-white font-bold bg-rose-500 hover:bg-rose-600 transition shadow-sm shadow-rose-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Continue ➔
-                </button>
-              </div>
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 w-full h-full min-h-screen min-h-[100dvh] bg-slate-950/80 backdrop-blur-md"
+              onClick={handleCloseInstantTitleModal}
+            />
+
+            {/* Modal positioning container */}
+            <div className="relative min-h-[100dvh] w-full flex items-start sm:items-center justify-center p-4 pt-6 pb-12 sm:p-4 pointer-events-none">
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0, y: -10 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: -10 }}
+                className="relative bg-white rounded-3xl p-5 sm:p-6 shadow-2xl max-w-sm w-full border border-slate-100 pointer-events-auto sm:my-auto"
+              >
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={handleCloseInstantTitleModal}
+                className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition cursor-pointer"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <h3 className="text-xl font-bold text-slate-900 mb-1.5 pr-8">Give it a Title 🎀</h3>
+              <p className="text-sm text-slate-500 mb-3.5">What would you like to call this event?</p>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (instantModalTitle.trim().length > 0) {
+                    handleTitleSubmit(selectedDemo, instantModalTitle);
+                  }
+                }}
+              >
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={instantModalTitle}
+                    onChange={(e) => setInstantModalTitle(e.target.value.slice(0, 60))}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-rose-400 focus:ring-4 focus:ring-rose-100 transition outline-none text-slate-800 mb-1"
+                    placeholder="e.g. For Sarah ❤️"
+                    autoFocus
+                  />
+                  <span className={`text-[10px] font-semibold absolute right-3 bottom-3.5 ${instantModalTitle.length >= 55 ? 'text-amber-500' : 'text-slate-400'}`}>
+                    {instantModalTitle.length}/60
+                  </span>
+                </div>
+
+                <p className="text-xs text-slate-400 mb-5 leading-relaxed">
+                  Try:{" "}
+                  <button
+                    type="button"
+                    onClick={() => setInstantModalTitle("For Priya 💖")}
+                    className="text-rose-500 hover:text-rose-600 hover:underline cursor-pointer font-medium"
+                  >
+                    &quot;For Priya 💖&quot;
+                  </button>
+                  {", "}
+                  <button
+                    type="button"
+                    onClick={() => setInstantModalTitle("Surprise for Ananya ✨")}
+                    className="text-rose-500 hover:text-rose-600 hover:underline cursor-pointer font-medium"
+                  >
+                    &quot;Surprise for Ananya ✨&quot;
+                  </button>
+                  {", "}
+                  <button
+                    type="button"
+                    onClick={() => setInstantModalTitle("For My Best Girl 🌸")}
+                    className="text-rose-500 hover:text-rose-600 hover:underline cursor-pointer font-medium"
+                  >
+                    &quot;For My Best Girl 🌸&quot;
+                  </button>
+                </p>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleCloseInstantTitleModal}
+                    className="flex-1 px-4 py-3 rounded-xl text-slate-600 font-bold bg-slate-100 hover:bg-slate-200 transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={instantModalTitle.trim().length === 0}
+                    className="flex-1 px-4 py-3 rounded-xl text-white font-bold bg-rose-500 hover:bg-rose-600 transition shadow-sm shadow-rose-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    Continue ➔
+                  </button>
+                </div>
+              </form>
             </motion.div>
-          </motion.div>
+          </div>
+        </div>
         )}
       </AnimatePresence>
 

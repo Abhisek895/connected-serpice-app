@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Eye, Globe, Edit3, QrCode, Link2 } from "lucide-react";
+import { Palette, Eye, Globe, Edit3, QrCode, Link2 } from "lucide-react";
 import EventCardActions from "./EventCardActions";
 import EventCardMenu from "./EventCardMenu";
 import CustomizeModal from "./CustomizeModal";
@@ -77,7 +77,7 @@ export default function EventCardContainer({ events, isPremiumUser }: { events: 
               <div>
                 <div className="flex justify-between items-start mb-4">
                   <div className="bg-rose-100 text-rose-600 px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" /> {event.theme?.name || "Unknown Theme"}
+                    <Palette className="w-3 h-3 text-rose-500" /> {event.theme?.name || "Unknown Theme"}
                   </div>
 
                   {/* Interactive 3-Dots Menu */}

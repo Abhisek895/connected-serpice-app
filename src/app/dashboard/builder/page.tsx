@@ -1,10 +1,11 @@
 "use client"
 import { useState, Suspense, useEffect } from "react"
-import { Sparkles, Image as ImageIcon, Music, Type, CheckCircle, ArrowRight, Loader2, AlertCircle, Bookmark, Heart, Mail } from "lucide-react"
+import { Image as ImageIcon, Music, Type, CheckCircle, ArrowRight, Loader2, AlertCircle, Bookmark, Zap, Mail } from "lucide-react"
 import { createDraftEvent, updateEventCustomData, uploadMedia, publishEvent, checkPaymentAccess } from "./actions"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
+import ImageCropModal from "@/components/ImageCropModal"
 
 function BuilderWizard() {
   const router = useRouter()
@@ -24,6 +25,19 @@ function BuilderWizard() {
   const [eventId, setEventId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [premiumUpgradePrice, setPremiumUpgradePrice] = useState(5000)
+  const [cropTarget, setCropTarget] = useState<{ file: File; objectUrl: string } | null>(null)
+
+  useEffect(() => {
+    fetch("/api/system/pricing")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.premiumUpgradePrice) {
+          setPremiumUpgradePrice(data.premiumUpgradePrice);
+        }
+      })
+      .catch(() => {});
+  }, [])
 
   useEffect(() => {
     async function verifyAccess() {
@@ -149,10 +163,17 @@ function BuilderWizard() {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
     if (!e.target.files || !e.target.files[0]) return;
+    const file = e.target.files[0];
+
+    if (type === "image") {
+      const objectUrl = URL.createObjectURL(file);
+      setCropTarget({ file, objectUrl });
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {
-      const file = e.target.files[0];
       const reader = new FileReader();
       const dataUrl = await new Promise<string>((resolve, reject) => {
         reader.onload = () => resolve(reader.result as string);
@@ -165,7 +186,27 @@ function BuilderWizard() {
       setError("Failed to process media file.");
     }
     setIsLoading(false);
-  }
+  };
+
+  const handleCropComplete = async (croppedBlob: Blob, croppedFile: File) => {
+    if (cropTarget?.objectUrl) URL.revokeObjectURL(cropTarget.objectUrl);
+    setCropTarget(null);
+    setIsLoading(true);
+    setError(null);
+    try {
+      const reader = new FileReader();
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("Failed to read cropped image."));
+        reader.readAsDataURL(croppedFile);
+      });
+      setPhotoUrl(dataUrl);
+    } catch (err: any) {
+      console.error(err);
+      setError("Failed to process cropped photo.");
+    }
+    setIsLoading(false);
+  };
 
   const stepVariants = {
     initial: { opacity: 0, y: 20 },
@@ -322,7 +363,7 @@ function BuilderWizard() {
               <div className="space-y-4 max-w-xl">
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-1.5">
-                    <Heart className="w-4 h-4 text-rose-500" /> Custom Photo Image URL (Optional or Upload File Below)
+                    <ImageIcon className="w-4 h-4 text-rose-500" /> Custom Photo Image URL (Optional or Upload File Below)
                   </label>
                   <input
                     type="url"
@@ -395,8 +436,15 @@ function BuilderWizard() {
                       {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
                       {isLoading ? 'Publishing...' : '🚀 Publish & Go Live'}
                     </motion.button>
-                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1 bg-rose-500 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-rose-600 transition-all shadow-rose-200 flex items-center justify-center gap-2">
-                      <Sparkles className="w-5 h-5" /> Upgrade to Premium (₹99)
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        window.location.href = "/dashboard/settings";
+                      }}
+                      className="flex-1 bg-rose-500 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-rose-600 transition-all shadow-rose-200 flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Zap className="w-5 h-5 fill-amber-300 text-amber-300" /> Upgrade to Premium (₹{premiumUpgradePrice})
                     </motion.button>
                   </div>
                 </>
@@ -430,6 +478,18 @@ function BuilderWizard() {
         )}
       </div>
 
+      {cropTarget && (
+        <ImageCropModal
+          imageSrc={cropTarget.objectUrl}
+          originalFileName={cropTarget.file.name}
+          initialAspect={1}
+          onCancel={() => {
+            URL.revokeObjectURL(cropTarget.objectUrl);
+            setCropTarget(null);
+          }}
+          onComplete={handleCropComplete}
+        />
+      )}
     </div>
   )
 }

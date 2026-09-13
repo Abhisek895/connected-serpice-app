@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, CreditCard, Tag, Loader2, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
+import { X, CreditCard, Tag, Loader2, CheckCircle2, AlertCircle, Zap } from "lucide-react";
 import Script from "next/script";
 import { useSession } from "next-auth/react";
 import { loadRazorpayScript } from "@/hooks/useRazorpay";
@@ -262,7 +262,17 @@ export default function CheckoutModal({
           }
         },
         modal: {
-          ondismiss: function () {
+          ondismiss: async function () {
+            // On mobile UPI app switch, check if payment went through before closing
+            try {
+              const res = await fetch(`/api/payment/status?orderId=${encodeURIComponent(data.orderId)}`);
+              const stat = await res.json();
+              if (stat.fulfilled) {
+                setIsProcessing(false);
+                onSuccess(activeCoupon);
+                return;
+              }
+            } catch { }
             setIsProcessing(false);
           },
         },
@@ -331,21 +341,21 @@ export default function CheckoutModal({
     <>
       <Script src="https://checkout.razorpay.com/v1/checkout.js" />
 
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4 pt-8 sm:pt-4 overflow-y-auto">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
           onClick={onClose}
         />
 
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden z-10"
+          exit={{ opacity: 0, scale: 0.95, y: 10 }}
+          className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden z-10 my-2 sm:my-auto"
         >
           {/* Header */}
           <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-rose-50 to-pink-50">
@@ -374,7 +384,7 @@ export default function CheckoutModal({
             {couponMessage.includes("Premium Member") ? (
               <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-2xl p-4 text-center space-y-1">
                 <div className="text-amber-800 font-black text-sm flex items-center justify-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-amber-600 fill-amber-500" />
+                  <Zap className="w-4 h-4 text-amber-600 fill-amber-500" />
                   👑 Premium Unlimited Pass Active
                 </div>
                 <p className="text-xs text-amber-700 font-semibold">
@@ -416,7 +426,7 @@ export default function CheckoutModal({
                           : "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
                         }`}
                     >
-                      <Sparkles className="w-3 h-3 fill-white" />
+                      <Tag className="w-3 h-3" />
                       🎁 FREE100% (100% OFF 1-Day Pass)
                     </button>
                   )}

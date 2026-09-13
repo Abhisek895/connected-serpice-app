@@ -2,9 +2,39 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Search, Loader2, Ban, CheckCircle2, Trash2, AlertCircle, AlertTriangle, X, ExternalLink, Users as UsersIcon, Gift } from "lucide-react";
+import {
+  Search,
+  Loader2,
+  Ban,
+  CheckCircle2,
+  Trash2,
+  AlertCircle,
+  AlertTriangle,
+  X,
+  ExternalLink,
+  Users as UsersIcon,
+  Gift,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 import { getAdminUsers, deleteAdminUser, toggleSuspendAdminUser, toggleUserPlanAdminAction, updateUserPlatformAdminAction } from "@/app/admin/actions";
 import { motion, AnimatePresence } from "framer-motion";
+
+// Helper to calculate pagination page numbers with ellipsis
+function getPageNumbers(current: number, total: number): (number | string)[] {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  if (current <= 4) {
+    return [1, 2, 3, 4, 5, "...", total];
+  }
+  if (current >= total - 3) {
+    return [1, "...", total - 4, total - 3, total - 2, total - 1, total];
+  }
+  return [1, "...", current - 1, current, current + 1, "...", total];
+}
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -15,10 +45,19 @@ export default function AdminUsersPage() {
   const [roleFilter, setRoleFilter] = useState("");
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   // Deletion Confirmation Modal State
   const [deleteConfirmUser, setDeleteConfirmUser] = useState<{ id: string; email: string; name?: string } | null>(null);
 
   useEffect(() => { loadUsers(); }, [roleFilter]);
+
+  // Reset page to 1 when search or roleFilter or pageSize changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, roleFilter, pageSize]);
 
   async function loadUsers(searchQuery = search) {
     setIsLoading(true);
@@ -113,17 +152,24 @@ export default function AdminUsersPage() {
     SUSPENDED: "text-rose-400 bg-rose-500/10 border border-rose-500/30 font-bold",
   };
 
+  // Calculate Pagination ranges
+  const totalPages = Math.max(1, Math.ceil(users.length / pageSize));
+  const safePage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, users.length);
+  const paginatedUsers = users.slice(startIndex, endIndex);
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2">
             User Management
             <span className="bg-indigo-500/20 text-indigo-400 text-xs px-2.5 py-0.5 rounded-full font-semibold">
               {total} Total
             </span>
           </h2>
-          <p className="text-slate-400 text-sm mt-1">All registered OurStory users with disable &amp; deletion controls.</p>
+          <p className="text-slate-400 text-xs sm:text-sm mt-1">All registered OurStory users with disable &amp; deletion controls.</p>
         </div>
       </div>
 
@@ -142,21 +188,21 @@ export default function AdminUsersPage() {
       )}
 
       {/* Filter Bar */}
-      <div className="bg-[#111827] border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-center">
-        <form onSubmit={(e) => { e.preventDefault(); loadUsers(); }} className="flex-1 w-full max-w-md relative">
-          <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+      <div className="bg-[#111827] border border-slate-800 rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center">
+        <form onSubmit={(e) => { e.preventDefault(); loadUsers(); }} className="flex-1 w-full relative">
+          <Search className="w-4 h-4 sm:w-5 sm:h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
           <input
             type="text"
             placeholder="Search by name or email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-[#0a0f1e] border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+            className="w-full pl-9 sm:pl-10 pr-4 py-2 bg-[#0a0f1e] border border-slate-700 rounded-lg text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
           />
         </form>
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
-          className="bg-[#0a0f1e] border border-slate-700 rounded-lg text-white text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="bg-[#0a0f1e] border border-slate-700 rounded-lg text-white text-xs sm:text-sm px-3 sm:px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           <option value="">All Roles</option>
           <option value="USER">User</option>
@@ -167,7 +213,7 @@ export default function AdminUsersPage() {
         </select>
       </div>
 
-      <div className="bg-[#111827] border border-slate-800 rounded-xl overflow-hidden shadow-sm">
+      <div className="-mx-3.5 sm:mx-0 rounded-none sm:rounded-xl border-x-0 sm:border border-slate-800 bg-[#111827] overflow-hidden shadow-sm">
         {isLoading ? (
           <div className="flex justify-center items-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
@@ -191,10 +237,15 @@ export default function AdminUsersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
-                {users.map((u) => {
+                {paginatedUsers.map((u) => {
                   const isActionBusy = actionLoadingId === u.id;
                   const isSuspended = u.role === "SUSPENDED";
-                  const totalSpentPaise = u.payments?.reduce((sum: number, p: any) => sum + p.amount, 0) ?? 0;
+                  const totalSpentPaise = u.payments?.reduce((sum: number, p: any) => {
+                    const actualPaid = p.finalAmount !== null && p.finalAmount !== undefined ? p.finalAmount : p.amount;
+                    return sum + actualPaid;
+                  }, 0) ?? 0;
+                  const paidPaymentsCount = u.payments?.filter((p: any) => (p.finalAmount !== null && p.finalAmount !== undefined ? p.finalAmount : p.amount) > 0).length ?? 0;
+                  const freeClaimsCount = (u.payments?.length ?? 0) - paidPaymentsCount;
 
                   return (
                     <tr key={u.id} className="hover:bg-slate-800/30 transition-colors">
@@ -270,11 +321,16 @@ export default function AdminUsersPage() {
                         <div className={`font-bold text-xs ${totalSpentPaise > 0 ? "text-emerald-400" : "text-slate-400"}`}>
                           ₹{(totalSpentPaise / 100).toFixed(0)}
                         </div>
-                        {totalSpentPaise > 0 && (
+                        {totalSpentPaise > 0 ? (
                           <div className="text-[10px] text-slate-500 font-medium leading-tight mt-0.5">
-                            {u.payments?.length ?? 0} {u.payments?.length === 1 ? "purchase" : "purchases"}
+                            {paidPaymentsCount} {paidPaymentsCount === 1 ? "purchase" : "purchases"}
+                            {freeClaimsCount > 0 && ` (+${freeClaimsCount} free)`}
                           </div>
-                        )}
+                        ) : freeClaimsCount > 0 ? (
+                          <div className="text-[10px] text-amber-400/90 font-semibold leading-tight mt-0.5">
+                            {freeClaimsCount} {freeClaimsCount === 1 ? "free pass" : "free passes"}
+                          </div>
+                        ) : null}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
@@ -320,17 +376,111 @@ export default function AdminUsersPage() {
             </table>
           </div>
         )}
+
+        {/* ── Enhanced Pagination Footer Bar ── */}
+        {!isLoading && users.length > 0 && (
+          <div className="p-3.5 sm:p-4 bg-[#0d1322] border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+            {/* Range & Page Size */}
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-slate-400 w-full sm:w-auto">
+              <span>
+                Showing <span className="text-white font-bold">{startIndex + 1}</span> to{" "}
+                <span className="text-white font-bold">{endIndex}</span> of{" "}
+                <span className="text-white font-bold">{users.length}</span> users
+              </span>
+
+              <div className="flex items-center gap-1.5 pl-2 border-l border-slate-700">
+                <span className="text-slate-500">Per page:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => setPageSize(Number(e.target.value))}
+                  className="bg-[#0a0f1e] border border-slate-700 rounded-lg text-slate-200 text-xs px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Pagination Controls */}
+            <div className="flex items-center gap-1">
+              {/* First Page */}
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={safePage === 1}
+                className="p-1.5 rounded-lg border border-slate-800 bg-[#0a0f1e] text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+                title="First Page"
+              >
+                <ChevronsLeft className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Previous Page */}
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={safePage === 1}
+                className="p-1.5 rounded-lg border border-slate-800 bg-[#0a0f1e] text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+                title="Previous Page"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Page Number Buttons */}
+              <div className="flex items-center gap-1">
+                {getPageNumbers(safePage, totalPages).map((p, idx) =>
+                  typeof p === "number" ? (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentPage(p)}
+                      className={`min-w-[28px] h-7 px-2 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        safePage === p
+                          ? "bg-indigo-600 text-white shadow-md shadow-indigo-950 border border-indigo-500"
+                          : "bg-[#0a0f1e] border border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ) : (
+                    <span key={idx} className="px-1 text-slate-500 font-bold select-none">
+                      ...
+                    </span>
+                  )
+                )}
+              </div>
+
+              {/* Next Page */}
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={safePage === totalPages}
+                className="p-1.5 rounded-lg border border-slate-800 bg-[#0a0f1e] text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+                title="Next Page"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Last Page */}
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={safePage === totalPages}
+                className="p-1.5 rounded-lg border border-slate-800 bg-[#0a0f1e] text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+                title="Last Page"
+              >
+                <ChevronsRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Delete User Confirmation Modal */}
       <AnimatePresence>
         {deleteConfirmUser && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-[#111827] border border-rose-500/30 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative text-center"
+              className="bg-[#111827] border border-rose-500/30 rounded-3xl p-5 sm:p-8 max-w-md w-full shadow-2xl relative text-center max-h-[90vh] overflow-y-auto"
             >
               <button
                 onClick={() => setDeleteConfirmUser(null)}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles } from "lucide-react";
+import { Compass } from "lucide-react";
 
 interface OnboardingTourEngineProps {
   currentStep: number;
@@ -124,7 +124,7 @@ export default function OnboardingTourEngine({
             }}
           >
             <span className="flex items-center gap-1.5 text-rose-300 font-black tracking-wide">
-              <Sparkles className="w-4 h-4 fill-rose-400" />
+              <Compass className="w-4 h-4 text-rose-400" />
               {badgeTexts[currentStep]}
             </span>
 

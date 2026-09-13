@@ -1,28 +1,30 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Script from "next/script";
 import Link from "next/link";
 import { useSession, signIn } from "next-auth/react";
 import {
-  X, Sparkles, ChevronRight, ChevronLeft, Loader2, Send,
+  X, ChevronRight, ChevronLeft, Loader2, Send,
   CheckCircle2, Copy, ExternalLink, Image as ImageIcon, Music,
-  AlertCircle, Smartphone, Edit3, Tag, Heart, Compass, Gift, Zap, Eye, Bell, LucideIcon,
+  AlertCircle, Smartphone, Edit3, Tag, Heart, Compass, Gift, Zap, Eye, Bell, ShieldCheck, RefreshCw, HeartHandshake, LucideIcon,
 } from "lucide-react";
 import type { DemoItem } from "@/app/dashboard/demoConfig";
 import type { TemplateClass, TemplateField } from "@/app/dashboard/templateConfig";
 import LivePhonePreview from "@/components/ui/LivePhonePreview";
 import AutoClickSimulatedPreview from "@/components/ui/AutoClickSimulatedPreview";
 import { loadRazorpayScript } from "@/hooks/useRazorpay";
+import { compressImage } from "@/lib/clientImageCompressor";
+import ImageCropModal from "@/components/ImageCropModal";
 
 // Map demoId → icon client-side (icons are functions, can't be serialized server→client)
 const DEMO_ICONS: Record<string, LucideIcon> = {
-  "surprise": Sparkles,
+  "surprise": Heart,
   "birthday-wish": Gift,
-  "im-sorry": Sparkles,
+  "im-sorry": HeartHandshake,
   "she-cant-say-no": Heart,
-  "nasamajh-lakri": Heart,
+  "nasamajh-lakri": Music,
   "date-planner": Compass,
   "jalpaiguri-planner": Compass,
 };
@@ -127,16 +129,22 @@ function FieldInput({
   if (field.type === "file-image" || field.type === "file-audio") {
     const isImage = field.type === "file-image";
     const Icon = isImage ? ImageIcon : Music;
+    const hasValue = Boolean(value && typeof value === "string" && value.trim() && value !== "undefined");
+    const isDone = fileStatus === "done" || hasValue;
+
     const statusText =
       fileStatus === "uploading"
         ? "Uploading…"
-        : fileStatus === "done"
-          ? "✓ Uploaded!"
+        : isDone
+          ? isImage
+            ? "✓ Photo Uploaded"
+            : "✓ Audio Attached"
           : isImage
             ? "Choose Photo"
             : "Choose Audio";
+
     const statusColor =
-      fileStatus === "done"
+      isDone
         ? "text-emerald-600 font-bold"
         : fileStatus === "uploading"
           ? "text-amber-600"
@@ -145,36 +153,66 @@ function FieldInput({
             : "text-slate-600";
 
     return (
-      <div>
-        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+      <div className="space-y-1.5">
+        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
           {field.label}
         </label>
-        <label
-          className={`relative flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed cursor-pointer transition ${fileStatus === "done"
-            ? "border-emerald-300 bg-emerald-50"
-            : isImage
-              ? "border-rose-200 bg-rose-50/50 hover:border-rose-400 hover:bg-rose-50"
-              : "border-slate-200 bg-slate-50 hover:border-slate-300"
-            } ${isLoading ? "opacity-50 pointer-events-none" : ""}`}
-        >
-          {fileStatus === "uploading" ? (
-            <Loader2 className="w-5 h-5 animate-spin text-amber-500 flex-shrink-0" />
-          ) : (
-            <Icon className={`w-5 h-5 flex-shrink-0 ${isImage ? "text-rose-500" : "text-slate-500"}`} />
+
+        <div className="flex items-center gap-2.5">
+          {/* If image and hasValue, show thumbnail preview! */}
+          {isImage && hasValue && (
+            <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-emerald-300 shadow-sm shrink-0 bg-slate-900">
+              <img src={value} alt="Uploaded thumbnail" className="w-full h-full object-cover" />
+            </div>
           )}
-          <span className={`text-sm ${statusColor}`}>{statusText}</span>
-          <input
-            type="file"
-            accept={field.accept}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            disabled={isLoading}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) onFileChange?.(file, field.key);
-            }}
-          />
-        </label>
-        {field.hint && <p className="text-[11px] text-slate-400 mt-1">{field.hint}</p>}
+
+          <label
+            className={`relative flex-1 flex items-center gap-3 px-4 py-2.5 rounded-xl border-2 border-dashed cursor-pointer transition ${
+              isDone
+                ? "border-emerald-300 bg-emerald-50/70 hover:bg-emerald-50"
+                : isImage
+                  ? "border-rose-200 bg-rose-50/50 hover:border-rose-400 hover:bg-rose-50"
+                  : "border-slate-200 bg-slate-50 hover:border-slate-300"
+            } ${isLoading ? "opacity-50 pointer-events-none" : ""}`}
+          >
+            {fileStatus === "uploading" ? (
+              <Loader2 className="w-5 h-5 animate-spin text-amber-500 flex-shrink-0" />
+            ) : (
+              <Icon className={`w-5 h-5 flex-shrink-0 ${isDone ? "text-emerald-600" : isImage ? "text-rose-500" : "text-slate-500"}`} />
+            )}
+            <div className="flex-1 min-w-0">
+              <span className={`text-xs sm:text-sm block truncate ${statusColor}`}>{statusText}</span>
+              {hasValue && (
+                <span className="text-[10px] text-slate-400 font-normal block">Tap to replace</span>
+              )}
+            </div>
+
+            <input
+              type="file"
+              accept={field.accept}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              disabled={isLoading}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) onFileChange?.(file, field.key);
+              }}
+            />
+          </label>
+
+          {/* Remove / Reset button if custom file was selected */}
+          {hasValue && (
+            <button
+              type="button"
+              onClick={() => onChange?.("")}
+              title="Remove and use default"
+              className="px-2.5 py-2.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold transition shrink-0"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {field.hint && <p className="text-[11px] text-slate-400">{field.hint}</p>}
       </div>
     );
   }
@@ -202,6 +240,7 @@ export default function GuestCustomizeFlow({
   const [showExitPushToast, setShowExitPushToast] = useState(false);
   const [showPaymentPushModal, setShowPaymentPushModal] = useState(false);
   const [showPaymentCancelledPushModal, setShowPaymentCancelledPushModal] = useState(false);
+  const isPaymentHandledRef = useRef(false);
 
   // Coupon & Payment state
   const [couponCode, setCouponCode] = useState("LOVE2026");
@@ -213,8 +252,13 @@ export default function GuestCustomizeFlow({
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
   const [buyerEmail, setBuyerEmail] = useState(""); // for link delivery email
   const [pollingForLink, setPollingForLink] = useState(false); // recovery poller state
+  const [cropTarget, setCropTarget] = useState<{
+    file: File;
+    fieldKey: string;
+    objectUrl: string;
+  } | null>(null);
 
-  const Icon = DEMO_ICONS[demo.id] ?? Sparkles;
+  const Icon = DEMO_ICONS[demo.id] ?? Heart;
   const totalSteps = tmpl.steps.length;
   const step = tmpl.steps[currentStep];
 
@@ -250,6 +294,19 @@ export default function GuestCustomizeFlow({
         setViewState("checkout");
       } else if (action === "customize" || action === "builder") {
         setViewState("customize");
+      }
+
+      // Check if there was an in-flight payment order (e.g. after returning from mobile UPI app)
+      const pendingOrder = sessionStorage.getItem(`ourstory_pending_${demo.id}`);
+      if (pendingOrder) {
+        try {
+          const { orderId } = JSON.parse(pendingOrder);
+          if (orderId && !orderId.startsWith("FREE")) {
+            setPollingForLink(true);
+            setIsProcessing(true);
+            pollForFulfillment(orderId);
+          }
+        } catch (e) { }
       }
     }
   }, [tmpl, demo.id]);
@@ -301,35 +358,70 @@ export default function GuestCustomizeFlow({
     });
   };
 
-  const handleFileChange = async (file: File, fieldKey: string) => {
+  const performFileUpload = async (file: File, fieldKey: string, isAudio: boolean) => {
     setFileStatuses((prev) => ({ ...prev, [fieldKey]: "uploading" }));
     setError(null);
 
     try {
+      // Validate file size (max 4.5MB hard limit for Vercel Serverless request body)
+      const MAX_FILE_SIZE = 4.5 * 1024 * 1024;
+      if (file.size > MAX_FILE_SIZE) {
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+        throw new Error(
+          isAudio
+            ? `Audio file (${sizeMb} MB) exceeds the 4.5 MB server limit. Please select an MP3 under 4.5 MB or compress your audio file.`
+            : `File (${sizeMb} MB) exceeds the 4.5 MB server limit. Please select a smaller file.`
+        );
+      }
+
+      // Pre-compress images on client to ~80KB WebP
+      let uploadFile = file;
+      if (!isAudio && file.type.startsWith("image/")) {
+        uploadFile = await compressImage(file, { maxWidth: 1280, maxHeight: 1280, quality: 0.82 });
+      }
+
       const uploadFormData = new FormData();
-      uploadFormData.append("file", file);
+      uploadFormData.append("file", uploadFile);
       const res = await fetch("/api/upload", {
         method: "POST",
         body: uploadFormData,
       });
-      const data = await res.json();
 
-      if (data.success && data.url) {
+      // Guard against non-JSON responses from Vercel edge proxy (e.g. 413 Request Entity Too Large)
+      if (res.status === 413) {
+        throw new Error(`File is too large for the server (${(uploadFile.size / (1024 * 1024)).toFixed(1)} MB). Vercel has a hard 4.5 MB limit.`);
+      }
+
+      let data: any;
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error(`Upload failed (server responded with code ${res.status}). Please ensure your file is under 4.5 MB.`);
+      }
+
+      if (data?.success && data?.url) {
         setFormValues((prev) => ({ ...prev, [fieldKey]: data.url }));
         setFileStatuses((prev) => ({ ...prev, [fieldKey]: "done" }));
         return;
       }
 
-      // Client-side fallback
-      const reader = new FileReader();
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => reject(new Error("Failed to read file"));
-        reader.readAsDataURL(file);
-      });
+      // Safe Fallback:
+      // For images: Compressed to ~80KB, Data URL is safe and won't exceed gateway limits.
+      if (!isAudio) {
+        const reader = new FileReader();
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error("Failed to read image file"));
+          reader.readAsDataURL(uploadFile);
+        });
 
-      setFormValues((prev) => ({ ...prev, [fieldKey]: dataUrl }));
-      setFileStatuses((prev) => ({ ...prev, [fieldKey]: "done" }));
+        setFormValues((prev) => ({ ...prev, [fieldKey]: dataUrl }));
+        setFileStatuses((prev) => ({ ...prev, [fieldKey]: "done" }));
+        return;
+      }
+
+      // For audio: Do NOT fallback to multi-MB Base64 string that crashes server actions
+      throw new Error(data?.message || "Failed to upload audio to cloud storage.");
     } catch (err: any) {
       console.error("Upload error:", err);
       setError(err.message || "File upload failed.");
@@ -337,11 +429,26 @@ export default function GuestCustomizeFlow({
     }
   };
 
+  const handleFileChange = async (file: File, fieldKey: string) => {
+    const isAudio = file.type.startsWith("audio/") || fieldKey.toLowerCase().includes("audio");
+
+    // For images: Open the interactive crop modal immediately so user can crop before upload!
+    if (!isAudio && file.type.startsWith("image/")) {
+      const objectUrl = URL.createObjectURL(file);
+      setCropTarget({ file, fieldKey, objectUrl });
+      return;
+    }
+
+    // For audio and other files, proceed directly
+    await performFileUpload(file, fieldKey, isAudio);
+  };
+
   const { data: session, status: sessionStatus } = useSession();
   const isLoggedIn = sessionStatus === "authenticated" && Boolean(session?.user);
   const [showLoginRequiredModal, setShowLoginRequiredModal] = useState(false);
 
   async function handlePayment() {
+    isPaymentHandledRef.current = false;
     setIsProcessing(true);
     setError(null);
     const { source, campaign } = getUtmParams();
@@ -384,6 +491,11 @@ export default function GuestCustomizeFlow({
       const data = await res.json();
       if (!data.success) throw new Error(data.message || "Failed to create order");
 
+      // Store in-flight order so mobile tab reload/app switch can recover it
+      if (typeof window !== "undefined" && data.orderId) {
+        sessionStorage.setItem(`ourstory_pending_${demo.id}`, JSON.stringify({ orderId: data.orderId }));
+      }
+
       if (data.amount === 0) {
         // Pass the real orderId (e.g. guest_free_xxx) — not the literal "FREE" —
         // so create-event can do a direct DB lookup and the poller works correctly.
@@ -415,6 +527,7 @@ export default function GuestCustomizeFlow({
           email: buyerEmail.trim() || undefined,
         },
         handler: async (response: any) => {
+          isPaymentHandledRef.current = true;
           await createGuestEvent(
             response.razorpay_order_id,
             response.razorpay_payment_id,
@@ -425,8 +538,34 @@ export default function GuestCustomizeFlow({
           );
         },
         modal: {
-          ondismiss: () => {
+          ondismiss: async () => {
+            // If payment was already handled and completed by handler, do not run ondismiss!
+            if (isPaymentHandledRef.current) return;
+
+            // On mobile Android, UPI app switches can fire ondismiss.
+            // Check if payment was actually completed before showing cancelled modal!
+            try {
+              const res = await fetch(`/api/payment/status?orderId=${encodeURIComponent(data.orderId)}`);
+              const stat = await res.json();
+              if (stat.fulfilled && stat.shareUrl) {
+                isPaymentHandledRef.current = true;
+                const fullUrl = `${window.location.origin}${stat.shareUrl}`;
+                if (typeof window !== "undefined") {
+                  sessionStorage.removeItem(`ourstory_pending_${demo.id}`);
+                }
+                setPublishedUrl(fullUrl);
+                setPollingForLink(false);
+                setIsProcessing(false);
+                return;
+              }
+            } catch { }
+
+            if (isPaymentHandledRef.current) return;
+            if (typeof window !== "undefined") {
+              sessionStorage.removeItem(`ourstory_pending_${demo.id}`);
+            }
             setIsProcessing(false);
+            setPollingForLink(false);
             setError(null);
             setShowPaymentCancelledPushModal(true);
           },
@@ -476,6 +615,7 @@ export default function GuestCustomizeFlow({
           razorpaySignature: sig,
           utmSource: source,
           utmCampaign: campaign,
+          buyerEmail: buyerEmail.trim() || undefined,
         }),
       });
       const data = await res.json();
@@ -486,6 +626,7 @@ export default function GuestCustomizeFlow({
         if (data.slug && typeof document !== "undefined") {
           document.cookie = `ourstory_guest_claim_slug=${data.slug}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax`;
           localStorage.setItem("ourstory_guest_claim_slug", data.slug);
+          sessionStorage.removeItem(`ourstory_pending_${demo.id}`);
         }
         setPublishedUrl(fullUrl);
         return;
@@ -532,6 +673,9 @@ export default function GuestCustomizeFlow({
 
         if (data.fulfilled && data.shareUrl) {
           const fullUrl = `${window.location.origin}${data.shareUrl}`;
+          if (typeof window !== "undefined") {
+            sessionStorage.removeItem(`ourstory_pending_${demo.id}`);
+          }
           setPublishedUrl(fullUrl);
           setPollingForLink(false);
           setIsProcessing(false);
@@ -580,13 +724,16 @@ export default function GuestCustomizeFlow({
   if (publishedUrl) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center p-3 sm:p-6">
-        <div className="bg-white rounded-3xl p-5 max-w-2xl w-full shadow-2xl border border-rose-100 relative">
+        <div className="bg-white rounded-3xl p-4 sm:p-6 max-w-2xl w-full max-h-[95vh] overflow-y-auto shadow-2xl border border-rose-100 relative">
           <AutoClickSimulatedPreview
             demoId={demo.id}
             formValues={formValues}
             defaultData={tmpl.defaultData}
             publishedUrl={publishedUrl}
             isPaid={true}
+            onClose={() => {
+              setViewState("landing");
+            }}
             onActivateOffer={() => { }}
             onShareFreeLink={() => {
               const text = `Hey! I made a special surprise link for you... Tap here to open 💖\n${publishedUrl}`;
@@ -598,18 +745,26 @@ export default function GuestCustomizeFlow({
           <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-rose-950 to-slate-900 text-white flex flex-col sm:flex-row items-center justify-between gap-3 border border-rose-500/30">
             <div>
               <p className="text-xs font-black text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400 fill-amber-400" /> Save Page &amp; Track Live Views
+                <Eye className="w-3.5 h-3.5 text-rose-400" /> Save Page &amp; Track Live Views
               </p>
               <p className="text-xs text-slate-300 font-medium mt-0.5">
-                Create a free account to track when {formValues["recipientName"] || "they"} open your surprise &amp; answer YES! 💖
+                Sign in or create a free account to track when {formValues["recipientName"] || "they"} open your surprise &amp; answer YES! 💖
               </p>
             </div>
-            <Link
-              href={`/register${publishedUrl.includes("/p/") ? `?claimSlug=${encodeURIComponent(publishedUrl.split("/p/")[1])}` : ""}`}
-              className="whitespace-nowrap px-4 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer"
-            >
-              Create Free Account ➔
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/login?redirect=/dashboard${buyerEmail ? `&email=${encodeURIComponent(buyerEmail)}` : ""}${publishedUrl.includes("/p/") ? `&claimSlug=${encodeURIComponent(publishedUrl.split("/p/")[1])}` : ""}`}
+                className="whitespace-nowrap px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition cursor-pointer"
+              >
+                Sign In
+              </Link>
+              <Link
+                href={`/register${publishedUrl.includes("/p/") ? `?claimSlug=${encodeURIComponent(publishedUrl.split("/p/")[1])}` : ""}${buyerEmail ? `&email=${encodeURIComponent(buyerEmail)}` : ""}`}
+                className="whitespace-nowrap px-4 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer"
+              >
+                Create Account ➔
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -642,7 +797,7 @@ export default function GuestCustomizeFlow({
                 <div className="flex-1 min-w-0 pr-2">
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-amber-400 fill-amber-400" /> OurStory Special Offer
+                      <Zap className="w-3 h-3 text-amber-400 fill-amber-400" /> OurStory Special Offer
                     </span>
                     <span className="text-[10px] text-slate-400">now</span>
                   </div>
@@ -780,7 +935,7 @@ export default function GuestCustomizeFlow({
                 </div>
 
                 <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
-                  <span className="flex items-center gap-1"><Heart className="w-3 h-3 text-rose-500 fill-rose-500" /> Instant Share Link</span>
+                  <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-rose-500 fill-rose-500" /> Instant Share Link</span>
                   <span>🔒 SSL Encrypted</span>
                 </div>
               </div>
@@ -807,7 +962,7 @@ export default function GuestCustomizeFlow({
           <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-rose-50 to-pink-50 flex justify-between items-center">
             <div>
               <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-rose-500" /> Secure Checkout
+                <ShieldCheck className="w-5 h-5 text-emerald-600" /> Secure Checkout
               </h2>
               <p className="text-sm font-semibold text-rose-600 mt-0.5">{demo.title}</p>
             </div>
@@ -1009,7 +1164,7 @@ export default function GuestCustomizeFlow({
                       }}
                       className="w-full py-3.5 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-rose-200 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
-                      <Sparkles className="w-4 h-4 fill-white" />
+                      <RefreshCw className="w-4 h-4" />
                       🚀 Retry Payment &amp; Activate Link
                     </button>
 
@@ -1389,7 +1544,7 @@ export default function GuestCustomizeFlow({
                     }}
                     className="w-full py-4 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white font-extrabold text-sm rounded-2xl shadow-xl shadow-rose-200 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <Sparkles className="w-4 h-4 fill-white" />
+                    <Tag className="w-4 h-4" />
                     {finalPriceINR === 0 ? "🚀 Activate Free Link Now (₹0)" : `🚀 Claim Discount & Pay ₹${finalPriceINR.toFixed(0)}`}
                   </button>
 
@@ -1435,7 +1590,7 @@ export default function GuestCustomizeFlow({
               <div className="flex-1 min-w-0 pr-2">
                 <div className="flex items-center gap-1.5 mb-0.5">
                   <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-amber-400 fill-amber-400" /> OurStory Special Offer
+                    <Zap className="w-3 h-3 text-amber-400 fill-amber-400" /> OurStory Special Offer
                   </span>
                   <span className="text-[10px] text-slate-400">now</span>
                 </div>
@@ -1525,7 +1680,7 @@ export default function GuestCustomizeFlow({
                     }}
                     className="w-full py-3.5 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-rose-200 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <Sparkles className="w-4 h-4 fill-white" />
+                    <RefreshCw className="w-4 h-4" />
                     🚀 Retry Payment &amp; Activate Link
                   </button>
 
@@ -1545,6 +1700,24 @@ export default function GuestCustomizeFlow({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {cropTarget && (
+        <ImageCropModal
+          imageSrc={cropTarget.objectUrl}
+          originalFileName={cropTarget.file.name}
+          initialAspect={1}
+          onCancel={() => {
+            URL.revokeObjectURL(cropTarget.objectUrl);
+            setCropTarget(null);
+          }}
+          onComplete={async (_blob, croppedFile) => {
+            const { fieldKey, objectUrl } = cropTarget;
+            URL.revokeObjectURL(objectUrl);
+            setCropTarget(null);
+            await performFileUpload(croppedFile, fieldKey, false);
+          }}
+        />
+      )}
     </>
   );
 }

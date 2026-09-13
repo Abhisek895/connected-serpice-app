@@ -154,11 +154,14 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       photoUrl={(customData as any).photoUrl || (customData as any)._photo || (customData as any)._photo1 || ""}
       audioUrl={(customData as any).audioUrl || (customData as any)._audio || ""}
       _photo={(customData as any)._photo || (customData as any)._photo1 || ""}
+      _photo2={(customData as any)._photo2 || ""}
+      _photo3={(customData as any)._photo3 || ""}
       _audio={(customData as any)._audio || ""}
       demoId={(customData as any).demoId || ""}
       recipientName={(customData as any).recipientName || ""}
       dodgeMessages={(customData as any).dodgeMessages || ""}
       patternText={(customData as any).patternText || ""}
+      customData={customData}
       media={event.media.map((m) => ({ id: m.id, url: m.url, type: m.type }))}
     />
   );

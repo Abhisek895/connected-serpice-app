@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X, Sparkles, ChevronRight, ChevronLeft, Loader2, Send,
+  X, ChevronRight, ChevronLeft, Loader2, Send,
   CheckCircle2, Copy, ExternalLink, Image as ImageIcon, Music,
-  AlertCircle, MessageCircle, Smartphone, Edit3,
+  AlertCircle, MessageCircle, Smartphone, Edit3, SlidersHorizontal,
 } from "lucide-react";
 import { getTemplateClass, TemplateClass, TemplateField } from "./templateConfig";
 import { demos } from "./demoConfig";
@@ -21,6 +21,8 @@ import CanvasConfetti from "@/components/ui/CanvasConfetti";
 import LivePhonePreview from "@/components/ui/LivePhonePreview";
 import AutoClickSimulatedPreview from "@/components/ui/AutoClickSimulatedPreview";
 import CheckoutModal from "./CheckoutModal";
+import { compressImage } from "@/lib/clientImageCompressor";
+import ImageCropModal from "@/components/ImageCropModal";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -45,7 +47,12 @@ function initFormValues(tmpl: TemplateClass, prefill: Record<string, any>): Reco
   const out: Record<string, string> = {};
   for (const step of tmpl.steps) {
     for (const field of step.fields) {
-      out[field.key] = prefill[field.key] ?? prefill[field.key === "_photo" ? "photoUrl" : field.key === "_audio" ? "audioUrl" : field.key] ?? tmpl.defaultData[field.key] ?? "";
+      out[field.key] =
+        prefill[field.key] ??
+        (field.key === "_photo" ? (prefill["photoUrl"] ?? prefill["_photo1"]) : undefined) ??
+        (field.key === "_audio" ? prefill["audioUrl"] : undefined) ??
+        tmpl.defaultData[field.key] ??
+        "";
     }
   }
   return out;
@@ -142,16 +149,22 @@ function FieldInput({
   if (field.type === "file-image" || field.type === "file-audio") {
     const isImage = field.type === "file-image";
     const Icon = isImage ? ImageIcon : Music;
+    const hasValue = Boolean(value && typeof value === "string" && value.trim() && value !== "undefined");
+    const isDone = fileStatus === "done" || hasValue;
+
     const statusText =
       fileStatus === "uploading"
         ? "Uploading…"
-        : fileStatus === "done"
-          ? "✓ Uploaded!"
+        : isDone
+          ? isImage
+            ? "✓ Photo Uploaded"
+            : "✓ Audio Attached"
           : isImage
             ? "Choose Photo"
             : "Choose Audio";
+
     const statusColor =
-      fileStatus === "done"
+      isDone
         ? "text-emerald-600 font-bold"
         : fileStatus === "uploading"
           ? "text-amber-600"
@@ -160,36 +173,66 @@ function FieldInput({
             : "text-slate-600";
 
     return (
-      <div>
-        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+      <div className="space-y-1.5">
+        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
           {field.label}
         </label>
-        <label
-          className={`relative flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed cursor-pointer transition ${fileStatus === "done"
-            ? "border-emerald-300 bg-emerald-50"
-            : isImage
-              ? "border-rose-200 bg-rose-50/50 hover:border-rose-400 hover:bg-rose-50"
-              : "border-slate-200 bg-slate-50 hover:border-slate-300"
-            } ${isLoading ? "opacity-50 pointer-events-none" : ""}`}
-        >
-          {fileStatus === "uploading" ? (
-            <Loader2 className="w-5 h-5 animate-spin text-amber-500 flex-shrink-0" />
-          ) : (
-            <Icon className={`w-5 h-5 flex-shrink-0 ${isImage ? "text-rose-500" : "text-slate-500"}`} />
+
+        <div className="flex items-center gap-2.5">
+          {/* If image and hasValue, show thumbnail preview! */}
+          {isImage && hasValue && (
+            <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-emerald-300 shadow-sm shrink-0 bg-slate-900">
+              <img src={value} alt="Uploaded thumbnail" className="w-full h-full object-cover" />
+            </div>
           )}
-          <span className={`text-sm ${statusColor}`}>{statusText}</span>
-          <input
-            type="file"
-            accept={field.accept}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            disabled={isLoading}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) onFileChange?.(file, field.key);
-            }}
-          />
-        </label>
-        {field.hint && <p className="text-[11px] text-slate-400 mt-1">{field.hint}</p>}
+
+          <label
+            className={`relative flex-1 flex items-center gap-3 px-4 py-2.5 rounded-xl border-2 border-dashed cursor-pointer transition ${
+              isDone
+                ? "border-emerald-300 bg-emerald-50/70 hover:bg-emerald-50"
+                : isImage
+                  ? "border-rose-200 bg-rose-50/50 hover:border-rose-400 hover:bg-rose-50"
+                  : "border-slate-200 bg-slate-50 hover:border-slate-300"
+            } ${isLoading ? "opacity-50 pointer-events-none" : ""}`}
+          >
+            {fileStatus === "uploading" ? (
+              <Loader2 className="w-5 h-5 animate-spin text-amber-500 flex-shrink-0" />
+            ) : (
+              <Icon className={`w-5 h-5 flex-shrink-0 ${isDone ? "text-emerald-600" : isImage ? "text-rose-500" : "text-slate-500"}`} />
+            )}
+            <div className="flex-1 min-w-0">
+              <span className={`text-xs sm:text-sm block truncate ${statusColor}`}>{statusText}</span>
+              {hasValue && (
+                <span className="text-[10px] text-slate-400 font-normal block">Tap to replace</span>
+              )}
+            </div>
+
+            <input
+              type="file"
+              accept={field.accept}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              disabled={isLoading}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) onFileChange?.(file, field.key);
+              }}
+            />
+          </label>
+
+          {/* Remove / Reset button if custom file was selected */}
+          {hasValue && (
+            <button
+              type="button"
+              onClick={() => onChange?.("")}
+              title="Remove and use default"
+              className="px-2.5 py-2.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold transition shrink-0"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {field.hint && <p className="text-[11px] text-slate-400">{field.hint}</p>}
       </div>
     );
   }
@@ -221,6 +264,11 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
   const [isEventPaid, setIsEventPaid] = useState(false);
   const [needsPayment, setNeedsPayment] = useState(false);
   const [checkingPayment, setCheckingPayment] = useState(true);
+  const [cropTarget, setCropTarget] = useState<{
+    file: File;
+    fieldKey: string;
+    objectUrl: string;
+  } | null>(null);
 
   const demoItem = demos.find((d) => d.id === demoId);
 
@@ -254,6 +302,12 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
       getEventCustomData(editEventId).then((res) => {
         if (res.success) {
           setFormValues(initFormValues(tmpl, res.customData));
+          const statuses: Record<string, "idle" | "uploading" | "done"> = {};
+          if (res.customData?._photo || res.customData?.photoUrl || res.customData?._photo1) statuses["_photo"] = "done";
+          if (res.customData?._photo2) statuses["_photo2"] = "done";
+          if (res.customData?._photo3) statuses["_photo3"] = "done";
+          if (res.customData?._audio || res.customData?.audioUrl) statuses["_audio"] = "done";
+          setFileStatuses(statuses);
         } else {
           setFormValues(initFormValues(tmpl, {}));
         }
@@ -280,41 +334,91 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
     setFormValues((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleFileChange = async (file: File, fieldKey: string) => {
+  const performFileUpload = async (file: File, fieldKey: string, isAudio: boolean) => {
     setFileStatuses((prev) => ({ ...prev, [fieldKey]: "uploading" }));
     setError(null);
 
     try {
-      // 1. Try uploading to /api/upload endpoint first (saves clean file to /uploads/ directory)
+      // Validate file size (max 4.5MB hard limit for Vercel Serverless request body)
+      const MAX_FILE_SIZE = 4.5 * 1024 * 1024;
+      if (file.size > MAX_FILE_SIZE) {
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+        throw new Error(
+          isAudio
+            ? `Audio file (${sizeMb} MB) exceeds the 4.5 MB server limit. Please select an MP3 under 4.5 MB or compress your audio file.`
+            : `File (${sizeMb} MB) exceeds the 4.5 MB server limit. Please select a smaller file.`
+        );
+      }
+
+      // Pre-compress images on client to ~80KB WebP
+      let uploadFile = file;
+      if (!isAudio && file.type.startsWith("image/")) {
+        uploadFile = await compressImage(file, { maxWidth: 1280, maxHeight: 1280, quality: 0.82 });
+      }
+
+      // 1. Try uploading to cloud storage via /api/upload endpoint
       const uploadFormData = new FormData();
-      uploadFormData.append("file", file);
+      uploadFormData.append("file", uploadFile);
       const res = await fetch("/api/upload", {
         method: "POST",
         body: uploadFormData,
       });
-      const data = await res.json();
 
-      if (data.success && data.url) {
+      // Guard against non-JSON responses from Vercel edge proxy (e.g. 413 Request Entity Too Large)
+      if (res.status === 413) {
+        throw new Error(`File is too large for the server (${(uploadFile.size / (1024 * 1024)).toFixed(1)} MB). Vercel has a hard 4.5 MB limit.`);
+      }
+
+      let data: any;
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error(`Upload failed (server responded with code ${res.status}). Please ensure your file is under 4.5 MB.`);
+      }
+
+      if (data?.success && data?.url) {
         setFormValues((prev) => ({ ...prev, [fieldKey]: data.url }));
         setFileStatuses((prev) => ({ ...prev, [fieldKey]: "done" }));
         return;
       }
 
-      // 2. Fallback to client-side Data URL if API upload fails
-      const reader = new FileReader();
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => reject(new Error("Failed to read audio/image file."));
-        reader.readAsDataURL(file);
-      });
+      // 2. Safe Fallback:
+      // For images: The file is already compressed to ~80KB, so Base64 Data URL is completely safe
+      // and will never trigger a 413 Payload Too Large error.
+      if (!isAudio) {
+        const reader = new FileReader();
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error("Failed to read image file."));
+          reader.readAsDataURL(uploadFile);
+        });
 
-      setFormValues((prev) => ({ ...prev, [fieldKey]: dataUrl }));
-      setFileStatuses((prev) => ({ ...prev, [fieldKey]: "done" }));
+        setFormValues((prev) => ({ ...prev, [fieldKey]: dataUrl }));
+        setFileStatuses((prev) => ({ ...prev, [fieldKey]: "done" }));
+        return;
+      }
+
+      // For audio: Do NOT fallback to multi-MB Base64 which crashes Server Actions with 413.
+      throw new Error(data?.message || "Failed to upload audio to cloud storage.");
     } catch (err: any) {
       console.error("Upload error:", err);
       setError(err.message || "File upload failed.");
       setFileStatuses((prev) => ({ ...prev, [fieldKey]: "idle" }));
     }
+  };
+
+  const handleFileChange = async (file: File, fieldKey: string) => {
+    const isAudio = file.type.startsWith("audio/") || fieldKey.toLowerCase().includes("audio");
+
+    // For images: Open the interactive crop modal immediately so user can crop before upload!
+    if (!isAudio && file.type.startsWith("image/")) {
+      const objectUrl = URL.createObjectURL(file);
+      setCropTarget({ file, fieldKey, objectUrl });
+      return;
+    }
+
+    // For audio and other files, proceed directly
+    await performFileUpload(file, fieldKey, isAudio);
   };
 
   const handleSubmit = async () => {
@@ -451,7 +555,7 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
         <div className="sticky top-0 z-40 bg-white rounded-t-3xl border-b border-slate-100 px-6 pt-5 pb-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-rose-100 rounded-2xl text-rose-600 flex-shrink-0">
-              <Sparkles className="w-5 h-5 fill-rose-500" />
+              <SlidersHorizontal className="w-5 h-5 text-rose-600" />
             </div>
             <div>
               <h3 className="text-lg font-bold text-slate-900 leading-tight">
@@ -622,6 +726,24 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
             setIsEventPaid(true);
             setNeedsPayment(false);
             handleSubmit();
+          }}
+        />
+      )}
+
+      {cropTarget && (
+        <ImageCropModal
+          imageSrc={cropTarget.objectUrl}
+          originalFileName={cropTarget.file.name}
+          initialAspect={1}
+          onCancel={() => {
+            URL.revokeObjectURL(cropTarget.objectUrl);
+            setCropTarget(null);
+          }}
+          onComplete={async (_blob, croppedFile) => {
+            const { fieldKey, objectUrl } = cropTarget;
+            URL.revokeObjectURL(objectUrl);
+            setCropTarget(null);
+            await performFileUpload(croppedFile, fieldKey, false);
           }}
         />
       )}

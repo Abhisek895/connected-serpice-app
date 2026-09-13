@@ -16,6 +16,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getRazorpay, hasValidRazorpayKeys } from "@/lib/razorpay";
+import { fulfillPayment } from "@/lib/payment-fulfillment";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +39,7 @@ export async function GET(req: NextRequest) {
       select: {
         id: true,
         status: true,
+        finalAmount: true,
         fulfillment: {
           select: {
             shareUrl: true,
@@ -53,10 +56,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    if (payment.status === "FAILED") {
-      return NextResponse.json({ fulfilled: false, failed: true }, { status: 200 });
-    }
-
+    // If already fulfilled, return link immediately
     if (payment.fulfillment) {
       return NextResponse.json({
         fulfilled: true,
@@ -64,7 +64,40 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Still pending (webhook hasn't fired yet, or is processing)
+    // If marked FAILED in DB, return failed
+    if (payment.status === "FAILED") {
+      return NextResponse.json({ fulfilled: false, failed: true }, { status: 200 });
+    }
+
+    // ── ACTIVE RECONCILIATION WITH RAZORPAY API ──────────────────────────────
+    // Do not passively wait for webhooks if the client is polling!
+    // Query Razorpay server-to-server directly using secret keys.
+    if (hasValidRazorpayKeys() && !orderId.startsWith("guest_mock_") && !orderId.startsWith("guest_free_") && !orderId.startsWith("free_")) {
+      try {
+        const razorpay = getRazorpay();
+        const rzpPayments = await razorpay.orders.fetchPayments(orderId);
+        const captured = rzpPayments?.items?.find((p: any) => p.status === "captured");
+
+        if (captured) {
+          console.log(`[payment/status] Auto-reconciled captured payment ${captured.id} for order ${orderId}`);
+          const fulfilled = await fulfillPayment(orderId, captured.id);
+          return NextResponse.json({
+            fulfilled: true,
+            shareUrl: fulfilled.shareUrl,
+          });
+        }
+
+        // Check if all attempts explicitly failed
+        const allFailed = rzpPayments?.items?.length > 0 && rzpPayments.items.every((p: any) => p.status === "failed");
+        if (allFailed) {
+          return NextResponse.json({ fulfilled: false, failed: true, status: "FAILED" });
+        }
+      } catch (rzpErr: any) {
+        console.warn(`[payment/status] Razorpay reconciliation check failed for ${orderId}:`, rzpErr.message);
+      }
+    }
+
+    // Still pending (payment in flight or user has not completed OTP yet)
     return NextResponse.json({ fulfilled: false, status: payment.status });
 
   } catch (error: any) {

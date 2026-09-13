@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Mail, Play, Pause, XCircle, Trash2, ArrowLeft, RefreshCw, CheckCircle,
-  AlertCircle, Clock, ShieldCheck, Zap, Server, Loader2, Sparkles, Filter, Search
+  AlertCircle, Clock, ShieldCheck, Zap, Server, Loader2, Filter, Search
 } from "lucide-react";
 import {
   getColdCampaignById,
@@ -173,7 +173,7 @@ export default function CampaignDetailsPage({ params }: { params: Promise<{ id: 
         >
           {toast.type === "success" && <CheckCircle className="w-4 h-4" />}
           {toast.type === "error" && <AlertCircle className="w-4 h-4" />}
-          {toast.type === "info" && <Sparkles className="w-4 h-4" />}
+          {toast.type === "info" && <Zap className="w-4 h-4" />}
           <span>{toast.message}</span>
         </div>
       )}

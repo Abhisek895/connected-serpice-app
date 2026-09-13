@@ -131,21 +131,23 @@ export default function UserDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-[#111827] border border-slate-800 rounded-xl p-6 shadow-sm">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-slate-400">
-                <User className="w-8 h-8" />
+          <div className="bg-[#111827] border border-slate-800 rounded-xl p-4 sm:p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 shrink-0">
+                  <User className="w-6 h-6 sm:w-8 sm:h-8" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white truncate">{user.name || "Unnamed User"}</h2>
+                  <p className="text-slate-400 text-xs sm:text-sm truncate">{user.email}</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white">{user.name || "Unnamed User"}</h2>
-                <p className="text-slate-400 text-sm">{user.email}</p>
-              </div>
-              <span className={`ml-auto px-3 py-1 rounded-full text-xs font-bold border ${roleColors[user.role] || roleColors.USER}`}>
+              <span className={`self-start sm:self-center px-3 py-1 rounded-full text-xs font-bold border shrink-0 ${roleColors[user.role] || roleColors.USER}`}>
                 {user.role}
               </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 mt-4 sm:mt-6">
               <div className="bg-[#0a0f1e] p-3 rounded-lg border border-slate-800">
                 <div className="text-xs text-slate-500 uppercase tracking-wider">Plan</div>
                 <div className="mt-1 font-medium text-slate-300">{user.plan}</div>
@@ -193,19 +195,45 @@ export default function UserDetailPage() {
             </div>
           )}
 
-          {/* Payments */}
+          {/* Payments & Passes */}
           {user.payments?.length > 0 && (
             <div className="bg-[#111827] border border-slate-800 rounded-xl p-6 shadow-sm">
-              <h3 className="text-white font-semibold mb-4 flex items-center gap-2"><CreditCard className="w-4 h-4 text-emerald-400" /> Payments</h3>
+              <h3 className="text-white font-semibold mb-4 flex items-center gap-2"><CreditCard className="w-4 h-4 text-emerald-400" /> Payments &amp; Passes</h3>
               <div className="space-y-2">
-                {user.payments.map((p: any) => (
-                  <div key={p.id} className="flex items-center justify-between text-sm bg-[#0a0f1e] px-4 py-2.5 rounded-lg border border-slate-800">
-                    <span className="text-indigo-400 text-xs uppercase">{p.plan}</span>
-                    <span className="text-emerald-400 font-bold">₹{(p.amount / 100).toFixed(2)}</span>
-                    <span className={`text-xs ${p.status === "SUCCESS" ? "text-emerald-400" : "text-amber-400"}`}>{p.status}</span>
-                    <span className="text-slate-500 text-xs">{new Date(p.createdAt).toLocaleDateString()}</span>
-                  </div>
-                ))}
+                {user.payments.map((p: any) => {
+                  const actualPaid = p.finalAmount !== null && p.finalAmount !== undefined ? p.finalAmount : p.amount;
+                  const isDiscounted = p.finalAmount !== null && p.finalAmount < p.amount;
+                  const isFree = actualPaid === 0;
+
+                  return (
+                    <div key={p.id} className="flex items-center justify-between text-sm bg-[#0a0f1e] px-4 py-2.5 rounded-lg border border-slate-800">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-indigo-400 text-xs font-semibold uppercase">{p.plan || "PURCHASE"}</span>
+                        {p.coupon?.code && (
+                          <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded font-bold uppercase">
+                            🏷️ {p.coupon.code}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <span className={`font-bold text-xs ${isFree ? "text-slate-400" : "text-emerald-400"}`}>
+                            ₹{(actualPaid / 100).toFixed(2)}
+                          </span>
+                          {isDiscounted && (
+                            <span className="text-[10px] text-slate-500 block line-through leading-none">
+                              ₹{(p.amount / 100).toFixed(2)}
+                            </span>
+                          )}
+                        </div>
+                        <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${p.status === "SUCCESS" ? "text-emerald-400 bg-emerald-500/10" : "text-amber-400 bg-amber-500/10"}`}>
+                          {p.status}
+                        </span>
+                        <span className="text-slate-500 text-xs">{new Date(p.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -331,12 +359,12 @@ export default function UserDetailPage() {
       {/* ── Custom Confirmation & Action Modals ── */}
       <AnimatePresence>
         {confirmModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-[#111827] border border-amber-500/30 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative text-center"
+              className="bg-[#111827] border border-amber-500/30 rounded-3xl p-5 sm:p-8 max-w-md w-full shadow-2xl relative text-center max-h-[90vh] overflow-y-auto"
             >
               <button
                 onClick={() => setConfirmModal(null)}

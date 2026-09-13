@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { recordResponseAction } from "../actions";
-import { Heart, Sparkles, X, Volume2, VolumeX, MailOpen, RotateCcw } from "lucide-react";
+import { Heart, X, Volume2, VolumeX, MailOpen, RotateCcw, Flame } from "lucide-react";
 import OurStoryWatermark from "./OurStoryWatermark";
 import Script from "next/script";
 
@@ -341,7 +341,7 @@ export default function GalaxyMemoriesTemplate({
             onClick={handleTriggerBlast}
             className="w-full py-4 px-8 bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:scale-105 active:scale-95 text-white font-black text-xs uppercase tracking-widest rounded-full shadow-[0_0_40px_rgba(236,72,153,0.8)] border border-white/30 transition flex items-center justify-center gap-2 cursor-pointer animate-pulse"
           >
-            <Sparkles className="w-4 h-4 fill-white" />
+            <Flame className="w-4 h-4 fill-amber-300 text-amber-300" />
             <span>Tap to Trigger Big Bang 🌌</span>
           </button>
         ) : (
@@ -407,7 +407,7 @@ export default function GalaxyMemoriesTemplate({
                   onClick={handleSendLoveBack}
                   className="px-6 py-2.5 bg-gradient-to-r from-pink-500 to-purple-600 hover:scale-105 active:scale-95 text-white font-extrabold text-xs uppercase tracking-widest rounded-full shadow-[0_0_30px_rgba(236,72,153,0.7)] transition border border-white/30 flex items-center gap-1.5 cursor-pointer"
                 >
-                  <Sparkles className="w-3.5 h-3.5 fill-white" />
+                  <Heart className="w-3.5 h-3.5 fill-white text-white" />
                   <span>Send Love Back 💫</span>
                 </button>
               </div>

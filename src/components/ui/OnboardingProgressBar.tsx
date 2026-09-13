@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, CheckCircle2, RotateCcw, X } from "lucide-react";
+import { Compass, CheckCircle2, RotateCcw, X } from "lucide-react";
 
 interface OnboardingProgressBarProps {
   currentStep: number; // 1, 2, 3, 4
@@ -33,7 +33,7 @@ export default function OnboardingProgressBar({
       <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3">
         <div className="flex items-center gap-2.5">
           <div className="p-2 bg-rose-500/20 rounded-xl text-rose-400 border border-rose-500/30">
-            <Sparkles className="w-4 h-4 fill-rose-400" />
+            <Compass className="w-4 h-4 text-rose-400" />
           </div>
           <div>
             <h3 className="text-sm sm:text-base font-bold text-white tracking-tight flex items-center gap-2">

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { uploadToStorage } from "@/lib/storage";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
@@ -11,20 +12,43 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: "No file provided" }, { status: 400 });
     }
 
+    if (file.size > 4.5 * 1024 * 1024) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `File size (${(file.size / (1024 * 1024)).toFixed(1)} MB) exceeds 4.5 MB limit. Please select a smaller file.`,
+        },
+        { status: 413 }
+      );
+    }
+
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const ext = file.name.split(".").pop() || (file.type.startsWith("audio/") ? "mp3" : "jpg");
-    const filename = `upload_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
+    const result = await uploadToStorage(
+      buffer,
+      file.name,
+      file.type || "application/octet-stream",
+      "uploads"
+    );
 
-    await mkdir(uploadDir, { recursive: true });
-    await writeFile(path.join(uploadDir, filename), buffer);
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, message: result.error || "Upload failed" },
+        { status: 500 }
+      );
+    }
 
-    const url = `/uploads/${filename}`;
-    return NextResponse.json({ success: true, url });
+    return NextResponse.json({
+      success: true,
+      url: result.url,
+      provider: result.provider,
+    });
   } catch (error: any) {
     console.error("User upload error:", error);
-    return NextResponse.json({ success: false, message: error.message || "Upload failed" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: error.message || "Upload failed" },
+      { status: 500 }
+    );
   }
 }

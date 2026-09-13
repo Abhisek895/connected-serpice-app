@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { LayoutDashboard, Settings, LogOut, Bell, User, Menu, X, ChevronRight, ShieldAlert, Gift, Sparkles } from "lucide-react";
+import { LayoutDashboard, Settings, LogOut, Bell, User, Menu, X, ChevronRight, ShieldAlert, Gift, Heart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function DashboardSidebar() {
@@ -33,7 +33,7 @@ export default function DashboardSidebar() {
 
   const planConfig: Record<string, { label: string; color: string }> = {
     FREE:     { label: "Free",         color: "bg-slate-700/60 text-slate-400 border-slate-600/40" },
-    PREMIUM:  { label: "✨ Premium",   color: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
+    PREMIUM:  { label: "👑 Premium",   color: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
     LIFETIME: { label: "💎 Lifetime",  color: "bg-purple-500/20 text-purple-300 border-purple-500/30" },
   };
   const planBadge = planConfig[plan] ?? planConfig.FREE;
@@ -44,9 +44,13 @@ export default function DashboardSidebar() {
       {/* ── Logo ── */}
       <div className={`p-5 border-b ${mobile ? "border-slate-100" : "border-slate-800/60"} flex items-center justify-between`}>
         <Link href="/dashboard" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-lg shadow-rose-500/30 group-hover:shadow-rose-500/50 transition-all">
-            <Sparkles className="w-4 h-4 text-white fill-white" />
-          </div>
+          {mobile ? (
+            <Heart className="w-8 h-8 text-rose-500 fill-rose-500 shrink-0" />
+          ) : (
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-lg shadow-rose-500/30 group-hover:shadow-rose-500/50 transition-all">
+              <Heart className="w-4 h-4 text-white fill-white" />
+            </div>
+          )}
           <h1 className={`text-xl font-bold font-pacifico tracking-wider ${mobile ? "text-rose-500" : "text-white"}`}>
             OurStory
           </h1>
@@ -167,9 +171,7 @@ export default function DashboardSidebar() {
       {/* ── Mobile Top Header ── */}
       <header className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-sm">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-md shadow-rose-400/40">
-            <Sparkles className="w-3.5 h-3.5 text-white fill-white" />
-          </div>
+          <Heart className="w-8 h-8 text-rose-500 fill-rose-500 shrink-0" />
           <h1 className="text-xl font-bold text-rose-500 font-pacifico tracking-wider">OurStory</h1>
         </Link>
         <div className="flex items-center gap-2">

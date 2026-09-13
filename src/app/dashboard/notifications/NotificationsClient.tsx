@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bell, Heart, Eye, Sparkles, Check, Trash2, ArrowLeft, ChevronRight, ExternalLink } from "lucide-react";
+import { Bell, Heart, Eye, Check, Trash2, ArrowLeft, ChevronRight, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 

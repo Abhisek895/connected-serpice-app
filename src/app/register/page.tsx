@@ -19,6 +19,7 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const router = useRouter();
 
   // Capture refCode from URL on mount
@@ -128,9 +129,21 @@ export default function RegisterPage() {
     }
   };
 
+  const handleGoogleSignUp = async () => {
+    setError(null);
+    setGoogleLoading(true);
+    try {
+      const redirectTarget = (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null) || "/dashboard";
+      await signIn("google", { callbackUrl: redirectTarget });
+    } catch (err) {
+      console.error("Google sign up error:", err);
+      setGoogleLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-pink-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-3xl border border-rose-100 shadow-xl p-8 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-pink-50 flex items-start sm:items-center justify-center p-4 pt-8 sm:pt-4">
+      <div className="w-full max-w-md bg-white rounded-3xl border border-rose-100 shadow-xl p-6 sm:p-8 relative overflow-hidden -mt-2 sm:mt-0">
         {/* Top Decorative Line */}
         <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-rose-400 via-pink-500 to-rose-600" />
 
@@ -152,9 +165,19 @@ export default function RegisterPage() {
 
         {/* Error Alert */}
         {error && (
-          <div className="mb-5 p-3.5 bg-rose-50 border border-rose-200 rounded-2xl flex items-center gap-3 text-rose-700 text-xs font-medium">
-            <AlertCircle className="w-5 h-5 text-rose-500 flex-shrink-0" />
-            <span>{error}</span>
+          <div className="mb-5 p-3.5 bg-rose-50 border border-rose-200 rounded-2xl flex items-center justify-between gap-3 text-rose-700 text-xs font-medium">
+            <div className="flex items-center gap-2.5">
+              <AlertCircle className="w-5 h-5 text-rose-500 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+            {error.toLowerCase().includes("already exists") && (
+              <Link
+                href={`/login?email=${encodeURIComponent(email)}&redirect=/dashboard`}
+                className="whitespace-nowrap px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-[11px] transition shrink-0"
+              >
+                Sign In →
+              </Link>
+            )}
           </div>
         )}
 
@@ -311,28 +334,38 @@ export default function RegisterPage() {
         {/* Google OAuth Button */}
         <button
           type="button"
-          onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-          className="w-full py-3 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-sm rounded-2xl transition flex items-center justify-center gap-3 shadow-sm"
+          disabled={googleLoading || loading}
+          onClick={handleGoogleSignUp}
+          className="w-full py-3 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-sm rounded-2xl transition flex items-center justify-center gap-3 shadow-sm disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
         >
-          <svg className="w-5 h-5" viewBox="0 0 24 24">
-            <path
-              fill="#4285F4"
-              d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.29v3.15C3.26 21.3 7.31 24 12 24z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.29C.47 8.21 0 10.05 0 12s.47 3.79 1.29 5.42l3.99-3.15z"
-            />
-            <path
-              fill="#EA4335"
-              d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.58l3.99 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-            />
-          </svg>
-          Sign Up with Google
+          {googleLoading ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin text-rose-500" />
+              <span>Connecting to Google...</span>
+            </>
+          ) : (
+            <>
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path
+                  fill="#4285F4"
+                  d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.29v3.15C3.26 21.3 7.31 24 12 24z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.29C.47 8.21 0 10.05 0 12s.47 3.79 1.29 5.42l3.99-3.15z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.58l3.99 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                />
+              </svg>
+              Sign Up with Google
+            </>
+          )}
         </button>
 
         {/* Login Link */}

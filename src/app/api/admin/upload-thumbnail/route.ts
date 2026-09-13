@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { uploadToStorage } from "@/lib/storage";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -33,15 +32,21 @@ export async function POST(req: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const ext = file.name.split(".").pop() ?? "jpg";
-    const filename = `thumb_${demoId}_${Date.now()}.${ext}`;
-    const uploadDir = path.join(process.cwd(), "public", "demos", demoId);
+    const result = await uploadToStorage(
+      buffer,
+      `thumb_${demoId}_${Date.now()}.${file.name.split(".").pop() ?? "jpg"}`,
+      file.type,
+      `demos/${demoId}`
+    );
 
-    await mkdir(uploadDir, { recursive: true });
-    await writeFile(path.join(uploadDir, filename), buffer);
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, message: result.error || "Upload failed" },
+        { status: 500 }
+      );
+    }
 
-    const url = `/demos/${demoId}/${filename}`;
-    return NextResponse.json({ success: true, url });
+    return NextResponse.json({ success: true, url: result.url });
 
   } catch (error: any) {
     console.error("Thumbnail upload error:", error);

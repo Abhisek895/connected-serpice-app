@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Gift, Copy, CheckCircle2, Share2, Wallet, Users, TrendingUp,
-  Banknote, ExternalLink, Loader2, X, Sparkles, Link2,
+  Banknote, ExternalLink, Loader2, X, Link2,
   Zap, Clock, Star, MessageCircle
 } from "lucide-react";
 import { demos } from "../demoConfig";
@@ -345,7 +345,7 @@ export default function ReferralPage() {
       {/* ── How It Works steps ── */}
       <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-rose-950 rounded-3xl p-6 text-white shadow-xl">
         <div className="flex items-center gap-2 mb-5">
-          <Sparkles className="w-5 h-5 text-amber-400 fill-amber-400" />
+          <Gift className="w-5 h-5 text-amber-400" />
           <h2 className="font-bold text-base">How to Earn with Your Referral Links</h2>
         </div>
 

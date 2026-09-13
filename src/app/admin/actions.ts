@@ -44,7 +44,18 @@ export async function getAdminUserById(id: string) {
         orderBy: { createdAt: "desc" },
       },
       events: { select: { id: true, slug: true, status: true, themeId: true, createdAt: true } },
-      payments: { select: { id: true, amount: true, plan: true, status: true, createdAt: true } },
+      payments: {
+        select: {
+          id: true,
+          amount: true,
+          finalAmount: true,
+          plan: true,
+          status: true,
+          createdAt: true,
+          coupon: { select: { code: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      },
     },
   });
   if (!user) throw new Error("User not found");
@@ -184,9 +195,21 @@ export async function getLocalAdminStats() {
   const newThisWeek = await prisma.user.count({ where: { createdAt: { gte: oneWeekAgo } } });
   const activePages = await prisma.event.count({ where: { status: { in: ["PUBLISHED", "DRAFT"] } } });
   const linkViews = await prisma.response.count({ where: { action: "VIEWED" } });
-  const payments = await prisma.payment.aggregate({ where: { status: "SUCCESS" }, _sum: { amount: true } });
-  const totalRevenue = (payments._sum.amount || 0) / 100;
-  return { totalUsers, newThisWeek, activePages, linkViews, totalRevenue };
+  const successfulPayments = await prisma.payment.findMany({
+    where: { status: "SUCCESS" },
+    select: { amount: true, finalAmount: true },
+  });
+  const totalRevenuePaise = successfulPayments.reduce((sum, p) => {
+    const actualPaid = p.finalAmount !== null && p.finalAmount !== undefined ? p.finalAmount : p.amount;
+    return sum + actualPaid;
+  }, 0);
+  const grossRevenuePaise = successfulPayments.reduce((sum, p) => sum + p.amount, 0);
+
+  const totalRevenue = totalRevenuePaise / 100;
+  const grossRevenue = grossRevenuePaise / 100;
+  const totalDiscounts = (grossRevenuePaise - totalRevenuePaise) / 100;
+
+  return { totalUsers, newThisWeek, activePages, linkViews, totalRevenue, grossRevenue, totalDiscounts };
 }
 
 export async function getLocalAdminGrowth() {
@@ -253,7 +276,7 @@ export async function getAdminUsers(search = "", role = "") {
       },
       payments: {
         where: { status: "SUCCESS" },
-        select: { amount: true },
+        select: { amount: true, finalAmount: true, plan: true },
       },
     },
   });
@@ -353,6 +376,17 @@ export async function getAdminAuditLog() {
 // ─── System Health ───────────────────────────────────────────────────────────
 export async function getAdminSystemHealth() {
   await checkAuth();
+
+  let dbStatus = "healthy";
+  let dbLatencyMs = 0;
+  try {
+    const start = performance.now();
+    await prisma.user.findFirst({ select: { id: true } });
+    dbLatencyMs = Math.round((performance.now() - start) * 10) / 10;
+  } catch (err) {
+    dbStatus = "degraded";
+  }
+
   const [totalUsers, totalEvents, totalPayments, totalViews, publishedPages] = await Promise.all([
     prisma.user.count(),
     prisma.event.count(),
@@ -360,7 +394,42 @@ export async function getAdminSystemHealth() {
     prisma.response.count(),
     prisma.event.count({ where: { status: "PUBLISHED" } }),
   ]);
-  return { totalUsers, totalEvents, totalPayments, totalViews, publishedPages, dbStatus: "healthy", appVersion: "1.0.0" };
+
+  const hasVercelBlob = Boolean(
+    process.env.BLOB_READ_WRITE_TOKEN ||
+    Object.keys(process.env).some((k) => k.endsWith("_READ_WRITE_TOKEN"))
+  );
+  const hasCloudinary = Boolean(process.env.CLOUDINARY_URL || process.env.CLOUDINARY_CLOUD_NAME);
+  const isVercel = Boolean(process.env.VERCEL || process.env.NEXT_PUBLIC_VERCEL_ENV);
+
+  let activeStorage = "Local Disk (/public/uploads)";
+  if (hasVercelBlob) activeStorage = "Vercel Blob Storage";
+  else if (hasCloudinary) activeStorage = "Cloudinary Media";
+  else if (isVercel) activeStorage = "Read-Only (Needs Blob Token)";
+
+  const memory = process.memoryUsage();
+  const uptimeSeconds = Math.floor(process.uptime());
+
+  return {
+    totalUsers,
+    totalEvents,
+    totalPayments,
+    totalViews,
+    publishedPages,
+    dbStatus,
+    dbLatencyMs,
+    dbProvider: (process.env.DATABASE_URL || "").includes("neon.tech") ? "Neon PostgreSQL (AWS)" : "PostgreSQL",
+    activeStorage,
+    storageStatus: hasVercelBlob || hasCloudinary || !isVercel ? "healthy" : "warning",
+    memoryUsageMb: Math.round((memory.rss / (1024 * 1024)) * 10) / 10,
+    heapUsedMb: Math.round((memory.heapUsed / (1024 * 1024)) * 10) / 10,
+    uptimeSeconds,
+    nodeVersion: process.version,
+    hostingPlatform: isVercel ? "Vercel Cloud Serverless" : "Node.js Server",
+    razorpayLive: process.env.RAZORPAY_KEY_ID?.startsWith("rzp_live_") ?? false,
+    smtpConfigured: Boolean(process.env.SMTP_USER),
+    appVersion: "1.0.0",
+  };
 }
 
 // ─── AI Insights (engagement analytics) ─────────────────────────────────────
@@ -577,10 +646,14 @@ export async function getAdminPricingSettings() {
     const originalPrice = await prisma.systemSetting.findUnique({ where: { key: "offer_original_price" } });
     const specialPrice = await prisma.systemSetting.findUnique({ where: { key: "offer_special_price" } });
     const cashbackAmount = await prisma.systemSetting.findUnique({ where: { key: "offer_cashback_amount" } });
+    const premiumUpgradePrice = await prisma.systemSetting.findUnique({ where: { key: "premium_upgrade_price" } });
+    const enabledSetting = await prisma.systemSetting.findUnique({ where: { key: "offer_pricing_enabled" } });
 
-    const orig = originalPrice?.value ? parseInt(originalPrice.value, 10) : 499;
-    const spec = specialPrice?.value ? parseInt(specialPrice.value, 10) : 199;
+    const orig = originalPrice?.value ? parseInt(originalPrice.value, 10) : 500;
+    const spec = specialPrice?.value ? parseInt(specialPrice.value, 10) : 200;
     const cb = cashbackAmount?.value ? parseInt(cashbackAmount.value, 10) : 50;
+    const prem = premiumUpgradePrice?.value ? parseInt(premiumUpgradePrice.value, 10) : 5000;
+    const isPricingEnabled = enabledSetting?.value !== "false";
     const discountPercent = orig > 0 ? Math.round(((orig - spec) / orig) * 100) : 60;
 
     return {
@@ -589,14 +662,16 @@ export async function getAdminPricingSettings() {
         originalPrice: orig,
         specialPrice: spec,
         cashbackAmount: cb,
+        premiumUpgradePrice: prem,
         discountPercent,
+        enabled: isPricingEnabled,
       },
     };
   } catch (error: any) {
     return {
       success: false,
       error: error.message,
-      settings: { originalPrice: 499, specialPrice: 199, cashbackAmount: 50, discountPercent: 60 },
+      settings: { originalPrice: 500, specialPrice: 200, cashbackAmount: 50, premiumUpgradePrice: 5000, discountPercent: 60, enabled: true },
     };
   }
 }
@@ -605,14 +680,18 @@ export async function updateAdminPricingSettings({
   originalPrice,
   specialPrice,
   cashbackAmount,
+  premiumUpgradePrice,
+  enabled,
 }: {
   originalPrice: number;
   specialPrice: number;
   cashbackAmount: number;
+  premiumUpgradePrice?: number;
+  enabled?: boolean;
 }) {
   await checkAuth();
   try {
-    await prisma.$transaction([
+    const operations = [
       prisma.systemSetting.upsert({
         where: { key: "offer_original_price" },
         update: { value: originalPrice.toString(), description: "Original strike-through offer price in INR" },
@@ -628,11 +707,93 @@ export async function updateAdminPricingSettings({
         update: { value: cashbackAmount.toString(), description: "Promotional cashback amount in INR" },
         create: { key: "offer_cashback_amount", value: cashbackAmount.toString(), description: "Promotional cashback amount in INR" },
       }),
-    ]);
+    ];
+
+    if (enabled !== undefined) {
+      operations.push(
+        prisma.systemSetting.upsert({
+          where: { key: "offer_pricing_enabled" },
+          update: { value: enabled ? "true" : "false", description: "Whether promotional template offer and cashback is enabled" },
+          create: { key: "offer_pricing_enabled", value: enabled ? "true" : "false", description: "Whether promotional template offer and cashback is enabled" },
+        })
+      );
+    }
+
+    if (premiumUpgradePrice !== undefined) {
+      operations.push(
+        prisma.systemSetting.upsert({
+          where: { key: "premium_upgrade_price" },
+          update: { value: premiumUpgradePrice.toString(), description: "Upgrade to Premium plan price in INR" },
+          create: { key: "premium_upgrade_price", value: premiumUpgradePrice.toString(), description: "Upgrade to Premium plan price in INR" },
+        })
+      );
+    }
+
+    await prisma.$transaction(operations);
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message || "Failed to update pricing settings" };
   }
 }
+
+export async function updateAdminPremiumUpgradePrice({
+  premiumUpgradePrice,
+}: {
+  premiumUpgradePrice: number;
+}) {
+  await checkAuth();
+  try {
+    await prisma.systemSetting.upsert({
+      where: { key: "premium_upgrade_price" },
+      update: { value: premiumUpgradePrice.toString(), description: "Upgrade to Premium plan price in INR" },
+      create: { key: "premium_upgrade_price", value: premiumUpgradePrice.toString(), description: "Upgrade to Premium plan price in INR" },
+    });
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to update premium upgrade price" };
+  }
+}
+
+// ─── Post-Payment Email Delivery Settings ────────────────────────────────────
+export async function getAdminEmailDeliverySetting() {
+  await checkAuth();
+  try {
+    const setting = await prisma.systemSetting.findUnique({
+      where: { key: "email_send_link_on_payment" },
+    });
+    return {
+      success: true,
+      enabled: setting ? setting.value !== "false" : true, // default true
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      enabled: true,
+      error: error.message,
+    };
+  }
+}
+
+export async function updateAdminEmailDeliverySetting(enabled: boolean) {
+  await checkAuth();
+  try {
+    await prisma.systemSetting.upsert({
+      where: { key: "email_send_link_on_payment" },
+      update: {
+        value: enabled ? "true" : "false",
+        description: "Whether to automatically email the gift link to the buyer upon payment success",
+      },
+      create: {
+        key: "email_send_link_on_payment",
+        value: enabled ? "true" : "false",
+        description: "Whether to automatically email the gift link to the buyer upon payment success",
+      },
+    });
+    return { success: true, enabled };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to update email delivery setting" };
+  }
+}
+
 
 

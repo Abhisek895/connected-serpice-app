@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { recordResponseAction } from "../actions";
-import { Heart, Sparkles, X, MailOpen, Volume2, VolumeX, Gift, Award, Coffee } from "lucide-react";
+import { Heart, X, MailOpen, Volume2, VolumeX, Gift, Award, Coffee } from "lucide-react";
 import OurStoryWatermark from "./OurStoryWatermark";
 
 export type ProposalClientProps = {
@@ -15,10 +15,16 @@ export type ProposalClientProps = {
   rejectBtn?: string;
   loveMessage?: string;
   photoUrl?: string;
+  audioUrl?: string;
+  _photo?: string;
+  _photo2?: string;
+  _photo3?: string;
+  _audio?: string;
   demoId?: string;
   recipientName?: string;
   dodgeMessages?: string;
   patternText?: string;
+  customData?: Record<string, any>;
   media?: any[];
 };
 
@@ -31,6 +37,8 @@ export default function ImSorryTemplate({
   loveMessage,
   recipientName,
   photoUrl: propPhotoUrl,
+  _photo,
+  customData,
   media = [],
 }: ProposalClientProps) {
   const [mounted, setMounted] = useState(false);
@@ -78,7 +86,14 @@ export default function ImSorryTemplate({
 
   const uploadedImage = media?.find((m: any) => m.type === "IMAGE")?.url;
   const currentSadCatGif = sadCatGifs[dodgeCount % sadCatGifs.length];
-  const displayPhoto = propPhotoUrl || uploadedImage || currentSadCatGif;
+  const displayPhoto =
+    customData?._photo ||
+    customData?.photoUrl ||
+    customData?._photo1 ||
+    propPhotoUrl ||
+    _photo ||
+    uploadedImage ||
+    currentSadCatGif;
   const happyCatGif = "/demos/im-sorry/cat-happy.png";
 
   useEffect(() => {
@@ -208,7 +223,7 @@ export default function ImSorryTemplate({
         }`} />
       </div>
 
-      {/* Floating Sparkles Layer */}
+      {/* Floating Hearts Layer */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {Array.from({ length: 30 }).map((_, i) => (
           <div
@@ -265,8 +280,8 @@ export default function ImSorryTemplate({
               onClick={handleOpenGift}
               className="px-9 py-4 bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 hover:scale-108 active:scale-95 text-white font-black text-sm rounded-full shadow-[0_0_40px_rgba(244,63,94,0.8)] transition-all duration-300 flex items-center gap-3 border border-rose-200/50 tracking-wider uppercase cursor-pointer"
             >
-              <Sparkles className="w-5 h-5 fill-white animate-spin" />
-              <span>Tap Here ✨</span>
+              <Gift className="w-5 h-5 text-white" />
+              <span>Tap Here 💖</span>
             </button>
           </motion.div>
         ) : (

@@ -24,6 +24,7 @@ export async function POST(req: Request) {
       razorpaySignature,
       utmSource,
       utmCampaign,
+      buyerEmail,
     } = await req.json();
 
     if (!demoId) {
@@ -120,6 +121,17 @@ export async function POST(req: Request) {
       ...(utmCampaign ? { campaign: utmCampaign } : {}),
     };
 
+    // Persist buyerEmail to payment record if provided and not yet saved
+    if (buyerEmail && targetOrderId) {
+      try {
+        await prisma.payment.updateMany({
+          where: { razorpayOrderId: targetOrderId, buyerEmail: null },
+          data: { buyerEmail: String(buyerEmail).toLowerCase().trim() },
+        });
+      } catch (e) {
+        console.warn("[guest/create-event] Could not update buyerEmail:", e);
+      }
+    }
     // ── Delegate to fulfillPayment (idempotent) ────────────────────────────────
     // targetOrderId was resolved during verification above (handles FREE, guest_free_, and real orders)
     const result = await fulfillPayment(

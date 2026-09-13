@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Heart, Music, Sparkles, Image as ImageIcon, MessageSquare } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Heart, Music, Image as ImageIcon, MessageSquare } from "lucide-react";
 
 interface LivePhonePreviewProps {
   demoId: string;
@@ -26,7 +26,28 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
   const acceptBtn = formValues["acceptBtn"] || defaultData["acceptBtn"] || (isBirthday ? "Love ❤️" : "Yes! 😍");
   const rejectBtn = formValues["rejectBtn"] || defaultData["rejectBtn"] || (isBirthday ? "Hate 💔" : "No 🙈");
 
-  const photoUrl = formValues["_photo"] || formValues["_photo1"] || defaultData["_photo"] || defaultData["photo"];
+  const userBirthdayPhotos = [
+    formValues["_photo"],
+    formValues["photoUrl"],
+    formValues["_photo1"],
+    formValues["_photo2"],
+    formValues["_photo3"],
+  ].filter(Boolean) as string[];
+
+  const [bdaySlideIndex, setBdaySlideIndex] = useState(0);
+  useEffect(() => {
+    if (userBirthdayPhotos.length <= 1) return;
+    const interval = setInterval(() => {
+      setBdaySlideIndex((idx) => (idx + 1) % userBirthdayPhotos.length);
+    }, 2800);
+    return () => clearInterval(interval);
+  }, [userBirthdayPhotos.length]);
+
+  const activeBdayPhoto = userBirthdayPhotos.length > 0
+    ? userBirthdayPhotos[bdaySlideIndex % userBirthdayPhotos.length]
+    : defaultData["_photo"] || defaultData["photo"] || "/demos/birthday-wish/s0.jpeg";
+
+  const photoUrl = userBirthdayPhotos[0] || formValues["_photo"] || formValues["_photo1"] || defaultData["_photo"] || defaultData["photo"];
 
   const isStep2 = currentStep === 1;
 
@@ -98,16 +119,16 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
               </div>
 
               {/* Page 2 Buttons at Bottom */}
-              <div className="pb-1.5 flex flex-col items-center justify-center gap-1 w-full max-w-[150px] mx-auto shrink-0">
+              <div className="pb-2.5 pt-1 flex flex-row items-center justify-center gap-1.5 w-full max-w-[210px] mx-auto shrink-0">
                 {!showLetterPreview && (
                   <button
                     onClick={() => setShowLetterPreview(true)}
-                    className="w-full py-0.5 rounded-full bg-white/95 text-rose-600 text-[8.5px] font-bold shadow-md tracking-tight hover:bg-white cursor-pointer transition transform active:scale-95 text-center whitespace-nowrap"
+                    className="flex-1 py-1 rounded-full bg-white/95 text-rose-600 text-[8px] font-bold shadow-md tracking-tight hover:bg-white cursor-pointer transition transform active:scale-95 text-center whitespace-nowrap"
                   >
-                    💌 Read My Message
+                    💌 Message
                   </button>
                 )}
-                <span className="w-full py-0.5 rounded-full bg-rose-500 text-white text-[8.5px] font-bold shadow-md shadow-rose-950/60 text-center whitespace-nowrap">
+                <span className="flex-1 py-1 rounded-full bg-gradient-to-r from-rose-500 to-rose-600 text-white text-[8px] font-bold shadow-md shadow-rose-950/60 text-center whitespace-nowrap">
                   ✨ Continue
                 </span>
               </div>
@@ -119,9 +140,9 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
                 {/* 1. Photo Container — CLEAN with NO text overlay */}
                 <div className="relative w-full h-[130px] sm:h-[140px] rounded-xl overflow-hidden shadow-md bg-slate-950">
                   <img
-                    src={photoUrl || "/demos/birthday-wish/s0.jpeg"}
+                    src={activeBdayPhoto}
                     alt="Birthday Photo"
-                    className="w-full h-full object-cover object-[center_35%]"
+                    className="w-full h-full object-cover object-[center_35%] transition-opacity duration-500"
                   />
                 </div>
 
@@ -199,7 +220,7 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
                   <div className="flex justify-between items-center pt-1 text-[8.5px]">
                     <span className="text-rose-300 font-bold">Forever Yours 💖</span>
                     <span className="px-2.5 py-1 bg-gradient-to-r from-rose-600 to-pink-600 text-white font-bold rounded-lg shadow-md">
-                      Close Letter & Continue ✨
+                      Close Letter & Continue 💌
                     </span>
                   </div>
                 </div>
@@ -217,7 +238,7 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
 
                 <div className="flex justify-center pt-1">
                   <span className="px-4 py-1.5 text-[9.5px] rounded-full font-bold bg-gradient-to-r from-rose-500 to-purple-600 text-white shadow-md tracking-wider uppercase">
-                    Tap Here ✨
+                    Tap Here 💖
                   </span>
                 </div>
               </div>
