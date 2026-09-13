@@ -88,7 +88,7 @@ export async function deleteAdminUser(id: string) {
     where: { userId: id },
     select: { id: true }
   });
-  const eventIds = userEvents.map(e => e.id);
+  const eventIds = userEvents.map((e: { id: string }) => e.id);
 
   // 2. Delete all responses/analytics recorded for user's events
   if (eventIds.length > 0) {
@@ -200,11 +200,11 @@ export async function getLocalAdminStats() {
     where: { status: "SUCCESS" },
     select: { amount: true, finalAmount: true },
   });
-  const totalRevenuePaise = successfulPayments.reduce((sum, p) => {
+  const totalRevenuePaise = successfulPayments.reduce((sum: number, p: { amount: number; finalAmount?: number | null }) => {
     const actualPaid = p.finalAmount !== null && p.finalAmount !== undefined ? p.finalAmount : p.amount;
     return sum + actualPaid;
   }, 0);
-  const grossRevenuePaise = successfulPayments.reduce((sum, p) => sum + p.amount, 0);
+  const grossRevenuePaise = successfulPayments.reduce((sum: number, p: { amount: number }) => sum + p.amount, 0);
 
   const totalRevenue = totalRevenuePaise / 100;
   const grossRevenue = grossRevenuePaise / 100;
