@@ -58,7 +58,7 @@ export async function GET() {
       }),
       prisma.theme.findMany({
         where: { isActive: true },
-        select: { id: true, name: true, title: true, description: true, price: true, durationDays: true, isPremium: true },
+        select: { id: true, name: true, title: true, description: true, price: true, durationDays: true, isPremium: true, thumbnailUrl: true },
         orderBy: { price: "asc" },
       }),
     ]);

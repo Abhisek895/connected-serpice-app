@@ -16,6 +16,7 @@ type Theme = {
   price: number;
   durationDays: number;
   isPremium: boolean;
+  thumbnailUrl?: string | null;
 };
 
 type ReferralStats = {
@@ -136,8 +137,12 @@ function TemplateReferralCard({
       <div className="p-5 pb-3">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-rose-100 to-pink-100 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform duration-300">
-              {emoji}
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-rose-100 to-pink-100 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+              {theme.thumbnailUrl ? (
+                <img src={theme.thumbnailUrl} alt={displayTitle} className="w-full h-full object-cover" />
+              ) : (
+                emoji
+              )}
             </div>
             <div>
               <h3 className="font-bold text-slate-900 text-sm leading-tight">{displayTitle}</h3>
