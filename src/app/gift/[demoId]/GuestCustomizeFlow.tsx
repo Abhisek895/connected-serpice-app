@@ -1120,16 +1120,11 @@ export default function GuestCustomizeFlow({
               {pollingForLink ? (
                 <><Loader2 className="w-5 h-5 animate-spin" /> Confirming Your Love Link… 💖</>
               ) : isProcessing ? (
-                <><Loader2 className="w-5 h-5 animate-spin" /> Preparing Your Romantic Surprise... 💌</>
-              ) : finalPriceINR === 0 ? (
-                <>
-                  <Heart className="w-4 h-4 fill-white text-white group-hover:scale-110 transition-transform" />
-                  <span>Tell Her You Love Her 💖 · Free 1-Day Pass (₹0)</span>
-                </>
+                <><Loader2 className="w-5 h-5 animate-spin" /> Preparing Your Love Story... 💌</>
               ) : (
                 <>
                   <Heart className="w-4 h-4 fill-white text-white group-hover:scale-110 transition-transform" />
-                  <span>Tell Her You Love Her 💖 · Pay ₹${finalPriceINR.toFixed(2)}</span>
+                  <span>Tell Her You Love Her 💖</span>
                 </>
               )}
             </button>

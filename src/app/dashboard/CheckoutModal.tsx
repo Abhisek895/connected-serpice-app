@@ -588,32 +588,12 @@ export default function CheckoutModal({
               {isProcessing ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>
-                    {couponMessage.includes("Premium Member")
-                      ? "Sealing Your Love Story with Infinite Pass... 💖"
-                      : totalToPayINR === 0
-                        ? "Activating Your Love Link via Wallet... 💖"
-                        : "Preparing Your Romantic Surprise... 💌"}
-                  </span>
-                </>
-              ) : couponMessage.includes("Premium Member") ? (
-                <>
-                  <Heart className="w-4 h-4 fill-white text-white group-hover:scale-110 transition-transform" />
-                  <span>Tell Her You Love Her 💖 · Free for Premium ∞</span>
-                </>
-              ) : totalToPayINR === 0 ? (
-                <>
-                  <Heart className="w-4 h-4 fill-white text-white group-hover:scale-110 transition-transform" />
-                  <span>
-                    {walletDeductionPaise > 0
-                      ? "Tell Her You Love Her 💖 · Wallet Covered (₹0)"
-                      : "Tell Her You Love Her 💖 · Free 1-Day Pass (₹0)"}
-                  </span>
+                  <span>Preparing Your Love Story... 💌</span>
                 </>
               ) : (
                 <>
                   <Heart className="w-4 h-4 fill-white text-white group-hover:scale-110 transition-transform" />
-                  <span>Tell Her You Love Her 💖 · Pay ₹{totalToPayINR.toFixed(2)}</span>
+                  <span>Tell Her You Love Her 💖</span>
                 </>
               )}
             </button>
