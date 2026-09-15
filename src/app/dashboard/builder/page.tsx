@@ -220,7 +220,7 @@ function BuilderWizard() {
   };
 
   return (
-    <div className="w-full max-w-4xl bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+    <div className="w-full max-w-4xl bg-white sm:rounded-3xl shadow-sm border-x-0 sm:border border-slate-100 overflow-hidden flex flex-col min-h-[100dvh] sm:min-h-[600px] max-h-[100dvh] sm:max-h-[90vh]">
 
       {/* Wizard Header */}
       <div className="bg-slate-900 px-5 sm:px-8 py-5 sm:py-6 text-white flex justify-between items-center relative overflow-hidden">
@@ -248,7 +248,7 @@ function BuilderWizard() {
       )}
 
       {/* Wizard Body */}
-      <div className="p-5 sm:p-8 md:p-12 min-h-[400px] relative overflow-hidden">
+      <div className="flex-1 overflow-y-auto p-5 sm:p-8 md:p-12 relative">
         <AnimatePresence mode="wait">
 
           {/* STEP 1: Customization & Integrated Theme Selector */}
@@ -460,8 +460,8 @@ function BuilderWizard() {
         </AnimatePresence>
       </div>
 
-      {/* Wizard Footer Controls — sticky on mobile */}
-      <div className="bg-slate-50 border-t border-slate-100 px-5 sm:px-6 py-4 sm:py-5 flex justify-between items-center sticky bottom-0">
+      {/* Wizard Footer Controls */}
+      <div className="shrink-0 bg-slate-50 border-t border-slate-100 px-5 sm:px-6 py-4 sm:py-5 flex justify-between items-center">
         <button
           disabled={step === 1 || isLoading || !!publishedSlug}
           onClick={() => setStep(step - 1)}
@@ -501,7 +501,7 @@ function BuilderWizard() {
 
 export default function BuilderPage() {
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-start py-6 sm:py-12 px-3 sm:px-6 font-sans">
+    <div className="min-h-[100dvh] bg-slate-50 flex flex-col items-center justify-start sm:py-12 sm:px-6 font-sans overflow-hidden">
       <Suspense fallback={
         <div className="w-full max-w-4xl bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden flex items-center justify-center min-h-[600px]">
           <Loader2 className="w-10 h-10 animate-spin text-rose-500" />

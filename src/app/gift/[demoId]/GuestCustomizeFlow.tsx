@@ -1298,15 +1298,15 @@ export default function GuestCustomizeFlow({
   // ───────────────────────────────────────────────────────────────────────────
   return (
     <>
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-3 sm:p-6">
+      <div className="min-h-[100dvh] bg-slate-950 flex items-end sm:items-center justify-center sm:p-6 overflow-hidden">
         <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          className="bg-white rounded-3xl max-w-5xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-rose-100 relative"
+          className="bg-white w-full max-w-5xl max-h-[95dvh] sm:max-h-[92vh] flex flex-col rounded-t-3xl sm:rounded-3xl shadow-2xl border border-rose-100 relative"
         >
           {/* Header */}
-          <div className="sticky top-0 z-40 bg-white rounded-t-3xl border-b border-slate-100 px-6 pt-5 pb-4 flex items-center justify-between">
+          <div className="shrink-0 bg-white rounded-t-3xl border-b border-slate-100 px-4 sm:px-6 pt-4 pb-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2.5 bg-rose-100 rounded-2xl text-rose-600 flex-shrink-0">
                 <Icon className="w-5 h-5 text-rose-500" />
@@ -1320,7 +1320,7 @@ export default function GuestCustomizeFlow({
             </div>
           </div>
 
-          <div className="p-4 sm:p-6">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
               {/* Left Column: Form Inputs */}
               <div className="lg:col-span-7 space-y-4">
@@ -1402,18 +1402,18 @@ export default function GuestCustomizeFlow({
           </div>
 
           {/* Footer */}
-          <div className="sticky bottom-0 z-40 bg-white border-t border-slate-100 px-6 py-4 flex items-center gap-3 rounded-b-3xl">
+          <div className="shrink-0 bg-white border-t border-slate-100 px-4 sm:px-6 py-4 flex items-center gap-3 sm:rounded-b-3xl">
             {currentStep > 0 ? (
               <button
                 onClick={() => setCurrentStep((s) => s - 1)}
-                className="py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer"
+                className="py-3 sm:py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4" /> Back
               </button>
             ) : (
               <button
                 onClick={() => setShowExitModal(true)}
-                className="py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition inline-block cursor-pointer"
+                className="py-3 sm:py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition inline-block cursor-pointer"
               >
                 Browse Templates
               </button>
@@ -1422,14 +1422,14 @@ export default function GuestCustomizeFlow({
             {currentStep < totalSteps - 1 ? (
               <button
                 onClick={() => setCurrentStep((s) => s + 1)}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer"
+                className="flex-1 py-3 sm:py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer"
               >
                 Next Step <ChevronRight className="w-4 h-4" />
               </button>
             ) : (
               <button
                 onClick={() => setShowCheckoutView(true)}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs transition shadow-md shadow-rose-200 flex items-center justify-center gap-2 cursor-pointer"
+                className="flex-1 py-3 sm:py-2.5 px-4 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs transition shadow-md shadow-rose-200 flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Send className="w-4 h-4" /> Continue to Payment →
               </button>

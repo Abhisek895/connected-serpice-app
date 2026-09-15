@@ -573,15 +573,15 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
 
   // ── Main modal ──
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto w-screen h-screen">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6 bg-slate-950/80 backdrop-blur-md w-screen h-[100dvh] overflow-hidden">
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 10 }}
-        className="bg-white rounded-3xl max-w-5xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-rose-100 relative"
+        className="bg-white w-full max-w-5xl max-h-[95dvh] sm:max-h-[92vh] flex flex-col rounded-t-3xl sm:rounded-3xl shadow-2xl border border-rose-100 relative"
       >
         {/* Header */}
-        <div className="sticky top-0 z-40 bg-white rounded-t-3xl border-b border-slate-100 px-6 pt-5 pb-4 flex items-center justify-between">
+        <div className="shrink-0 bg-white rounded-t-3xl border-b border-slate-100 px-4 sm:px-6 pt-4 pb-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-rose-100 rounded-2xl text-rose-600 flex-shrink-0">
               <SlidersHorizontal className="w-5 h-5 text-rose-600" />
@@ -602,7 +602,7 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
           </button>
         </div>
 
-        <div className="p-4 sm:p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
             {/* Left Column: Form Inputs */}
             <div className="lg:col-span-7 space-y-4">
@@ -694,20 +694,20 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 z-40 bg-white border-t border-slate-100 px-6 py-4 flex items-center gap-3 rounded-b-3xl">
+        <div className="shrink-0 bg-white border-t border-slate-100 px-4 sm:px-6 py-4 flex items-center gap-3 sm:rounded-b-3xl">
           {/* Back */}
           {currentStep > 0 ? (
             <button
               onClick={() => setCurrentStep((s) => s - 1)}
               disabled={isLoading || isSubmitting}
-              className="py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition disabled:opacity-50 flex items-center gap-1.5"
+              className="py-3 sm:py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition disabled:opacity-50 flex items-center gap-1.5"
             >
               <ChevronLeft className="w-4 h-4" /> Back
             </button>
           ) : (
             <button
               onClick={onClose}
-              className="py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition"
+              className="py-3 sm:py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition"
             >
               Cancel
             </button>
@@ -718,7 +718,7 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
             <button
               onClick={() => setCurrentStep((s) => s + 1)}
               disabled={isLoading || isSubmitting}
-              className="flex-1 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition flex items-center justify-center gap-2"
+              className="flex-1 py-3 sm:py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition flex items-center justify-center gap-2"
             >
               Next Step <ChevronRight className="w-4 h-4" />
             </button>
@@ -726,7 +726,7 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
             <button
               onClick={handleSubmit}
               disabled={isLoading || isSubmitting}
-              className="flex-1 py-2.5 px-4 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs transition shadow-md shadow-rose-200 flex items-center justify-center gap-2 disabled:opacity-70"
+              className="flex-1 py-3 sm:py-2.5 px-4 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs transition shadow-md shadow-rose-200 flex items-center justify-center gap-2 disabled:opacity-70"
             >
               {isSubmitting ? (
                 <>
