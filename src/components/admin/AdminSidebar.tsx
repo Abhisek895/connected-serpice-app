@@ -20,6 +20,7 @@ import {
   Heart,
   Menu,
   X,
+  Database,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAdminAuth } from "./AdminAuthProvider";
@@ -47,6 +48,7 @@ export default function AdminSidebar() {
     { name: "Cold Email", href: "/admin/cold-email", icon: Mail, roles: ["admin", "super_admin"] },
     { name: "AI Insights", href: "/admin/ai-insights", icon: BrainCircuit, roles: ["super_admin"] },
     { name: "Audit Logs", href: "/admin/audit-logs", icon: ListOrdered, roles: ["super_admin"] },
+    { name: "User Uploads", href: "/admin/uploads", icon: Database, roles: ["super_admin"] },
     { name: "Email Tools", href: "/admin/email", icon: Mail, roles: ["super_admin"] },
     { name: "System Health", href: "/admin/system", icon: Activity, roles: ["super_admin"] },
   ];
