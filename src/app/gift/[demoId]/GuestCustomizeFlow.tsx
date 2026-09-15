@@ -983,30 +983,30 @@ export default function GuestCustomizeFlow({
           className="bg-white rounded-3xl shadow-2xl border border-rose-100 max-w-md w-full overflow-hidden relative"
         >
           {/* Header */}
-          <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-rose-50 to-pink-50 flex justify-between items-center">
+          <div className="p-4 sm:p-5 border-b border-slate-100 bg-gradient-to-r from-rose-50 to-pink-50 flex justify-between items-center">
             <div>
-              <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+              <h2 className="text-base sm:text-lg font-extrabold text-slate-900 flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-emerald-600" /> Secure Checkout
               </h2>
-              <p className="text-sm font-semibold text-rose-600 mt-0.5">{demo.title}</p>
+              <p className="text-xs sm:text-sm font-semibold text-rose-600 mt-0.5">{demo.title}</p>
             </div>
             <button
               onClick={() => setShowCheckoutView(false)}
-              className="p-2 hover:bg-white rounded-full transition-colors text-slate-400 hover:text-slate-600"
+              className="p-1.5 hover:bg-white rounded-full transition-colors text-slate-400 hover:text-slate-600"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="p-6 space-y-6">
+          <div className="p-4 sm:p-4 space-y-3">
             {/* Price line */}
-            <div className="flex justify-between items-center text-slate-700 font-medium">
+            <div className="flex justify-between items-center text-slate-700 font-medium text-sm">
               <span>Original Price</span>
               <span className="font-bold">₹{origPriceINR.toFixed(2)}</span>
             </div>
 
             {/* Coupon input & chips */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <label className="text-sm font-bold text-slate-700 flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
                   <Tag className="w-4 h-4 text-rose-500" /> Apply Coupon Code
@@ -1020,7 +1020,7 @@ export default function GuestCustomizeFlow({
                   value={couponCode}
                   onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                   placeholder="Enter code (e.g. LOVE2026)"
-                  className="w-full pl-4 pr-10 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all uppercase font-black text-slate-900 text-sm tracking-wide"
+                  className="w-full pl-4 pr-10 py-2 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all uppercase font-black text-slate-900 text-sm tracking-wide"
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
                   {couponStatus === "validating" && <Loader2 className="w-4 h-4 text-rose-500 animate-spin" />}
@@ -1066,19 +1066,19 @@ export default function GuestCustomizeFlow({
                 value={buyerEmail}
                 onChange={(e) => setBuyerEmail(e.target.value)}
                 placeholder="your@email.com — we'll send the link here"
-                className="w-full px-4 py-2.5 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-900 text-sm font-medium placeholder:text-slate-400"
+                className="w-full px-4 py-1.5 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-900 text-sm font-medium placeholder:text-slate-400"
               />
-              <p className="text-[10px] text-slate-400 font-medium">
+              <p className="text-[10px] text-slate-400 font-medium leading-tight">
                 Your link will be emailed instantly after payment — even if your browser closes 🔒
               </p>
             </div>
 
             {/* Total summary */}
-            <div className="border-t border-slate-100 pt-4 space-y-3">
+            <div className="border-t border-slate-100 pt-2 space-y-1.5">
               <div className="flex justify-between items-center">
-                <span className="text-slate-900 font-bold">Total to Pay</span>
+                <span className="text-slate-900 font-bold text-sm">Total to Pay</span>
                 <div className="text-right">
-                  <span className="text-2xl font-black text-rose-600">₹{finalPriceINR.toFixed(2)}</span>
+                  <span className="text-xl font-black text-rose-600">₹{finalPriceINR.toFixed(2)}</span>
                   {finalPriceINR === 0 && (
                     <span className="block text-[10px] text-emerald-600 font-extrabold uppercase tracking-wide">
                       100% FREE PASS
@@ -1087,7 +1087,7 @@ export default function GuestCustomizeFlow({
                 </div>
               </div>
 
-              <p className="text-xs text-slate-500 text-center bg-slate-50 py-2.5 rounded-xl border border-slate-100 font-medium">
+              <p className="text-xs text-slate-500 text-center bg-slate-50 py-1.5 rounded-xl border border-slate-100 font-medium">
                 Includes full access for <strong>{liveThemeDuration ?? 7} days</strong> + instant link publishing.
               </p>
             </div>
@@ -1115,7 +1115,7 @@ export default function GuestCustomizeFlow({
             <button
               onClick={handlePayment}
               disabled={isProcessing || pollingForLink}
-              className="w-full py-4 px-4 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:via-pink-600 hover:to-rose-700 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-rose-200 hover:shadow-rose-300 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer group"
+              className="w-full py-2.5 sm:py-3 px-4 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:via-pink-600 hover:to-rose-700 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-rose-200 hover:shadow-rose-300 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer group"
             >
               {pollingForLink ? (
                 <><Loader2 className="w-5 h-5 animate-spin" /> Confirming Your Love Link… 💖</>
@@ -1127,14 +1127,14 @@ export default function GuestCustomizeFlow({
                   <span>
                     Tell Them You Love Them 💖
                     {finalPriceINR === 0
-                      ? " · Free Pass (₹0)"
+                      ? " · Free (₹0)"
                       : ` · ₹${finalPriceINR.toFixed(0)} / ${liveThemeDuration}d`}
                   </span>
                 </>
               )}
             </button>
 
-            <p className="text-[10px] text-slate-400 text-center">
+            <p className="text-[9px] text-slate-400 text-center pb-1">
               🔒 256-Bit SSL Encrypted Payment · No Account Required
             </p>
           </div>

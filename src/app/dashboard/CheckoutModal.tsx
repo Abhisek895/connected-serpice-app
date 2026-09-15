@@ -394,22 +394,22 @@ export default function CheckoutModal({
           className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden z-10 my-2 sm:my-auto"
         >
           {/* Header */}
-          <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-rose-50 to-pink-50">
+          <div className="p-4 sm:p-5 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-rose-50 to-pink-50">
             <div>
-              <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+              <h2 className="text-base sm:text-lg font-extrabold text-slate-900 flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-rose-500" /> Secure Checkout
               </h2>
-              <p className="text-sm font-semibold text-rose-600 mt-0.5">{liveTemplateTitle || templateName}</p>
+              <p className="text-xs sm:text-sm font-semibold text-rose-600 mt-0.5">{liveTemplateTitle || templateName}</p>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-white rounded-full transition-colors text-slate-400 hover:text-slate-600 shadow-sm"
+              className="p-1.5 hover:bg-white rounded-full transition-colors text-slate-400 hover:text-slate-600 shadow-sm"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="p-6 space-y-6">
+          <div className="p-4 sm:p-4 space-y-3">
             {/* Original Price */}
             <div className="flex justify-between items-center text-slate-700 font-medium">
               <span>Original Price</span>
@@ -428,7 +428,7 @@ export default function CheckoutModal({
                 </p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label className="text-sm font-bold text-slate-700 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <Tag className="w-4 h-4 text-rose-500" /> Apply Coupon Code
@@ -442,7 +442,7 @@ export default function CheckoutModal({
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                     placeholder="Enter code (e.g. SPECIAL50)"
-                    className="w-full pl-4 pr-10 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all uppercase placeholder:normal-case font-black text-slate-900 text-sm tracking-wide"
+                    className="w-full pl-4 pr-10 py-2 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all uppercase placeholder:normal-case font-black text-slate-900 text-sm tracking-wide"
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
                     {couponStatus === "validating" && <Loader2 className="w-4 h-4 text-rose-500 animate-spin" />}
@@ -495,7 +495,7 @@ export default function CheckoutModal({
 
             {/* 💰 Wallet Balance Card */}
             {walletBalance > 0 && !isPremiumAccount && (
-              <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200/80 rounded-2xl p-4 space-y-2.5 shadow-sm">
+              <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200/80 rounded-2xl p-3 sm:p-4 space-y-2 shadow-sm">
                 <div className="flex items-center justify-between">
                   <label className="flex items-center gap-2 font-black text-xs text-emerald-900 cursor-pointer">
                     <input
@@ -527,9 +527,9 @@ export default function CheckoutModal({
             )}
 
             {/* Discount Summary */}
-            <div className="border-t border-slate-100 pt-4 space-y-3">
+            <div className="border-t border-slate-100 pt-2 space-y-1.5">
               {discountINR > 0 && !couponMessage.includes("Premium Member") && (
-                <div className="flex justify-between items-center text-emerald-700 font-extrabold text-xs bg-emerald-50 p-3 rounded-2xl border border-emerald-200">
+                <div className="flex justify-between items-center text-emerald-700 font-extrabold text-xs bg-emerald-50 p-2 sm:p-3 rounded-xl sm:rounded-2xl border border-emerald-200">
                   <span>Coupon Discount 🎉 ({couponCode})</span>
                   <span>- ₹{discountINR.toFixed(2)}</span>
                 </div>
@@ -538,7 +538,7 @@ export default function CheckoutModal({
               <div className="flex justify-between items-center">
                 <span className="text-slate-900 font-bold">Total to Pay</span>
                 <div className="text-right">
-                  <span className="text-2xl font-black text-rose-600">₹{totalToPayINR.toFixed(2)}</span>
+                  <span className="text-xl font-black text-rose-600">₹{totalToPayINR.toFixed(2)}</span>
                   {totalToPayINR === 0 && (
                     <span className="block text-[10px] text-amber-600 font-extrabold uppercase tracking-wide">
                       {couponMessage.includes("Premium Member")
@@ -551,7 +551,7 @@ export default function CheckoutModal({
                 </div>
               </div>
 
-              <p className="text-xs text-slate-500 text-center bg-slate-50 py-2.5 rounded-xl border border-slate-100 font-medium">
+              <p className="text-xs text-slate-500 text-center bg-slate-50 py-1.5 rounded-xl border border-slate-100 font-medium">
                 {couponMessage.includes("Premium Member") ? (
                   <>Includes <strong>Full Access for Premium Member ∞</strong> + instant link publishing.</>
                 ) : (
@@ -584,7 +584,7 @@ export default function CheckoutModal({
             <button
               onClick={handlePayment}
               disabled={isProcessing || isPolling}
-              className="w-full py-4 px-4 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:via-pink-600 hover:to-rose-700 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-rose-200 hover:shadow-rose-300 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer group"
+              className="w-full py-2.5 sm:py-3 px-4 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:via-pink-600 hover:to-rose-700 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-rose-200 hover:shadow-rose-300 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer group"
             >
               {isProcessing ? (
                 <>
@@ -599,14 +599,14 @@ export default function CheckoutModal({
                     {couponMessage.includes("Premium Member")
                       ? " · Free for Premium ∞"
                       : totalToPayINR === 0
-                        ? " · Free Pass (₹0)"
+                        ? " · Free (₹0)"
                         : ` · ₹${totalToPayINR.toFixed(0)} / ${liveDurationDays}d`}
                   </span>
                 </>
               )}
             </button>
 
-            <p className="text-[10px] text-slate-400 text-center flex items-center justify-center gap-1">
+            <p className="text-[9px] text-slate-400 text-center flex items-center justify-center gap-1 pb-1">
               <span>🔒 256-Bit SSL Encrypted Payment</span>
             </p>
           </div>

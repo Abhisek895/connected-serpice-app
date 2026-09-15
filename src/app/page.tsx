@@ -78,7 +78,7 @@ export default async function Home({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-rose-50/60 via-white to-pink-50/40 flex flex-col font-sans text-slate-800 antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800 antialiased overflow-x-hidden">
 
       {/* ========================================================= */}
       {/* 1. HEADER / NAVBAR                                        */}
