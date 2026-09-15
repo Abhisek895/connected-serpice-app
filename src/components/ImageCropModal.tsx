@@ -16,47 +16,68 @@ interface ImageCropModalProps {
 async function getCroppedImg(imageSrc: string, pixelCrop: Area, rotation = 0): Promise<Blob> {
   const image = await new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = "anonymous";
+    // Only set crossOrigin for external URLs, blob: and data: URLs fail in Safari if crossOrigin is set
+    if (!imageSrc.startsWith("blob:") && !imageSrc.startsWith("data:")) {
+      img.crossOrigin = "anonymous";
+    }
     img.addEventListener("load", () => resolve(img));
-    img.addEventListener("error", reject);
+    img.addEventListener("error", (err) => {
+      console.error("Image load error:", err);
+      reject(new Error("Failed to load image for cropping"));
+    });
     img.src = imageSrc;
   });
 
   const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d")!;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Could not get canvas context");
 
   const maxSize = Math.max(image.width, image.height);
   const safeArea = 2 * ((maxSize / 2) * Math.sqrt(2));
 
-  canvas.width = safeArea;
-  canvas.height = safeArea;
+  // Fix for iOS Safari and mobile browsers crashing on huge canvas memory limits.
+  // We limit the maximum internal canvas size to 3000px.
+  const MAX_CANVAS_SIZE = 3000;
+  const scale = safeArea > MAX_CANVAS_SIZE ? MAX_CANVAS_SIZE / safeArea : 1;
+
+  const scaledSafeArea = safeArea * scale;
+  canvas.width = scaledSafeArea;
+  canvas.height = scaledSafeArea;
 
   // Translate & rotate canvas for safe rotated area
-  ctx.translate(safeArea / 2, safeArea / 2);
+  ctx.translate(scaledSafeArea / 2, scaledSafeArea / 2);
   ctx.rotate((rotation * Math.PI) / 180);
-  ctx.translate(-safeArea / 2, -safeArea / 2);
-  ctx.drawImage(image, safeArea / 2 - image.width / 2, safeArea / 2 - image.height / 2);
+  ctx.translate(-scaledSafeArea / 2, -scaledSafeArea / 2);
+  
+  // Draw scaled image
+  ctx.drawImage(
+    image, 
+    (safeArea / 2 - image.width / 2) * scale, 
+    (safeArea / 2 - image.height / 2) * scale,
+    image.width * scale,
+    image.height * scale
+  );
 
-  const data = ctx.getImageData(0, 0, safeArea, safeArea);
+  const data = ctx.getImageData(0, 0, scaledSafeArea, scaledSafeArea);
 
   // Set final canvas to desired crop size
-  canvas.width = pixelCrop.width;
-  canvas.height = pixelCrop.height;
+  canvas.width = pixelCrop.width * scale;
+  canvas.height = pixelCrop.height * scale;
 
   ctx.putImageData(
     data,
-    Math.round(0 - safeArea / 2 + image.width * 0.5 - pixelCrop.x),
-    Math.round(0 - safeArea / 2 + image.height * 0.5 - pixelCrop.y)
+    Math.round(0 - scaledSafeArea / 2 + (image.width * 0.5) * scale - pixelCrop.x * scale),
+    Math.round(0 - scaledSafeArea / 2 + (image.height * 0.5) * scale - pixelCrop.y * scale)
   );
 
   return new Promise((resolve, reject) => {
     canvas.toBlob(
       (blob) => {
         if (blob) resolve(blob);
-        else reject(new Error("Canvas export failed"));
+        else reject(new Error("Canvas export failed - possibly due to memory limits"));
       },
       "image/jpeg",
-      0.92
+      0.90 // Slightly reduced quality to save memory and upload speed
     );
   });
 }
