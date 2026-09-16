@@ -24,7 +24,6 @@ export async function GET() {
     const rewardPercent = rewardPercentSetting?.value ? parseInt(rewardPercentSetting.value, 10) : 20;
     const minWithdrawal = minWithdrawalSetting?.value ? parseInt(minWithdrawalSetting.value, 10) : 50;
     const referralEnabled = enabledSetting?.value !== "false";
-    const rewardPaise = rewardType === "PERCENTAGE" ? 0 : rewardAmount * 100;
 
     // 2. Fetch User with Referrals and Wallet Transactions + Active Themes
     const [user, activeThemes] = await Promise.all([
@@ -41,7 +40,7 @@ export async function GET() {
               createdAt: true,
               payments: {
                 where: { status: "SUCCESS" },
-                select: { id: true, amount: true, createdAt: true },
+                select: { id: true, amount: true, finalAmount: true, createdAt: true },
                 orderBy: { createdAt: "desc" },
                 take: 1,
               },
@@ -68,59 +67,20 @@ export async function GET() {
     let currentWalletBalance = user.walletBalance;
     const updatedTxns = [...user.walletTxns];
 
-    // 3. Auto-Reconcile: Check for paid referrals that haven't been credited yet
-    if (referralEnabled) {
-      for (const ref of user.referrals) {
-        const hasPaid = ref.payments.length > 0;
-        if (hasPaid) {
-          const paymentIds = ref.payments.map((p) => p.id);
-          const hasRewardRecord = updatedTxns.some(
-            (t) =>
-              t.type === "REFERRAL_EARNED" &&
-              (t.referenceId === ref.id ||
-                (t.referenceId && paymentIds.includes(t.referenceId)) ||
-                (t.description && ref.email && t.description.includes(ref.email.split("@")[0])))
-          );
+    // Referral rewards are credited only by the verified payment fulfillment path.
+    // This endpoint is intentionally read-only so loading the dashboard can never mint money.
 
-          if (!hasRewardRecord) {
-            let creditPaise = rewardPaise;
-            if (rewardType === "PERCENTAGE") {
-              const paymentAmountPaise = ref.payments[0]?.amount || 19900;
-              creditPaise = Math.round(paymentAmountPaise * (rewardPercent / 100));
-            }
-
-            // Auto-credit missing referral reward to referrer's wallet
-            const [newTxn] = await prisma.$transaction([
-              prisma.walletTransaction.create({
-                data: {
-                  userId,
-                  type: "REFERRAL_EARNED",
-                  amount: creditPaise,
-                  description: `Referral reward for ${ref.name || ref.email}`,
-                  referenceId: ref.id,
-                  status: "COMPLETED",
-                },
-              }),
-              prisma.user.update({
-                where: { id: userId },
-                data: { walletBalance: { increment: creditPaise } },
-              }),
-            ]);
-
-            currentWalletBalance += creditPaise;
-            updatedTxns.unshift(newTxn);
-          }
-        }
-      }
-    }
-
-    // 4. Calculate Total Earned & Referral Statuses
+    // 3. Calculate Total Earned & Referral Statuses
     const totalEarned = updatedTxns
       .filter((t) => t.type === "REFERRAL_EARNED" && t.status === "COMPLETED")
       .reduce((sum, t) => sum + t.amount, 0);
 
     const referralsMapped = user.referrals.map((ref) => {
-      const hasPaid = ref.payments.length > 0;
+      const qualifyingPayment = ref.payments[0];
+      const paidAmount = qualifyingPayment
+        ? (qualifyingPayment.finalAmount ?? qualifyingPayment.amount)
+        : 0;
+      const hasPaid = paidAmount > 0;
       const paymentIds = ref.payments.map((p) => p.id);
       const isRewardCredited = updatedTxns.some(
         (t) =>
@@ -131,13 +91,24 @@ export async function GET() {
             (t.description && ref.email && t.description.includes(ref.email.split("@")[0])))
       );
 
+      const rewardStatus = isRewardCredited
+        ? "EARNED"
+        : hasPaid
+          ? "PENDING"
+          : qualifyingPayment
+            ? "NOT_ELIGIBLE"
+            : "PENDING";
+
       return {
         id: ref.id,
         name: ref.name || "Anonymous",
         email: ref.email?.replace(/(.{2})(.*)(@.*)/, "$1***$3") || "---", // mask email
         joinedAt: ref.createdAt,
         hasPaid,
-        rewardStatus: isRewardCredited ? "EARNED" : "PENDING",
+        rewardStatus,
+        rewardMessage: rewardStatus === "NOT_ELIGIBLE"
+          ? "No referral bonus: this order used a 100% coupon/free credit, so OurStory received no payment."
+          : undefined,
       };
     });
 

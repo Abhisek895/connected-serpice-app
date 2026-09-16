@@ -298,7 +298,7 @@ export async function fulfillPayment(
     // Refresh payment with latest status for referral engine
     const freshPayment = await prisma.payment.findUnique({ where: { id: payment.id } });
     if (freshPayment) {
-      await creditReferrer(freshPayment as any);
+      await creditReferrer(freshPayment);
     }
   } catch (err) {
     console.error("[fulfillPayment] referral credit error:", err);

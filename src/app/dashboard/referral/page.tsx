@@ -28,7 +28,7 @@ type ReferralStats = {
   referralCount: number;
   referrals: {
     id: string; name: string; email: string; joinedAt: string;
-    hasPaid: boolean; rewardStatus: "EARNED" | "PENDING";
+    hasPaid: boolean; rewardStatus: "EARNED" | "PENDING" | "NOT_ELIGIBLE"; rewardMessage?: string;
   }[];
   recentTxns: {
     id: string; type: string; amount: number; description: string;
@@ -454,12 +454,21 @@ export default function ReferralPage() {
                     <p className="text-xs text-slate-400">{ref.email}</p>
                   </div>
                 </div>
-                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                  ref.rewardStatus === "EARNED"
-                    ? "bg-emerald-100 text-emerald-700"
-                    : "bg-amber-100 text-amber-700"
-                }`}>
-                  {ref.rewardStatus === "EARNED" ? `✅ ${rewardLabel} Earned` : "⏳ Pending"}
+                <span
+                  title={ref.rewardMessage}
+                  className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                    ref.rewardStatus === "EARNED"
+                      ? "bg-emerald-100 text-emerald-700"
+                      : ref.rewardStatus === "NOT_ELIGIBLE"
+                        ? "bg-slate-100 text-slate-600"
+                        : "bg-amber-100 text-amber-700"
+                  }`}
+                >
+                  {ref.rewardStatus === "EARNED"
+                    ? `✅ ${rewardLabel} Earned`
+                    : ref.rewardStatus === "NOT_ELIGIBLE"
+                      ? "ℹ️ No bonus (free order)"
+                      : "⏳ Pending"}
                 </span>
               </motion.div>
             ))}

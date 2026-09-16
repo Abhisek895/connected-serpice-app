@@ -4,9 +4,22 @@ export async function creditReferrer(payment: {
   id: string;
   referredByCode?: string | null;
   amount: number;
+  finalAmount?: number | null;
+  status?: string;
+  razorpayPaymentId?: string | null;
   demoId: string | null;
   userId: string;
 }) {
+  // Referral rewards are earned only from a real, positive Razorpay payment.
+  // A successful free order (including a 100% coupon) must never create wallet credit.
+  const paidAmount = payment.finalAmount ?? payment.amount;
+  const isMockPayment =
+    !payment.razorpayPaymentId ||
+    payment.razorpayPaymentId.startsWith("mock_") ||
+    payment.razorpayPaymentId.startsWith("guest_free_");
+
+  if (payment.status !== "SUCCESS" || paidAmount <= 0 || isMockPayment) return;
+
   // 1. Check if referral program is enabled
   const enabledSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_enabled" } });
   if (enabledSetting?.value === "false") return;
@@ -63,7 +76,7 @@ export async function creditReferrer(payment: {
   if (rewardType === "PERCENTAGE") {
     const rewardPercentSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_reward_percent" } });
     const globalPercent = rewardPercentSetting?.value ? parseInt(rewardPercentSetting.value, 10) : 20;
-    creditPaise = Math.round((payment.amount * globalPercent) / 100);
+    creditPaise = Math.round((paidAmount * globalPercent) / 100);
   } else {
     // Fixed reward
     const rewardSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_reward_amount" } });

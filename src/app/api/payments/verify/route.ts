@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyRazorpaySignature } from "@/lib/razorpay";
 import { prisma } from "@/lib/prisma";
 
-const REFERRAL_REWARD_PAISE = 50000; // ₹500 per successful referral
-
 export async function POST(req: NextRequest) {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = await req.json();
@@ -55,71 +53,6 @@ export async function POST(req: NextRequest) {
         data: { usedCount: { increment: 1 } },
       });
     }
-
-    // 5. ─── REFERRAL REWARD ENGINE ──────────────────────────────────────────
-    // Check if referral system is enabled & get configured reward settings
-    const enabledSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_enabled" } });
-    const isReferralEnabled = enabledSetting?.value !== "false";
-
-    if (isReferralEnabled) {
-      const rewardTypeSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_reward_type" } });
-      const rewardSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_reward_amount" } });
-      const rewardPercentSetting = await prisma.systemSetting.findUnique({ where: { key: "referral_reward_percent" } });
-
-      const rewardType = rewardTypeSetting?.value || "FIXED";
-      const rewardFixedINR = rewardSetting?.value ? parseInt(rewardSetting.value, 10) : 20;
-      const rewardPercent = rewardPercentSetting?.value ? parseInt(rewardPercentSetting.value, 10) : 20;
-
-      let rewardPaise = 0;
-      let rewardINRStr = "";
-      let rewardDetailText = "";
-
-      if (rewardType === "PERCENTAGE") {
-        const paymentPaise = payment.finalAmount || payment.amount || 19900;
-        rewardPaise = Math.round(paymentPaise * (rewardPercent / 100));
-        const rewardINR = (rewardPaise / 100);
-        rewardINRStr = rewardINR.toFixed(2);
-        rewardDetailText = `${rewardPercent}% of ₹${(paymentPaise / 100).toFixed(0)} (₹${rewardINRStr})`;
-      } else {
-        rewardPaise = rewardFixedINR * 100;
-        rewardINRStr = rewardFixedINR.toString();
-        rewardDetailText = `₹${rewardFixedINR}`;
-      }
-
-      // Only trigger on payer's FIRST successful payment
-      const payerSuccessfulPayments = await prisma.payment.count({
-        where: { userId: payment.userId, status: "SUCCESS" },
-      });
-
-      if (payerSuccessfulPayments === 1) {
-        const payer = await prisma.user.findUnique({
-          where: { id: payment.userId },
-          select: { referredById: true, email: true },
-        });
-
-        // Credit referrer if payer was referred (and it's not a self-referral)
-        if (payer?.referredById && payer.referredById !== payment.userId) {
-          await prisma.$transaction([
-            prisma.user.update({
-              where: { id: payer.referredById },
-              data: { walletBalance: { increment: rewardPaise } },
-            }),
-            prisma.walletTransaction.create({
-              data: {
-                userId: payer.referredById,
-                type: "REFERRAL_EARNED",
-                amount: rewardPaise,
-                description: `Referral reward (${rewardDetailText}) — your friend ${payer.email?.split("@")[0] || "someone"} made their first purchase! 🎉`,
-                referenceId: payment.id,
-                status: "COMPLETED",
-              },
-            }),
-          ]);
-          console.log(`[REFERRAL REWARD] Credited ₹${rewardINRStr} (${rewardType}) to referrer ${payer.referredById} for referring ${payer.email}`);
-        }
-      }
-    }
-    // ───────────────────────────────────────────────────────────────────────────
 
     return NextResponse.json({ message: "Payment verified successfully", success: true });
   } catch (error: any) {
