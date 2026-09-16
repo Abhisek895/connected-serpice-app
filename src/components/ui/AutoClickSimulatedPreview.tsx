@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, MousePointer2, ShieldCheck, Zap, Share2, Check, Lock, X } from "lucide-react";
+import { Heart, MousePointer2, ShieldCheck, Zap, Share2, Check, Lock, X, Gift } from "lucide-react";
 import CanvasConfetti from "./CanvasConfetti";
+import { RecipientActionBar } from "@/components/ui/RecipientActionBar";
 import { useSession } from "next-auth/react";
 
 interface AutoClickSimulatedPreviewProps {
@@ -710,6 +711,15 @@ export default function AutoClickSimulatedPreview({
 
               {/* iPhone Home Bar */}
               <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-16 h-1 bg-white/40 rounded-full" />
+              
+              <div className="absolute bottom-4 w-[120%] left-[-10%] z-50 flex justify-center scale-50 sm:scale-75 origin-bottom">
+                <RecipientActionBar 
+                  url={publishedUrl || (typeof window !== "undefined" ? window.location.origin + "/p/preview" : "")}
+                  recipientName={displayRecipient}
+                  title={displayTitle}
+                  position="absolute"
+                />
+              </div>
             </div>
           </div>
         </div>

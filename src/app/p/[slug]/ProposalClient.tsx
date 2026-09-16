@@ -6,6 +6,7 @@ import DatePlannerTemplate from "./templates/DatePlannerTemplate";
 import BirthdayTemplate from "./templates/BirthdayTemplate";
 import SheCantSayNoTemplate from "./templates/SheCantSayNoTemplate";
 import ImSorryTemplate from "./templates/ImSorryTemplate";
+import { RecipientActionBar } from "@/components/ui/RecipientActionBar";
 
 type MediaItem = {
   id: string;
@@ -38,31 +39,34 @@ type ProposalClientProps = {
 export default function ProposalClient(props: ProposalClientProps) {
   const { demoId } = props;
 
-  // Render the correct template component based on demoId (Class Identifier)
+  // Fallback if demoId is missing
+  let content = <RomanticLoveTemplate {...props} />;
+  
   if (demoId === "im-sorry" || demoId === "apology") {
-    return <ImSorryTemplate {...props} />;
+    content = <ImSorryTemplate {...props} />;
+  } else if (demoId === "she-cant-say-no") {
+    content = <SheCantSayNoTemplate {...props} />;
+  } else if (demoId === "nasamajh-lakri") {
+    content = <NasamajhLakriTemplate {...props} />;
+  } else if (demoId === "date-planner" || demoId === "jalpaiguri-planner") {
+    content = <DatePlannerTemplate {...props} />;
+  } else if (demoId === "birthday-wish") {
+    content = <BirthdayTemplate {...props} />;
+  } else if (demoId === "surprise") {
+    content = <RomanticLoveTemplate {...props} />;
   }
 
-  if (demoId === "she-cant-say-no") {
-    return <SheCantSayNoTemplate {...props} />;
-  }
+  const url = typeof window !== "undefined" ? window.location.href : "";
 
-  if (demoId === "nasamajh-lakri") {
-    return <NasamajhLakriTemplate {...props} />;
-  }
-
-  if (demoId === "date-planner" || demoId === "jalpaiguri-planner") {
-    return <DatePlannerTemplate {...props} />;
-  }
-
-  if (demoId === "birthday-wish") {
-    return <BirthdayTemplate {...props} />;
-  }
-
-  if (demoId === "surprise") {
-    return <RomanticLoveTemplate {...props} />;
-  }
-
-  // Default fallback if demoId is missing or strictly custom (Custom Events)
-  return <RomanticLoveTemplate {...props} />;
+  return (
+    <>
+      {content}
+      <RecipientActionBar 
+        url={url} 
+        recipientName={props.recipientName}
+        title={props.title}
+        themeColors={{ primary: "#e11d48", secondary: "#f43f5e" }} // Update based on theme later
+      />
+    </>
+  );
 }

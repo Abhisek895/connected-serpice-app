@@ -289,6 +289,15 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
 
           {/* iPhone Home Bar */}
           <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-24 h-1 bg-white/40 rounded-full" />
+          
+          <div className="absolute bottom-6 w-full left-0 z-50 flex justify-center scale-90">
+            <RecipientActionBar 
+              url={typeof window !== "undefined" ? window.location.origin + "/p/preview" : ""}
+              recipientName={displayRecipient}
+              title={displayTitle}
+              position="absolute"
+            />
+          </div>
         </div>
       </div>
     </div>
