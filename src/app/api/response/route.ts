@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     const result = responseSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json({ error: "Invalid input", details: result.error.errors }, { status: 400 });
+      return NextResponse.json({ error: "Invalid input", details: result.error }, { status: 400 });
     }
 
     // Get IP address from headers to use as fallback identity for idempotency
