@@ -129,20 +129,34 @@ model PaymentFulfillment {
 
 // Interaction tracking
 model Response {
-  id          String    @id @default(cuid())
-  eventId     String
-  event       Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  id             String   @id @default(cuid())
+  eventId        String
+  event          Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   
-  action      String    // "VIEWED", "ACCEPTED", "REJECTED"
-  device      String?
-  browser     String?
-  country     String?
-  city        String?
+  action         String   // "VIEWED", "ACCEPTED", "REJECTED", "IMAGE_SAVED", "WHATSAPP_SHARED", "LINK_COPIED"
+  device         String?
+  browser        String?
+  country        String?
+  city           String?
   
-  createdAt   DateTime  @default(now())
+  // New structured fields
+  metadata       Json?    // JSON for viewport, duration, interaction state
+  
+  // Server-issued secure tracking evidence
+  trackingHash   String?  // Hashed version of the tracking token (Raw token NEVER stored)
+  sessionExpiry  DateTime? 
+  
+  isHuman        Boolean  @default(false)
+  
+  // Idempotency scope: hash(eventId + action + session/IP window)
+  idempotencyKey String?  @unique 
+  
+  createdAt      DateTime @default(now())
 
   @@index([eventId, action])
+  @@index([eventId, isHuman])
   @@index([createdAt])
+  @@index([trackingHash]) // Indexed, NOT unique, so one session can log multiple actions
 }
 
 // Available theme configurations

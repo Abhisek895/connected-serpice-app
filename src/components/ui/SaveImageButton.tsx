@@ -46,8 +46,16 @@ export function SaveImageButton(props: SaveImageButtonProps) {
       link.click();
       document.body.removeChild(link);
       
-      // Optionally track IMAGE_SAVED here
-      // await recordResponseAction(slug, "IMAGE_SAVED");
+      // Track IMAGE_SAVED
+      try {
+        const { recordResponseAction } = await import("@/app/p/[slug]/actions");
+        const match = props.url.match(/\/p\/([^\/?#]+)/);
+        if (match && match[1]) {
+          await recordResponseAction(match[1], "IMAGE_SAVED");
+        }
+      } catch (e) {
+        console.error("Failed to log tracking:", e);
+      }
       
     } catch (error) {
       console.error("Failed to capture image:", error);

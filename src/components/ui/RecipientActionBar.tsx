@@ -27,10 +27,24 @@ export function RecipientActionBar({
   const [showToast, setShowToast] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
+  const trackAction = async (action: string) => {
+    try {
+      const { recordResponseAction } = await import("@/app/p/[slug]/actions");
+      const match = url.match(/\/p\/([^\/?#]+)/);
+      if (match && match[1]) {
+        // don't await, fire and forget for responsiveness
+        recordResponseAction(match[1], action);
+      }
+    } catch (e) {
+      console.error("Failed to log tracking:", e);
+    }
+  };
+
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(url);
       setShowToast(true);
+      trackAction("LINK_COPIED");
     } catch (err) {
       console.error("Failed to copy link:", err);
     }
@@ -39,6 +53,7 @@ export function RecipientActionBar({
   const handleWhatsAppShare = () => {
     const text = encodeURIComponent(`I made a surprise for you! 💖\n\nOpen it here: ${url}`);
     window.open(`https://wa.me/?text=${text}`, "_blank");
+    trackAction("WHATSAPP_SHARED");
   };
 
   const handleNativeShare = async () => {
@@ -49,6 +64,7 @@ export function RecipientActionBar({
           text: "I made something special for you...",
           url: url,
         });
+        trackAction("NATIVE_SHARED");
       } catch (err) {
         if ((err as Error).name !== "AbortError") {
           console.error("Error sharing:", err);
