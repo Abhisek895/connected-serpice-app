@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Heart, Music, Image as ImageIcon, MessageSquare } from "lucide-react";
+import { RecipientActionBar } from "./RecipientActionBar";
 
 interface LivePhonePreviewProps {
   demoId: string;

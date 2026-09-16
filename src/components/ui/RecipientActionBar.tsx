@@ -74,17 +74,14 @@ export function RecipientActionBar({
           <AnimatePresence>
             {isHovered && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                initial={{ opacity: 0, x: "-100%" }}
+                animate={{ opacity: 1, x: "200%" }}
                 exit={{ opacity: 0 }}
                 className="absolute inset-0 z-0 bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-12 translate-x-[-100%]"
                 transition={{
                   duration: 1.5,
                   repeat: Infinity,
                   ease: "linear",
-                }}
-                style={{
-                  translateX: ["-100%", "200%"]
                 }}
               />
             )}
