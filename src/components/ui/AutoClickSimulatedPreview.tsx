@@ -46,6 +46,8 @@ export default function AutoClickSimulatedPreview({
   const isBirthday = demoId === "birthday-wish";
   const isPlanner = demoId.includes("planner");
   const isSurprise = demoId === "surprise";
+  const isProposal = demoId === "she-cant-say-no" || demoId === "nasamajh-lakri";
+  const isApology = demoId === "im-sorry" || demoId === "apology";
 
   // Dynamic Admin Pricing State
   const [pricing, setPricing] = useState({
@@ -58,7 +60,15 @@ export default function AutoClickSimulatedPreview({
 
   // Auto-click simulation state loop
   const [simStage, setSimStage] = useState<
-    "landing" | "tap_heart" | "portrait" | "read_letter" | "continue_proposal" | "accept_clicked" | "accepted"
+    | "landing" | "tap_heart" | "portrait" | "read_letter" | "continue_proposal" | "accept_clicked" | "accepted"
+    // Birthday
+    | "slideshow" | "read_wish"
+    // Apology
+    | "open_gift" | "begging" | "forgiven"
+    // Planner
+    | "hero" | "select_place" | "select_food" | "select_date" | "summary"
+    // Proposal (She Can't Say No / Nasamajh)
+    | "dodge_no" | "click_yes" | "gateway" | "rejected"
   >("landing");
 
   const [triggerConfetti, setTriggerConfetti] = useState(false);
@@ -127,22 +137,91 @@ export default function AutoClickSimulatedPreview({
       timers.push(setTimeout(() => runSurpriseCycle(), 14000));
     };
 
+    const runBirthdayCycle = () => {
+      setSimStage("landing");
+      setTriggerConfetti(true); // Falling confetti from start
+      timers.push(setTimeout(() => setSimStage("slideshow"), 1500));
+      timers.push(setTimeout(() => setSimStage("read_wish"), 4000));
+      timers.push(setTimeout(() => setSimStage("slideshow"), 7000));
+      timers.push(setTimeout(() => runBirthdayCycle(), 10000));
+    };
+
+    const runApologyCycle = () => {
+      setSimStage("landing"); // Gift box
+      setTriggerConfetti(false);
+      timers.push(setTimeout(() => setSimStage("open_gift"), 1400));
+      timers.push(setTimeout(() => setSimStage("read_letter"), 2000));
+      timers.push(setTimeout(() => setSimStage("begging"), 4500)); // Sad cat
+      timers.push(setTimeout(() => setSimStage("dodge_no"), 6500)); // Try to click no
+      timers.push(setTimeout(() => setSimStage("click_yes"), 8500));
+      timers.push(setTimeout(() => {
+        setSimStage("forgiven");
+        setTriggerConfetti(true);
+      }, 9000));
+      timers.push(setTimeout(() => runApologyCycle(), 13000));
+    };
+
+    const runPlannerCycle = () => {
+      setSimStage("hero"); // Typewriter hero
+      setTriggerConfetti(false);
+      timers.push(setTimeout(() => setSimStage("select_place"), 2500));
+      timers.push(setTimeout(() => setSimStage("select_food"), 5000));
+      timers.push(setTimeout(() => setSimStage("select_date"), 7500));
+      timers.push(setTimeout(() => {
+        setSimStage("summary");
+        setTriggerConfetti(true);
+      }, 10000));
+      timers.push(setTimeout(() => runPlannerCycle(), 14000));
+    };
+
+    const runSheCantSayNoCycle = () => {
+      setSimStage("landing"); // Flirty cat
+      setTriggerConfetti(false);
+      timers.push(setTimeout(() => setSimStage("dodge_no"), 2000));
+      timers.push(setTimeout(() => setSimStage("click_yes"), 4500));
+      timers.push(setTimeout(() => {
+        setSimStage("accepted"); // Bear hug
+        setTriggerConfetti(true);
+      }, 5000));
+      timers.push(setTimeout(() => runSheCantSayNoCycle(), 9000));
+    };
+
+    const runNasamajhCycle = () => {
+      setSimStage("gateway");
+      setTriggerConfetti(false);
+      timers.push(setTimeout(() => setSimStage("continue_proposal"), 1500));
+      timers.push(setTimeout(() => setSimStage("rejected"), 3500)); // First rejection
+      timers.push(setTimeout(() => setSimStage("click_yes"), 6000));
+      timers.push(setTimeout(() => {
+        setSimStage("accepted");
+        setTriggerConfetti(true);
+      }, 6500));
+      timers.push(setTimeout(() => runNasamajhCycle(), 10500));
+    };
+
     const runGenericCycle = () => {
       setSimStage("landing");
       setTriggerConfetti(false);
-
       timers.push(setTimeout(() => setSimStage("accept_clicked"), 1800));
-
       timers.push(setTimeout(() => {
         setSimStage("accepted");
         setTriggerConfetti(true);
       }, 2200));
-
       timers.push(setTimeout(() => runGenericCycle(), 7000));
     };
 
     if (isSurprise) {
       runSurpriseCycle();
+    } else if (isBirthday) {
+      runBirthdayCycle();
+    } else if (isApology) {
+      runApologyCycle();
+    } else if (isPlanner) {
+      runPlannerCycle();
+    } else if (demoId === "she-cant-say-no") {
+      runSheCantSayNoCycle();
+    } else if (demoId === "nasamajh-lakri") {
+      runNasamajhCycle();
     } else {
       runGenericCycle();
     }
@@ -160,24 +239,46 @@ export default function AutoClickSimulatedPreview({
     }
   };
 
-  // Calculate cursor positioning & click animations dynamically based on simStage
   const getCursorTarget = () => {
     switch (simStage) {
       case "landing":
+      case "hero":
+      case "gateway":
         return { top: "62%", left: "50%", opacity: 1, scale: 1 };
       case "tap_heart":
+      case "open_gift":
         return { top: "62%", left: "50%", opacity: 1, scale: 0.85 };
       case "portrait":
+      case "slideshow":
+      case "begging":
+      case "select_place":
         return { top: "78%", left: "50%", opacity: 1, scale: 1 };
       case "read_letter":
+      case "read_wish":
+      case "select_food":
         return { top: "78%", left: "50%", opacity: 1, scale: 0.85 };
       case "continue_proposal":
+      case "select_date":
+      case "rejected":
         return { top: "75%", left: "38%", opacity: 1, scale: 1 };
+      case "dodge_no":
+        return { top: "75%", left: "65%", opacity: 1, scale: 0.85 };
       case "accept_clicked":
+      case "click_yes":
         return { top: "75%", left: "38%", opacity: 1, scale: 0.85 };
       default:
         return { top: "75%", left: "38%", opacity: 0, scale: 1 };
     }
+  };
+
+  const getBgClass = () => {
+    if (isSurprise && simStage !== "landing") return "bg-black";
+    if (isBirthday) return "bg-gradient-to-br from-rose-950 to-black";
+    if (isApology) return "bg-[#090312]";
+    if (demoId === "she-cant-say-no") return "bg-[#DF98A2]";
+    if (demoId === "nasamajh-lakri") return "bg-gradient-to-br from-indigo-950 via-[#1a0a2e] to-black";
+    if (isPlanner) return "bg-gradient-to-br from-rose-950 via-pink-950 to-slate-950";
+    return "bg-gradient-to-br from-slate-950 via-rose-950 to-purple-950";
   };
 
   const isDarkCanvas = isSurprise && simStage !== "landing";
@@ -211,7 +312,7 @@ export default function AutoClickSimulatedPreview({
         
         {/* Left Column: Outer Phone Mockup Frame */}
         <div className="md:col-span-5 flex justify-center">
-          <div className="w-full max-w-[185px] sm:max-w-[200px] bg-slate-950 p-2 rounded-[30px] shadow-2xl border-4 border-slate-800 relative">
+          <div className="w-full max-w-[160px] sm:max-w-[200px] bg-slate-950 p-2 rounded-[30px] shadow-2xl border-4 border-slate-800 relative">
             {/* Dynamic Island / Notch */}
             <div className="absolute top-1 left-1/2 -translate-x-1/2 w-14 h-3 bg-black rounded-full z-20 flex items-center justify-center pointer-events-none">
               <div className="w-1.5 h-1.5 rounded-full bg-slate-900/80 mr-1.5" />
@@ -219,9 +320,7 @@ export default function AutoClickSimulatedPreview({
             </div>
 
             {/* Screen Content Area */}
-            <div className={`w-full h-[290px] sm:h-[310px] rounded-[22px] overflow-hidden relative flex flex-col justify-between p-2.5 pt-5 text-white text-center shadow-inner transition-colors duration-500 ${
-              isDarkCanvas ? "bg-black" : "bg-gradient-to-br from-slate-950 via-rose-950 to-purple-950"
-            }`}>
+            <div className={`w-full h-[250px] sm:h-[310px] rounded-[22px] overflow-hidden relative flex flex-col justify-between p-2.5 pt-5 text-white text-center shadow-inner transition-colors duration-500 ${getBgClass()}`}>
               
               {/* Animated Virtual Cursor */}
               <motion.div
@@ -251,7 +350,38 @@ export default function AutoClickSimulatedPreview({
 
               {/* Content Body */}
               <div className="relative z-10 my-auto w-full">
-                {isSurprise && simStage !== "landing" ? (
+                {isSurprise ? (
+                  /* Romantic Surprise Multi-Stage Flow (including landing) */
+                  <AnimatePresence mode="wait">
+                    {simStage === "landing" || simStage === "tap_heart" ? (
+                      <motion.div
+                        key="surprise_landing"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className="flex flex-col items-center justify-center space-y-3 h-full py-2"
+                      >
+                        <motion.div
+                          animate={{ scale: [1, 1.08, 1] }}
+                          transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+                          className="w-16 h-16 rounded-full bg-gradient-to-tr from-rose-600 via-pink-500 to-purple-600 flex items-center justify-center shadow-[0_0_40px_rgba(244,63,94,0.7)] border-2 border-rose-300/50"
+                        >
+                          <Heart className="w-8 h-8 text-white fill-white" />
+                        </motion.div>
+                        <h4 className="text-[11px] font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-200 via-pink-200 to-purple-200 leading-tight text-center px-2">
+                          {displayTitle}
+                        </h4>
+                        <motion.span
+                          animate={simStage === "tap_heart" ? { scale: 0.9, backgroundColor: "rgba(244,63,94,0.9)" } : { scale: 1 }}
+                          className="px-4 py-1.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-full text-[9px] font-black shadow-lg border border-rose-300/40"
+                        >
+                          Open Surprise 💌
+                        </motion.span>
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
+                ) : null}
+                {isSurprise && simStage !== "landing" && simStage !== "tap_heart" ? (
                   /* Romantic Surprise Multi-Stage Flow */
                   <AnimatePresence mode="wait">
                     {simStage === "portrait" || simStage === "read_letter" ? (
@@ -265,8 +395,12 @@ export default function AutoClickSimulatedPreview({
                         {/* TextArtPortrait Mockup with Overlay Popup */}
                         <div className="relative inline-flex items-center justify-center overflow-hidden max-w-full shadow-2xl">
                           <div
-                            className="absolute inset-0 w-[300%] h-[300%] bg-black text-white text-[7px] font-black leading-[7px] tracking-tighter overflow-hidden select-none pointer-events-none break-all text-justify p-0 origin-top-left z-0"
-                            style={{ fontFamily: "monospace", transform: "scale(0.33333)" }}
+                            className="absolute inset-0 w-[300%] h-[300%] bg-black text-white text-[8px] font-black leading-[8px] tracking-tighter overflow-hidden select-none pointer-events-none break-all text-justify p-0 origin-top-left z-0"
+                            style={{
+                              fontFamily: "monospace",
+                              transform: "scale(0.33333)",
+                              willChange: "transform",
+                            }}
                           >
                             {((patternText || "love you").trim() + "  ").repeat(180)}
                           </div>
@@ -345,54 +479,196 @@ export default function AutoClickSimulatedPreview({
                     ) : null}
                   </AnimatePresence>
                 ) : isBirthday ? (
-                  /* Birthday Glass Card Preview (Matches Real BirthdayTemplate & Photos) */
-                  <div className="w-full bg-rose-950/40 backdrop-blur-xl border border-rose-300/30 rounded-2xl p-2 shadow-2xl flex flex-col items-center text-center space-y-1.5">
-                    {/* Photo Container */}
-                    <div className="relative w-full h-[110px] rounded-xl overflow-hidden shadow-md bg-slate-950">
-                      <img
-                        src={photoUrl || "/demos/birthday-wish/s0.jpeg"}
-                        alt="Birthday Person"
-                        className="w-full h-full object-cover object-[center_35%]"
-                      />
-                    </div>
-
-                    {/* Heading */}
-                    <h4 className="text-[11px] font-bold text-white font-serif tracking-tight leading-snug px-1 text-left w-full">
-                      Happy Birthday, <span className="text-rose-300 font-extrabold">{displayRecipient} ✨</span> 🦋 💖
-                    </h4>
-
-                    {/* Subtitle */}
-                    <p className="text-[8.5px] text-rose-100/90 font-medium text-left w-full">
-                      A little surprise from someone who truly cares…
-                    </p>
-
-                    {/* Live Message Box */}
-                    <div className="w-full bg-white/5 rounded-lg p-1.5 text-left border border-white/10">
-                      <p className="text-[9px] text-white font-medium leading-relaxed">
-                        {displayMessage}
-                        <span className="animate-pulse text-white/80"> |</span>
-                      </p>
-                    </div>
-                  </div>
+                  <AnimatePresence mode="wait">
+                    {simStage === "landing" || simStage === "slideshow" || simStage === "read_wish" ? (
+                      <motion.div key="bday_slideshow" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="w-full h-full flex flex-col items-center justify-center relative space-y-2">
+                        {/* Typewriter Text (simulated) */}
+                        <div className="text-[11px] font-bold text-rose-300 font-serif leading-tight">
+                          May all your dreams come true...
+                        </div>
+                        <div className="relative w-full h-[140px] rounded-xl overflow-hidden shadow-2xl bg-black border-2 border-rose-300/30">
+                          <img src={photoUrl || "/demos/birthday-wish/s0.jpeg"} alt="Birthday Person" className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/10" />
+                        </div>
+                        <h4 className="text-[12px] font-bold text-white font-serif tracking-tight leading-snug pt-1">
+                          Happy Birthday, <span className="text-amber-400 font-extrabold">{displayRecipient} ✨</span>
+                        </h4>
+                        
+                        {/* Wish Popup */}
+                        {simStage === "read_wish" && (
+                          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="absolute inset-2 z-30 bg-white/95 backdrop-blur-md rounded-xl p-2.5 text-slate-900 flex flex-col items-center justify-center text-center shadow-2xl border border-white/60">
+                            <span className="text-[8px] font-extrabold text-rose-500 uppercase tracking-wider mb-0.5">💌 Birthday Wish</span>
+                            <p className="text-[9px] font-medium italic leading-tight line-clamp-4">"{displayMessage}"</p>
+                            <span className="text-[7.5px] text-slate-400 mt-2 font-bold bg-slate-100 px-2 py-1 rounded-full">(Tap to close)</span>
+                          </motion.div>
+                        )}
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
+                ) : isApology ? (
+                  /* Apology Multi-Stage Flow (Gift -> Letter -> Begging -> Happy) */
+                  <AnimatePresence mode="wait">
+                    {simStage === "landing" ? (
+                      <motion.div key="apology_landing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.8 }} className="flex flex-col items-center justify-center h-full space-y-4">
+                        <div className="w-16 h-16 bg-gradient-to-tr from-rose-950 via-pink-900 to-purple-950 rounded-2xl border border-rose-400/50 flex items-center justify-center shadow-[0_0_30px_rgba(244,63,94,0.5)]">
+                           <Gift className="w-8 h-8 text-rose-300 animate-bounce" />
+                        </div>
+                        <h4 className="text-[11px] font-bold text-rose-100 tracking-tight leading-snug">
+                          {displayTitle}
+                        </h4>
+                        <span className="px-3 py-1 bg-gradient-to-r from-rose-500 to-purple-600 text-white rounded-full text-[9px] font-bold shadow-md">
+                          Tap Here 💖
+                        </span>
+                      </motion.div>
+                    ) : simStage === "read_letter" ? (
+                      <motion.div key="apology_letter" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="w-full bg-slate-950 border border-rose-500/40 rounded-xl p-3 shadow-2xl flex flex-col items-center text-center text-rose-200">
+                        <h4 className="text-[9px] font-bold border-b border-rose-500/30 pb-1 mb-2 w-full text-left flex items-center gap-1"><Heart className="w-3 h-3 fill-rose-500" /> A Letter...</h4>
+                        <p className="text-[7px] font-medium text-left leading-relaxed">I am so deeply sorry for making you upset. You mean the entire world to me...</p>
+                        <span className="inline-block px-3 py-1 bg-gradient-to-r from-rose-600 to-pink-600 text-white rounded-md text-[8px] mt-3 shadow-md w-full font-bold">Close Letter ✨</span>
+                      </motion.div>
+                    ) : simStage === "begging" || simStage === "dodge_no" || simStage === "click_yes" ? (
+                      <motion.div key="apology_begging" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="w-full flex flex-col items-center h-full justify-center space-y-2">
+                        <img src="/demos/im-sorry/cat-sorry1.png" className="w-20 h-20 rounded-xl border border-rose-400/30 bg-slate-900 object-contain shadow-[0_0_20px_rgba(244,63,94,0.4)]" />
+                        <h4 className="text-[10px] font-black text-rose-100 leading-tight">I'm Really Sorry... 🥺</h4>
+                        <div className="flex gap-1.5 justify-center pt-1 relative w-full h-[30px]">
+                          <motion.span animate={simStage === "click_yes" ? { scale: 0.92 } : { scale: 1 }} className="absolute left-[10%] px-2.5 py-1 text-[8px] bg-gradient-to-r from-rose-500 to-emerald-500 text-white rounded-full font-bold">
+                            Yes, I Forgive You 🥰
+                          </motion.span>
+                          <motion.span animate={simStage === "dodge_no" ? { x: 30, y: -20, opacity: 0.5 } : { x: 0, y: 0, opacity: 1 }} className="absolute right-[10%] px-2 py-1 text-[8px] bg-slate-900 text-rose-300 rounded-full font-medium border border-rose-500/40">
+                            No 😤
+                          </motion.span>
+                        </div>
+                      </motion.div>
+                    ) : simStage === "forgiven" ? (
+                      <motion.div key="apology_accept" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-slate-950/85 border border-emerald-500/50 p-2.5 rounded-xl text-center space-y-1 shadow-2xl h-full flex flex-col items-center justify-center">
+                        <img src="/demos/im-sorry/cat-happy.png" className="w-16 h-16 object-contain" />
+                        <div className="text-[10px] font-black text-emerald-400">Yay! You Forgave Me! 🥰🎉</div>
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
+                ) : demoId === "she-cant-say-no" ? (
+                  /* She Can't Say No Flow (Pink Theme, Flirty Cat, Dodging No) */
+                  <AnimatePresence mode="wait">
+                    {simStage === "landing" ? (
+                      <motion.div key="she_landing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center space-y-2 h-full">
+                        <img src="https://media1.tenor.com/m/al4yRBO26akAAAAC/cat-goma.gif" className="w-24 h-24 rounded-xl shadow-lg border-2 border-white" />
+                        <h4 className="text-[12px] font-black text-white bg-pink-500/50 px-2 py-0.5 rounded-md drop-shadow-md">
+                          Do you love me? 🤗
+                        </h4>
+                        <div className="flex gap-2">
+                          <span className="px-3 py-1 bg-white text-pink-600 rounded-full text-[9px] font-black shadow-lg">Yes I Do! 💖</span>
+                          <span className="px-3 py-1 bg-pink-400 text-white rounded-full text-[9px] font-bold shadow-lg border border-pink-300">No...</span>
+                        </div>
+                      </motion.div>
+                    ) : simStage === "dodge_no" || simStage === "click_yes" ? (
+                      <motion.div key="she_dodge" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center space-y-2 h-full relative w-full">
+                        <img src="https://media1.tenor.com/m/V792k7WJFAUAAAAC/peach-goma.gif" className="w-24 h-24 rounded-xl shadow-lg border-2 border-white" />
+                        <h4 className="text-[12px] font-black text-white bg-pink-500/50 px-2 py-0.5 rounded-md drop-shadow-md">
+                          Ek aur baar Soch lo! 🥺
+                        </h4>
+                        <div className="relative w-full h-[30px]">
+                          <motion.span animate={simStage === "click_yes" ? { scale: 0.9 } : { scale: 1 }} className="absolute left-[15%] px-3 py-1 bg-white text-pink-600 rounded-full text-[9px] font-black shadow-lg z-20">Yes I Do! 💖</motion.span>
+                          <motion.span animate={simStage === "dodge_no" ? { x: 35, y: -25, opacity: 0.8 } : { x: 0, y: 0, opacity: 1 }} className="absolute right-[15%] px-3 py-1 bg-pink-400 text-white rounded-full text-[9px] font-bold shadow-lg border border-pink-300 z-10">No...</motion.span>
+                        </div>
+                      </motion.div>
+                    ) : simStage === "accepted" ? (
+                      <motion.div key="she_accept" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="h-full flex items-center justify-center">
+                        <img src="https://media1.tenor.com/m/gUiu1zyxfzYAAAAC/bear-kiss-bear-hug.gif" className="w-32 h-32 bg-white rounded-2xl p-1 shadow-2xl border-2 border-white object-contain" />
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
+                ) : demoId === "nasamajh-lakri" ? (
+                  /* Nasamajh Lakri Flow (Dark Theme, Gateway, Hinglish Questions) */
+                  <AnimatePresence mode="wait">
+                    {simStage === "gateway" ? (
+                      <motion.div key="nasa_gateway" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center space-y-3 h-full">
+                        <h4 className="text-[16px] font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-200 via-pink-300 to-purple-200 drop-shadow-[0_2px_10px_rgba(244,63,94,0.6)] leading-tight text-center px-2">
+                          Will you be mine? 💖
+                        </h4>
+                        <div className="flex gap-2 w-full justify-center px-4">
+                          <span className="flex-1 py-1.5 bg-gradient-to-r from-emerald-400 to-emerald-600 text-white rounded-full text-[9px] font-black shadow-[0_0_15px_rgba(16,185,129,0.5)] border border-emerald-300/50">Haan Ji 💖</span>
+                        </div>
+                        <div className="flex gap-2 w-full justify-center px-4">
+                          <span className="flex-1 py-1.5 bg-white/10 text-white/90 rounded-full text-[9px] font-bold border border-white/20 backdrop-blur-md">Nahin Ji 😔</span>
+                        </div>
+                      </motion.div>
+                    ) : simStage === "continue_proposal" || simStage === "rejected" || simStage === "click_yes" ? (
+                      <motion.div key="nasa_questions" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center h-full relative w-full space-y-4">
+                         <h4 className="text-[14px] font-black text-rose-200 text-center leading-snug px-2 drop-shadow-md">
+                          {simStage === "rejected" ? "Think again, piliiiiiizzzz? 🌻" : "piliiiiiizzzzzzzz? 💔"}
+                        </h4>
+                        <div className="flex gap-2 w-full justify-center px-4">
+                          <motion.span animate={simStage === "click_yes" ? { scale: 0.92 } : { scale: 1 }} className="flex-1 py-1.5 bg-emerald-500 text-white rounded-full text-[9px] font-black shadow-md border border-emerald-400">Yes</motion.span>
+                        </div>
+                        <div className="flex gap-2 w-full justify-center px-4">
+                          <span className="flex-1 py-1.5 bg-white/10 text-white/90 rounded-full text-[9px] font-bold border border-white/20">No</span>
+                        </div>
+                      </motion.div>
+                    ) : simStage === "accepted" ? (
+                      <motion.div key="nasa_accept" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="h-full flex flex-col items-center justify-center space-y-2">
+                        <div className="text-[24px] animate-bounce">💖</div>
+                        <div className="text-[12px] font-black text-rose-200">Yayyy! ✨</div>
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
+                ) : isPlanner ? (
+                  /* Date Planner Flow (Hero -> Place -> Food -> Date -> Summary) */
+                  <AnimatePresence mode="wait">
+                    {simStage === "hero" ? (
+                      <motion.div key="plan_hero" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center h-full space-y-3 px-2 text-center">
+                        <div className="text-[18px]">✨</div>
+                        <p className="text-[10px] font-serif text-rose-200/90 leading-relaxed font-medium">I made this tiny corner of the internet just for you...</p>
+                        <span className="text-[8px] font-bold text-white bg-rose-500/50 px-2 py-1 rounded-full border border-rose-400/40">Continue 👀</span>
+                      </motion.div>
+                    ) : simStage === "select_place" ? (
+                      <motion.div key="plan_place" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="w-full bg-white/10 backdrop-blur-md rounded-xl p-2 shadow-xl border border-white/20">
+                        <h4 className="text-[9px] font-bold text-white mb-2 text-left">Where are we going? 🗺️</h4>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <div className="relative h-12 rounded border border-rose-400 overflow-hidden group"><div className="absolute inset-0 bg-black/40 z-10 flex items-center justify-center text-[7px] text-white font-bold">Victoria</div><img src="https://images.unsplash.com/photo-1558431382-27e303142255?q=80&w=800&auto=format&fit=crop" className="w-full h-full object-cover" /></div>
+                          <div className="relative h-12 rounded border border-white/20 overflow-hidden"><div className="absolute inset-0 bg-black/40 z-10 flex items-center justify-center text-[7px] text-white font-bold">Eco Park</div><img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop" className="w-full h-full object-cover" /></div>
+                        </div>
+                        <span className="block mt-2 px-2 py-1 bg-white text-slate-900 text-center rounded text-[8px] font-bold shadow">Next ➡️</span>
+                      </motion.div>
+                    ) : simStage === "select_food" ? (
+                      <motion.div key="plan_food" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="w-full bg-white/10 backdrop-blur-md rounded-xl p-2 shadow-xl border border-white/20">
+                        <h4 className="text-[9px] font-bold text-white mb-2 text-left">What are we eating? 🍕</h4>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <div className="bg-rose-500 text-white text-[7px] py-3 text-center rounded border border-rose-400 font-bold">Biryani</div>
+                          <div className="bg-slate-800 text-white/70 text-[7px] py-3 text-center rounded border border-white/20 font-bold">Momo</div>
+                        </div>
+                        <span className="block mt-2 px-2 py-1 bg-white text-slate-900 text-center rounded text-[8px] font-bold shadow">Next ➡️</span>
+                      </motion.div>
+                    ) : simStage === "select_date" ? (
+                      <motion.div key="plan_date" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="w-full bg-white/10 backdrop-blur-md rounded-xl p-2 shadow-xl border border-white/20">
+                        <h4 className="text-[9px] font-bold text-white mb-2 text-left">When are we going? 🗓️</h4>
+                        <div className="bg-slate-800/80 text-white text-[8px] py-2 text-center rounded border border-rose-400/50 mb-1">Select Date</div>
+                        <div className="bg-rose-500 text-white font-bold text-[8px] py-2 text-center rounded border border-rose-400 mb-2 shadow">7:00 PM</div>
+                        <span className="block mt-1 px-2 py-1 bg-gradient-to-r from-rose-500 to-pink-500 text-white text-center rounded text-[8px] font-bold shadow uppercase tracking-wider">Send Plan</span>
+                      </motion.div>
+                    ) : simStage === "summary" ? (
+                      <motion.div key="plan_accept" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white/95 border-2 border-pink-200 p-2.5 rounded-xl text-center space-y-1 w-full shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-8 h-8 bg-pink-100 rounded-bl-full z-0" />
+                        <div className="text-[12px] font-black text-rose-500 relative z-10 mb-1">🌸 It's a Date! 🌸</div>
+                        <div className="bg-rose-50 rounded p-1 text-[7px] text-slate-700 font-bold text-left space-y-0.5 border border-rose-100">
+                          <p>📍 Victoria</p>
+                          <p>🍕 Biryani</p>
+                          <p>🗓️ Friday, 7:00 PM</p>
+                        </div>
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
                 ) : (
-                  /* Standard Cover / Landing simulation for other templates */
+                  /* Romantic Love Surprise / Catch-all Fallback */
                   <div className="space-y-1 px-1">
                     <div className="w-8 h-8 rounded-lg bg-rose-500/20 border border-rose-400/40 text-rose-400 flex items-center justify-center mx-auto shadow-md">
-                      {isPlanner ? (
-                        <span className="text-base">🌸</span>
-                      ) : (
-                        <Heart className="w-4 h-4 fill-rose-500 animate-pulse" />
-                      )}
+                      <Heart className="w-4 h-4 fill-rose-500 animate-pulse" />
                     </div>
-
                     <h4 className="text-xs font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-rose-200 via-pink-200 to-purple-200 leading-tight line-clamp-1">
                       {displayTitle}
                     </h4>
-
                     <p className="text-[10px] font-medium text-rose-300/90 truncate">
                       For: <span className="font-bold text-white">{displayRecipient}</span>
                     </p>
-
                     {simStage === "accepted" ? (
                       <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}

@@ -1127,7 +1127,7 @@ export default function GuestCustomizeFlow({
                   <span>
                     Tell Them You Love Them 💖
                     {finalPriceINR === 0
-                      ? " · Free (₹0)"
+                      ? ""
                       : ` · ₹${finalPriceINR.toFixed(0)} / ${liveThemeDuration}d`}
                   </span>
                 </>

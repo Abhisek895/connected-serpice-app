@@ -88,6 +88,7 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
                     style={{
                       fontFamily: "monospace",
                       transform: "scale(0.33333)",
+                      willChange: "transform",
                     }}
                   >
                     {((patternText || "love you").trim() + "  ").repeat(3000)}

@@ -92,6 +92,7 @@ function TextArtPortrait({
           wordBreak: "break-all",
           overflow: "hidden",
           textAlign: "justify",
+          willChange: "transform",
         }}
       />
       {/* Source image */}
@@ -381,7 +382,6 @@ export default function RomanticLoveTemplate({
           pointer-events: none;
         }
 
-        /* Portrait */
         .portrait-page {
           width: 100%;
           height: 100vh;
@@ -393,8 +393,10 @@ export default function RomanticLoveTemplate({
           align-items: center;
           position: relative;
           z-index: 10;
-          overflow: hidden;
-          padding-bottom: max(36px, calc(env(safe-area-inset-bottom, 0px) + 24px));
+          overflow-y: auto;
+          overflow-x: hidden;
+          padding-bottom: max(48px, calc(env(safe-area-inset-bottom, 0px) + 32px));
+          will-change: transform, opacity;
         }
 
         .portrait-container-wrapper {
@@ -403,15 +405,15 @@ export default function RomanticLoveTemplate({
           align-items: center;
           justify-content: center;
           z-index: 10;
-          /* Shift slightly upward into the optical center of mobile viewport */
-          margin-top: -36px;
+          /* Shift upward into the optical center of mobile viewport */
+          margin-top: -80px;
           transition: transform 0.3s ease;
         }
 
         .portrait-buttons-container {
           position: absolute;
           /* Lifted well above mobile navigation bar / home indicator */
-          bottom: max(36px, calc(env(safe-area-inset-bottom, 0px) + 24px));
+          bottom: max(60px, calc(env(safe-area-inset-bottom, 0px) + 40px));
           left: 50%;
           transform: translateX(-50%);
           display: flex;
@@ -563,10 +565,10 @@ export default function RomanticLoveTemplate({
             <motion.div
               key="portrait"
               className="portrait-page"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 1 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
             >
               {/* Photo & Overlay Popup Container (Dead Centered at y=50vh) */}
               <div className="portrait-container-wrapper">

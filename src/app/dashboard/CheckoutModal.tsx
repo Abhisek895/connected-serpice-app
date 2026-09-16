@@ -599,7 +599,7 @@ export default function CheckoutModal({
                     {couponMessage.includes("Premium Member")
                       ? " · Free for Premium ∞"
                       : totalToPayINR === 0
-                        ? " · Free (₹0)"
+                        ? ""
                         : ` · ₹${totalToPayINR.toFixed(0)} / ${liveDurationDays}d`}
                   </span>
                 </>
