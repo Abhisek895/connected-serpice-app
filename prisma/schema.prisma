@@ -149,7 +149,7 @@ model Response {
   isHuman        Boolean  @default(false)
   
   // Idempotency scope: hash(eventId + action + session/IP window)
-  idempotencyKey String?  @unique 
+  idempotencyKey String   @unique 
   
   createdAt      DateTime @default(now())
 
