@@ -600,7 +600,7 @@ export default function CheckoutModal({
                       ? " · Free for Premium ∞"
                       : totalToPayINR === 0
                         ? ""
-                        : ` · ₹${totalToPayINR.toFixed(0)} / ${liveDurationDays}d`}
+                        : ""}
                   </span>
                 </>
               )}

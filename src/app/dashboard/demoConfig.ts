@@ -20,7 +20,7 @@ export const demos: DemoItem[] = [
   {
     id: "surprise",
     title: "Romantic Love Surprise 💖",
-    badge: "Requires Customization",
+    badge: "Instant Available",
     badgeColor: "bg-rose-500 text-white",
     description: "Interactive romantic surprise with floating heart animations, love song (loveSong.mp3), photo showcase, & love letter reveal.",
     previewUrl: "/demos/surprise/index.html",
@@ -35,7 +35,7 @@ export const demos: DemoItem[] = [
   {
     id: "birthday-wish",
     title: "Happy Birthday Surprise 🎂",
-    badge: "Requires Customization",
+    badge: "Instant Available",
     badgeColor: "bg-amber-500 text-white",
     description: "Interactive birthday card with photo slideshow gallery, birthday music (hbd.mp3), confetti, & custom love message reveal.",
     previewUrl: "/demos/birthday-wish/index.html",
