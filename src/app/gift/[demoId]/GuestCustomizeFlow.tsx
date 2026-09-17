@@ -231,6 +231,7 @@ export default function GuestCustomizeFlow({
   demo: Omit<DemoItem, "icon">;
   tmpl: TemplateClass;
 }) {
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [viewState, setViewState] = useState<"landing" | "customize" | "checkout" | "done">("landing");
   const [currentStep, setCurrentStep] = useState(0);
   const [formValues, setFormValues] = useState<Record<string, string>>({});
@@ -241,6 +242,7 @@ export default function GuestCustomizeFlow({
   const [showPaymentPushModal, setShowPaymentPushModal] = useState(false);
   const [showPaymentCancelledPushModal, setShowPaymentCancelledPushModal] = useState(false);
   const isPaymentHandledRef = useRef(false);
+  const formContainerRef = useRef<HTMLDivElement>(null);
 
   // Live pricing & coupon state
   const [liveThemePrice, setLiveThemePrice] = useState<number>(demo.price ?? 2100);
@@ -266,6 +268,19 @@ export default function GuestCustomizeFlow({
   const Icon = DEMO_ICONS[demo.id] ?? Heart;
   const totalSteps = tmpl.steps.length;
   const step = tmpl.steps[currentStep];
+
+  // Romantic Loading Screen Delay
+  useEffect(() => {
+    const timer = setTimeout(() => setIsInitialLoading(false), 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Scroll to top when step changes
+  useEffect(() => {
+    if (formContainerRef.current) {
+      formContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [currentStep]);
 
   // Initialize form with template defaultData & check URL params
   useEffect(() => {
@@ -743,6 +758,44 @@ export default function GuestCustomizeFlow({
   const finalPriceINR = finalPrice / 100;
 
   // ───────────────────────────────────────────────────────────────────────────
+  // Initial Loading Screen
+  // ───────────────────────────────────────────────────────────────────────────
+  if (isInitialLoading) {
+    return (
+      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-gradient-to-br from-purple-950 via-rose-950 to-slate-950 overflow-hidden">
+        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay pointer-events-none" />
+        
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: [1, 1.1, 1], opacity: 1 }}
+          transition={{ 
+            opacity: { duration: 0.5 },
+            scale: { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
+          }}
+          className="relative z-10 mb-8"
+        >
+          <div className="w-24 h-24 bg-rose-500/20 rounded-full blur-2xl absolute inset-0 animate-pulse" />
+          <Heart className="w-16 h-16 text-rose-500 fill-rose-500 relative z-10 drop-shadow-2xl" />
+        </motion.div>
+        
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="relative z-10 text-center px-4"
+        >
+          <h2 className="text-2xl font-bold text-white mb-2 font-pacifico tracking-wide">
+            Preparing something magical...
+          </h2>
+          <p className="text-rose-200/80 text-sm font-medium animate-pulse">
+            Unwrapping your special surprise ✨
+          </p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
   // Post-Payment Success Screen (with Auto-Click Simulated Preview)
   // ───────────────────────────────────────────────────────────────────────────
   if (publishedUrl) {
@@ -854,7 +907,7 @@ export default function GuestCustomizeFlow({
           )}
         </AnimatePresence>
 
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-rose-950 to-slate-950 relative overflow-hidden flex items-center justify-center p-4">
+        <div className="h-[100dvh] w-full bg-gradient-to-br from-slate-950 via-rose-950 to-slate-950 relative overflow-hidden flex items-center justify-center p-4">
           {/* Floating hearts background */}
           {Array.from({ length: 12 }, (_, i) => (
             <motion.div
@@ -871,11 +924,11 @@ export default function GuestCustomizeFlow({
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-md w-full relative z-10"
+            className="max-w-md w-full max-h-[95dvh] relative z-10 flex flex-col"
           >
-            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-white/10">
+            <div className="bg-white rounded-3xl shadow-2xl overflow-y-auto border border-white/10 w-full">
               {/* Thumbnail */}
-              <div className="relative h-56 w-full overflow-hidden bg-slate-100 group">
+              <div className="relative h-56 shrink-0 w-full overflow-hidden bg-slate-100 group">
                 <img
                   src={demo.image}
                   alt={demo.title}
@@ -1298,7 +1351,7 @@ export default function GuestCustomizeFlow({
   // ───────────────────────────────────────────────────────────────────────────
   return (
     <>
-      <div className="min-h-[100dvh] bg-slate-950 flex items-end sm:items-center justify-center sm:p-6 overflow-hidden">
+      <div className="h-[100dvh] w-full bg-slate-950 flex items-end sm:items-center justify-center sm:p-6 overflow-hidden">
         <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -1320,7 +1373,7 @@ export default function GuestCustomizeFlow({
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+          <div ref={formContainerRef} className="flex-1 overflow-y-auto p-4 sm:p-6">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
               {/* Left Column: Form Inputs */}
               <div className="lg:col-span-7 space-y-4">
