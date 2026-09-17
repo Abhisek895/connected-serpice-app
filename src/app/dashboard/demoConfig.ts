@@ -22,7 +22,7 @@ export const demos: DemoItem[] = [
     title: "Romantic Love Surprise 💖",
     badge: "Instant Available",
     badgeColor: "bg-rose-500 text-white",
-    description: "Interactive romantic surprise with floating heart animations, love song (loveSong.mp3), photo showcase, & love letter reveal.",
+    description: "Interactive romantic surprise with floating heart animations, photo showcase, & love letter reveal.",
     previewUrl: "/demos/surprise/index.html",
     builderTheme: "Romantic",
     image: "/demos/surprise/thumb_surprise_1786296446260.jpg",

@@ -1028,15 +1028,15 @@ export default function GuestCustomizeFlow({
   // ───────────────────────────────────────────────────────────────────────────
   if (showCheckoutView) {
     return (
-      <div className="min-h-screen bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="h-[100dvh] w-full bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-hidden">
         <Script src="https://checkout.razorpay.com/v1/checkout.js" />
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          className="bg-white rounded-3xl shadow-2xl border border-rose-100 max-w-md w-full overflow-hidden relative"
+          className="bg-white rounded-3xl shadow-2xl border border-rose-100 max-w-md w-full max-h-[95dvh] flex flex-col relative overflow-hidden"
         >
           {/* Header */}
-          <div className="p-4 sm:p-5 border-b border-slate-100 bg-gradient-to-r from-rose-50 to-pink-50 flex justify-between items-center">
+          <div className="shrink-0 p-4 sm:p-5 border-b border-slate-100 bg-gradient-to-r from-rose-50 to-pink-50 flex justify-between items-center">
             <div>
               <h2 className="text-base sm:text-lg font-extrabold text-slate-900 flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-emerald-600" /> Secure Checkout
@@ -1051,7 +1051,7 @@ export default function GuestCustomizeFlow({
             </button>
           </div>
 
-          <div className="p-4 sm:p-4 space-y-3">
+          <div className="flex-1 p-4 sm:p-4 space-y-3 overflow-y-auto">
             {/* Price line */}
             <div className="flex justify-between items-center text-slate-700 font-medium text-sm">
               <span>Original Price</span>

@@ -308,7 +308,7 @@
                 "/demos/surprise/images.jpeg",
                 "/demos/date-planner/victoria_memorial_1785673658927.png"
             ],
-            audioUrl: "/demos/surprise/loveSong.mp3"
+            audioUrl: "https://k4q9rpuc4cgssyjq.public.blob.vercel-storage.com/uploads/terenaina.mp3"
         };
 
         if (window.GALAXY_DATA.title) {
@@ -616,7 +616,7 @@
 
         function playMusic() {
             if (!audio) {
-                audio = new Audio(window.GALAXY_DATA.audioUrl || "/demos/surprise/loveSong.mp3");
+                audio = new Audio(window.GALAXY_DATA.audioUrl || "https://k4q9rpuc4cgssyjq.public.blob.vercel-storage.com/uploads/terenaina.mp3");
                 audio.loop = true;
                 audio.volume = 0.5;
             }

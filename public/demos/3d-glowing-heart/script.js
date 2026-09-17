@@ -154,7 +154,7 @@ let isPlaying = false;
 
 function playMusic() {
     if (!audio) {
-        audio = new Audio("/demos/surprise/loveSong.mp3");
+        audio = new Audio("https://k4q9rpuc4cgssyjq.public.blob.vercel-storage.com/uploads/terenaina.mp3");
         audio.loop = true;
         audio.volume = 0.45;
     }

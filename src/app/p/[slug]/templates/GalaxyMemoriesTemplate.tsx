@@ -59,7 +59,7 @@ export default function GalaxyMemoriesTemplate({
   const uploadedImages = media?.filter((m: any) => m.type === "IMAGE")?.map((m: any) => m.url) || [];
   const uploadedAudio = media?.find((m: any) => m.type === "AUDIO")?.url;
 
-  const audioTrack = propAudioUrl || _audio || uploadedAudio || "/demos/surprise/loveSong.mp3";
+  const audioTrack = propAudioUrl || _audio || uploadedAudio || "https://k4q9rpuc4cgssyjq.public.blob.vercel-storage.com/uploads/terenaina.mp3";
 
   useEffect(() => {
     setMounted(true);

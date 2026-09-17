@@ -293,7 +293,7 @@ export default function RomanticLoveTemplate({
     customData?._audio ||
     audioUrl ||
     _audio ||
-    (audioMedia ? audioMedia.url : "/demos/surprise/loveSong.mp3");
+    (audioMedia ? audioMedia.url : "https://k4q9rpuc4cgssyjq.public.blob.vercel-storage.com/uploads/terenaina.mp3");
 
   const displayTitle = title || "I have a surprise for you...";
   const displayLetter =
