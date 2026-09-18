@@ -65,8 +65,8 @@ function TextArtPortrait({
         position: "relative",
         display: "flex",
         width: "100%",
-        height: "auto",
-        maxHeight: "100vh",
+        height: "100%",
+        boxShadow: "inset 0 0 120px rgba(0,0,0,1)",
         overflow: "hidden",
       }}
     >
@@ -103,8 +103,7 @@ function TextArtPortrait({
         style={{
           display: "block",
           width: "100%",
-          height: "auto",
-          maxHeight: "100vh",
+          height: "100%",
           objectFit: "cover",
           position: "relative",
           zIndex: 2,
@@ -410,7 +409,6 @@ export default function RomanticLoveTemplate({
           display: flex;
           align-items: center;
           justify-content: center;
-          padding-bottom: 12vh;
           z-index: 10;
           transition: transform 0.3s ease;
         }
