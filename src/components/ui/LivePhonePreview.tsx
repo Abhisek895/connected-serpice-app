@@ -79,10 +79,10 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
 
           {/* Content Body — Step 2 View for Romantic Surprise (Matches Real Generated Page) */}
           {isStep2 && isSurprise ? (
-            <div className="relative z-10 h-full w-full flex flex-col justify-between items-center py-2 px-1">
+            <div className="absolute inset-0 z-30 flex flex-col justify-center items-center bg-black rounded-[30px] overflow-hidden">
               {/* Dead-Centered Portrait Container */}
-              <div className="my-auto flex items-center justify-center w-full">
-                <div className="relative inline-flex items-center justify-center overflow-hidden max-w-full shadow-2xl">
+              <div className="absolute inset-0 flex items-center justify-center w-full h-full">
+                <div className="relative flex items-center justify-center overflow-hidden w-full">
                   {/* 1. Ultra-dense White Monospace Text Pixel Matrix (Spans ONLY image bounds) */}
                   <div
                     className="absolute inset-0 w-[300%] h-[300%] bg-black text-white text-[8px] font-black leading-[8px] tracking-tighter overflow-hidden select-none pointer-events-none break-all text-justify p-0 origin-top-left z-0"
@@ -99,29 +99,29 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
                   <img
                     src={photoUrl || "/demos/surprise/cute_woman.png"}
                     alt="Portrait Preview"
-                    className="relative z-10 w-full h-auto max-h-[220px] object-contain block"
+                    className="relative z-10 w-full h-auto object-cover block"
                     style={{
                       filter: "grayscale(100%) contrast(160%) brightness(1.2)",
                       mixBlendMode: "multiply",
                     }}
                   />
-
-                  {/* 3. Popup Note Overlay directly on top of photo */}
-                  {showLetterPreview && (
-                    <div
-                      onClick={() => setShowLetterPreview(false)}
-                      className="absolute inset-2 z-30 m-auto bg-white/95 backdrop-blur-md rounded-xl p-3 text-slate-900 flex flex-col items-center justify-center text-center shadow-2xl border border-white/60 cursor-pointer animate-in zoom-in-95 duration-200"
-                    >
-                      <span className="text-[9px] font-extrabold text-rose-500 uppercase tracking-wider mb-1">💌 Message for you</span>
-                      <p className="text-[10px] font-medium italic leading-snug line-clamp-4">"{displayMessage}"</p>
-                      <span className="text-[8px] text-slate-400 mt-2 font-bold">(Tap note to close)</span>
-                    </div>
-                  )}
                 </div>
               </div>
 
+              {/* Popup Note Overlay */}
+              {showLetterPreview && (
+                <div
+                  onClick={() => setShowLetterPreview(false)}
+                  className="absolute inset-x-4 top-1/2 -translate-y-1/2 z-40 bg-white/95 backdrop-blur-md rounded-xl p-3 text-slate-900 flex flex-col items-center justify-center text-center shadow-2xl border border-white/60 cursor-pointer animate-in zoom-in-95 duration-200"
+                >
+                  <span className="text-[9px] font-extrabold text-rose-500 uppercase tracking-wider mb-1">💌 Message for you</span>
+                  <p className="text-[10px] font-medium italic leading-snug line-clamp-4">"{displayMessage}"</p>
+                  <span className="text-[8px] text-slate-400 mt-2 font-bold">(Tap note to close)</span>
+                </div>
+              )}
+
               {/* Page 2 Buttons at Bottom */}
-              <div className="pb-2.5 pt-1 flex flex-row items-center justify-center gap-1.5 w-full max-w-[210px] mx-auto shrink-0">
+              <div className="absolute bottom-10 left-0 right-0 flex flex-row items-center justify-center gap-1.5 w-full max-w-[210px] mx-auto z-40">
                 {!showLetterPreview && (
                   <button
                     onClick={() => setShowLetterPreview(true)}

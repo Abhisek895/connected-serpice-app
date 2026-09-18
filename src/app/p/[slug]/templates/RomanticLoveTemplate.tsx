@@ -65,8 +65,8 @@ function TextArtPortrait({
         position: "relative",
         display: "flex",
         width: "100%",
-        height: "100%",
-        boxShadow: "inset 0 0 120px rgba(0,0,0,1)",
+        height: "auto",
+        maxHeight: "100vh",
         overflow: "hidden",
       }}
     >
@@ -103,7 +103,8 @@ function TextArtPortrait({
         style={{
           display: "block",
           width: "100%",
-          height: "100%",
+          height: "auto",
+          maxHeight: "100vh",
           objectFit: "cover",
           position: "relative",
           zIndex: 2,
@@ -321,6 +322,10 @@ export default function RomanticLoveTemplate({
   return (
     <>
       <style>{`
+        ::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
+        * { scrollbar-width: none !important; -ms-overflow-style: none !important; }
+        html, body { overflow: hidden !important; overscroll-behavior: none !important; max-width: 100vw; max-height: 100vh; margin: 0; padding: 0; }
+
         @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Pacifico&display=swap');
 
         .romantic-body {
