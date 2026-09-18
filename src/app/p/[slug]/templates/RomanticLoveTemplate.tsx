@@ -60,58 +60,46 @@ function TextArtPortrait({
   }, [generateArt]);
 
   return (
-    <div
-      style={{
-        position: "relative",
-        display: "flex",
-        width: "100%",
-        height: "100%",
-        boxShadow: "inset 0 0 120px rgba(0,0,0,1)",
-        overflow: "hidden",
-      }}
-    >
-      {/* Text pixel layer */}
-      <div
-        ref={textRef}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "300%",
-          height: "300%",
-          transform: "scale(0.3333)",
-          transformOrigin: "top left",
-          zIndex: 1,
-          backgroundColor: "black",
-          color: "white",
-          fontSize: "8px",
-          lineHeight: "8px",
-          letterSpacing: "0px",
-          fontWeight: 900,
-          wordBreak: "break-all",
-          overflow: "hidden",
-          textAlign: "justify",
-          willChange: "transform",
-        }}
-      />
-      {/* Source image */}
-      <img
-        ref={imgRef}
-        src={src}
-        alt="Portrait"
-        onLoad={generateArt}
-        style={{
-          display: "block",
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          position: "relative",
-          zIndex: 2,
-          filter: "grayscale(100%) contrast(160%) brightness(1.2)",
-          mixBlendMode: "multiply",
-        }}
-      />
-    </div>
+    <>
+      <div className="portrait-art-wrapper">
+        {/* Text pixel layer */}
+        <div
+          ref={textRef}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "300%",
+            height: "300%",
+            transform: "scale(0.3333)",
+            transformOrigin: "top left",
+            zIndex: 1,
+            backgroundColor: "black",
+            color: "white",
+            fontSize: "8px",
+            lineHeight: "8px",
+            letterSpacing: "0px",
+            fontWeight: 900,
+            wordBreak: "break-all",
+            overflow: "hidden",
+            textAlign: "justify",
+            willChange: "transform",
+          }}
+        />
+        {/* Source image */}
+        <img
+          ref={imgRef}
+          src={src}
+          alt="Portrait"
+          onLoad={generateArt}
+          className="portrait-art-img"
+          style={{
+            filter: "grayscale(100%) contrast(160%) brightness(1.2)",
+            mixBlendMode: "multiply",
+          }}
+        />
+      </div>
+    </>
   );
 }
 
@@ -324,6 +312,35 @@ export default function RomanticLoveTemplate({
         ::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
         * { scrollbar-width: none !important; -ms-overflow-style: none !important; }
         html, body { overflow: hidden !important; overscroll-behavior: none !important; max-width: 100vw; max-height: 100vh; margin: 0; padding: 0; }
+
+        .portrait-art-wrapper {
+          position: relative;
+          display: flex;
+          overflow: hidden;
+          width: 100%;
+          height: 100%; /* Mobile default: fill height */
+        }
+        
+        .portrait-art-img {
+          display: block;
+          position: relative;
+          z-index: 2;
+          width: 100%;
+          height: 100%; /* Mobile default: fill height */
+          object-fit: cover;
+        }
+
+        /* Desktop specific styling */
+        @media (min-width: 768px) {
+          .portrait-art-wrapper {
+            height: auto;
+            max-height: 100vh;
+          }
+          .portrait-art-img {
+            height: auto;
+            max-height: 100vh;
+          }
+        }
 
         @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Pacifico&display=swap');
 
