@@ -482,7 +482,7 @@ export default function AutoClickSimulatedPreview({
                         className="flex flex-col items-center justify-center space-y-2"
                       >
                         {/* TextArtPortrait Mockup with Overlay Popup */}
-                        <div className="absolute top-0 left-0 w-full h-full z-10 overflow-hidden flex items-center justify-center">
+                        <div className="absolute top-0 left-0 w-full h-full z-10 overflow-hidden flex items-center justify-center pb-12">
                           <TextArtPortraitMock src={photoUrl || "/demos/surprise/cute_woman.png"} phrase={patternText || "love you"} />
 
                           {/* Love Letter Popup overlay directly on top of photo */}

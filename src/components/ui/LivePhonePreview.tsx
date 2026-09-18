@@ -81,7 +81,7 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
           {isStep2 && isSurprise ? (
             <div className="absolute inset-0 z-30 flex flex-col justify-center items-center bg-black rounded-[30px] overflow-hidden">
               {/* Dead-Centered Portrait Container */}
-              <div className="absolute inset-0 flex items-center justify-center w-full h-full">
+              <div className="absolute inset-0 flex items-center justify-center w-full h-full pb-12">
                 <div className="relative flex items-center justify-center overflow-hidden w-full">
                   {/* 1. Ultra-dense White Monospace Text Pixel Matrix (Spans ONLY image bounds) */}
                   <div

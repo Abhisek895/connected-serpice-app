@@ -410,6 +410,7 @@ export default function RomanticLoveTemplate({
           display: flex;
           align-items: center;
           justify-content: center;
+          padding-bottom: 12vh;
           z-index: 10;
           transition: transform 0.3s ease;
         }
