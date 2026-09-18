@@ -37,7 +37,7 @@ export default async function SettingsPage() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 max-w-4xl">
+    <div className="space-y-8 animate-in fade-in duration-500 w-full">
       <div>
         <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
           <Settings className="text-rose-500" />

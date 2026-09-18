@@ -6,6 +6,93 @@ import { Heart, MousePointer2, ShieldCheck, Zap, Share2, Check, Lock, X, Gift } 
 import CanvasConfetti from "./CanvasConfetti";
 import { RecipientActionBar } from "@/components/ui/RecipientActionBar";
 import { useSession } from "next-auth/react";
+import { useRef, useCallback } from "react";
+
+function TextArtPortraitMock({
+  src,
+  phrase = "LOVE YOU",
+}: {
+  src: string;
+  phrase?: string;
+}) {
+  const textRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  const generateArt = useCallback(() => {
+    const img = imgRef.current;
+    const wall = textRef.current;
+    if (!img || !wall || !img.complete || img.naturalWidth === 0) return;
+    const w = img.clientWidth;
+    const h = img.clientHeight;
+    const multiplier = 3;
+    const charsPerLine = Math.ceil((w * multiplier) / 5);
+    const totalLines = Math.ceil((h * multiplier) / 8);
+    const totalChars = charsPerLine * totalLines * 1.5;
+    const repeatPhrase = phrase.trim() + "  ";
+    const repeatCount = Math.ceil(totalChars / repeatPhrase.length);
+    wall.innerText = repeatPhrase.repeat(repeatCount);
+  }, [phrase]);
+
+  useEffect(() => {
+    window.addEventListener("resize", generateArt);
+    return () => window.removeEventListener("resize", generateArt);
+  }, [generateArt]);
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        display: "flex",
+        width: "100%",
+        height: "100%",
+        boxShadow: "inset 0 0 40px rgba(0,0,0,1)",
+        overflow: "hidden",
+      }}
+    >
+      {/* Text pixel layer */}
+      <div
+        ref={textRef}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "300%",
+          height: "300%",
+          transform: "scale(0.3333)",
+          transformOrigin: "top left",
+          zIndex: 1,
+          backgroundColor: "black",
+          color: "white",
+          fontSize: "8px",
+          lineHeight: "8px",
+          letterSpacing: "0px",
+          fontWeight: 900,
+          wordBreak: "break-all",
+          overflow: "hidden",
+          textAlign: "justify",
+          willChange: "transform",
+        }}
+      />
+      {/* Source image */}
+      <img
+        ref={imgRef}
+        src={src}
+        alt="Portrait"
+        onLoad={generateArt}
+        style={{
+          display: "block",
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          position: "relative",
+          zIndex: 2,
+          filter: "grayscale(100%) contrast(160%) brightness(1.2)",
+          mixBlendMode: "multiply",
+        }}
+      />
+    </div>
+  );
+}
 
 interface AutoClickSimulatedPreviewProps {
   demoId: string;
@@ -394,46 +481,37 @@ export default function AutoClickSimulatedPreview({
                         className="flex flex-col items-center justify-center space-y-2"
                       >
                         {/* TextArtPortrait Mockup with Overlay Popup */}
-                        <div className="relative inline-flex items-center justify-center overflow-hidden max-w-full shadow-2xl">
-                          <div
-                            className="absolute inset-0 w-[300%] h-[300%] bg-black text-white text-[8px] font-black leading-[8px] tracking-tighter overflow-hidden select-none pointer-events-none break-all text-justify p-0 origin-top-left z-0"
-                            style={{
-                              fontFamily: "monospace",
-                              transform: "scale(0.33333)",
-                              willChange: "transform",
-                            }}
-                          >
-                            {((patternText || "love you").trim() + "  ").repeat(180)}
-                          </div>
-                          <img
-                            src={photoUrl || "/demos/surprise/cute_woman.png"}
-                            alt="Portrait Preview"
-                            className="relative z-10 w-full h-auto max-h-[170px] object-contain block"
-                            style={{ filter: "grayscale(100%) contrast(160%) brightness(1.2)", mixBlendMode: "multiply" }}
-                          />
+                        <div className="absolute top-0 left-0 w-full h-full z-10 overflow-hidden flex items-center justify-center">
+                          <TextArtPortraitMock src={photoUrl || "/demos/surprise/cute_woman.png"} phrase={patternText || "love you"} />
 
                           {/* Love Letter Popup overlay directly on top of photo */}
-                          {simStage === "read_letter" && (
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.8 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.8 }}
-                              className="absolute inset-2 z-30 m-auto bg-white/95 backdrop-blur-md rounded-xl p-2.5 text-slate-900 flex flex-col items-center justify-center text-center shadow-2xl border border-white/60"
-                            >
-                              <span className="text-[8px] font-extrabold text-rose-500 uppercase tracking-wider mb-0.5">💌 Message for you</span>
-                              <p className="text-[9px] font-medium italic leading-tight line-clamp-4">"{displayMessage}"</p>
-                              <span className="text-[7.5px] text-slate-400 mt-1 font-bold">(Tap note to close)</span>
-                            </motion.div>
-                          )}
+                          <AnimatePresence>
+                            {simStage === "read_letter" && (
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                className="absolute inset-x-2 top-1/2 -translate-y-1/2 z-30 m-auto bg-white/95 backdrop-blur-md rounded-xl p-2.5 text-slate-900 flex flex-col items-center justify-center text-center shadow-2xl border border-white/60"
+                                style={{ fontFamily: "'Dancing Script', cursive" }}
+                              >
+                                <span className="text-[10px] font-extrabold text-rose-500 uppercase tracking-wider mb-0.5" style={{ fontFamily: "sans-serif" }}>💌 Message for you</span>
+                                <p className="text-[11px] font-medium leading-tight line-clamp-4">"{displayMessage}"</p>
+                                <span className="text-[7.5px] text-slate-400 mt-1 font-bold" style={{ fontFamily: "sans-serif" }}>(Tap note to close)</span>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
 
                         {simStage !== "read_letter" && (
-                          <motion.span
-                            animate={{ scale: 1 }}
-                            className="px-3 py-1 bg-white/95 text-rose-600 rounded-full text-[9px] font-bold shadow-md tracking-tight"
-                          >
-                            💌 Read My Message
-                          </motion.span>
+                          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 w-full flex justify-center">
+                            <motion.button
+                              animate={{ scale: 1 }}
+                              className="px-4 py-1.5 bg-white/95 text-rose-600 rounded-full text-[10px] shadow-lg border border-white/80"
+                              style={{ fontFamily: "'Dancing Script', cursive", fontWeight: "bold" }}
+                            >
+                              💌 Read My Message
+                            </motion.button>
+                          </div>
                         )}
                       </motion.div>
                     ) : simStage === "continue_proposal" || simStage === "accept_clicked" ? (

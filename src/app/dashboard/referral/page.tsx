@@ -298,7 +298,7 @@ export default function ReferralPage() {
   const hasCode = !!stats?.referralCode;
 
   return (
-    <div className="max-w-4xl space-y-8 animate-in fade-in duration-500">
+    <div className="w-full space-y-8 animate-in fade-in duration-500">
 
       {/* Header */}
       <div>

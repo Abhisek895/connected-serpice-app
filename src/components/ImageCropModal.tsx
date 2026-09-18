@@ -85,7 +85,7 @@ async function getCroppedImg(imageSrc: string, pixelCrop: Area, rotation = 0): P
 export default function ImageCropModal({
   imageSrc,
   originalFileName = "photo.jpg",
-  initialAspect = 1, // Default 1:1 Square for Polaroid & memories
+  initialAspect = -1, // Default -1 for Original / Full Image
   onCancel,
   onComplete,
 }: ImageCropModalProps) {
@@ -95,6 +95,7 @@ export default function ImageCropModal({
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [aspect, setAspect] = useState<number>(initialAspect);
+  const [mediaSize, setMediaSize] = useState<{ width: number; height: number; naturalWidth: number; naturalHeight: number } | null>(null);
 
   const onCropComplete = useCallback((_: Area, pixels: Area) => {
     setCroppedAreaPixels(pixels);
@@ -116,11 +117,21 @@ export default function ImageCropModal({
   };
 
   const aspectOptions = [
+    { label: "Original", value: -1, desc: "Full Image" },
     { label: "1:1 Square", value: 1, desc: "Polaroids & Cards" },
     { label: "4:5 Portrait", value: 4 / 5, desc: "Photos" },
     { label: "16:9 Banner", value: 16 / 9, desc: "Landscape" },
     { label: "Free", value: 0, desc: "Custom" },
   ];
+
+  const isRotated = rotation % 180 !== 0;
+  const originalAspect = mediaSize
+    ? isRotated
+      ? mediaSize.naturalHeight / mediaSize.naturalWidth
+      : mediaSize.naturalWidth / mediaSize.naturalHeight
+    : 1;
+
+  const currentAspect = aspect === 0 ? undefined : aspect === -1 ? originalAspect : aspect;
 
   return (
     <AnimatePresence>
@@ -172,7 +183,8 @@ export default function ImageCropModal({
               crop={crop}
               zoom={zoom}
               rotation={rotation}
-              aspect={aspect === 0 ? undefined : aspect}
+              aspect={currentAspect}
+              onMediaLoaded={setMediaSize}
               onCropChange={setCrop}
               onZoomChange={setZoom}
               onCropComplete={onCropComplete}

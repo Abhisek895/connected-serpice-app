@@ -161,17 +161,25 @@ export default function PaymentsPage() {
 
   // Aggregate KPI stats from filtered payments
   const stats = useMemo(() => {
-    let totalCashPaid = 0;
-    let totalRetail = 0;
+    let totalCashPaid = 0;  // Only SUCCESS payments with real Razorpay money
+    let totalRetail = 0;    // Only SUCCESS payments retail value
     let couponCount = 0;
     let successCount = 0;
 
     filteredPayments.forEach((p) => {
       const paid = p.finalAmount !== null && p.finalAmount !== undefined ? p.finalAmount : p.amount;
-      totalCashPaid += paid;
-      totalRetail += p.amount;
+
+      // ── CRITICAL: Only count SUCCESS payments in cash/revenue figures ──────
+      // PENDING = payment initiated but not confirmed by Razorpay webhook yet
+      // FAILED  = payment failed — no money received
+      // Only SUCCESS = Razorpay has confirmed money was captured
+      if (p.status === "SUCCESS") {
+        totalCashPaid += paid;
+        totalRetail += p.amount;
+        successCount++;
+      }
+
       if (p.coupon?.code || p.couponId) couponCount++;
-      if (p.status === "SUCCESS") successCount++;
     });
 
     return {

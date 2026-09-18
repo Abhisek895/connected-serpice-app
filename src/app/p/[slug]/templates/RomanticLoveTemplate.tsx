@@ -63,12 +63,11 @@ function TextArtPortrait({
     <div
       style={{
         position: "relative",
-        display: "inline-flex",
-        maxWidth: "94vw",
-        maxHeight: "65dvh",
-        boxShadow: "inset 0 0 80px rgba(0,0,0,1)",
+        display: "flex",
+        width: "100%",
+        height: "100%",
+        boxShadow: "inset 0 0 120px rgba(0,0,0,1)",
         overflow: "hidden",
-        borderRadius: "16px",
       }}
     >
       {/* Text pixel layer */}
@@ -103,10 +102,9 @@ function TextArtPortrait({
         onLoad={generateArt}
         style={{
           display: "block",
-          width: "auto",
-          height: "auto",
-          maxWidth: "100%",
-          maxHeight: "65dvh",
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
           position: "relative",
           zIndex: 2,
           filter: "grayscale(100%) contrast(160%) brightness(1.2)",
@@ -393,20 +391,21 @@ export default function RomanticLoveTemplate({
           align-items: center;
           position: relative;
           z-index: 10;
-          overflow-y: auto;
-          overflow-x: hidden;
-          padding-bottom: max(48px, calc(env(safe-area-inset-bottom, 0px) + 32px));
+          overflow: hidden;
+          padding-bottom: 0;
           will-change: transform, opacity;
         }
 
         .portrait-container-wrapper {
-          position: relative;
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
           display: flex;
           align-items: center;
           justify-content: center;
           z-index: 10;
-          /* Shift upward into the optical center of mobile viewport */
-          margin-top: -80px;
           transition: transform 0.3s ease;
         }
 
@@ -511,9 +510,6 @@ export default function RomanticLoveTemplate({
         .continue-btn:hover { transform: translateY(-2px) scale(1.03); filter: brightness(1.08); }
 
         @media (min-width: 640px) {
-          .portrait-container-wrapper {
-            margin-top: -44px;
-          }
           .portrait-buttons-container {
             max-width: 440px;
             gap: 16px;
