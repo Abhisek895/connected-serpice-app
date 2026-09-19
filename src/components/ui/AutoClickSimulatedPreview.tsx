@@ -835,12 +835,7 @@ export default function AutoClickSimulatedPreview({
               )}
             </div>
 
-            {pricing.enabled && pricing.cashbackAmount > 0 && !isPremiumAccount && (
-              <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-2.5 py-1.5 text-[11px] font-bold text-amber-300 flex items-center justify-between">
-                <span>🎁 Post-Payment Cashback:</span>
-                <span className="text-amber-200">Get ₹{pricing.cashbackAmount} back</span>
-              </div>
-            )}
+
 
             {/* Action Button */}
             <div className="flex flex-col gap-2">

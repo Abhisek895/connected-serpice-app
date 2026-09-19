@@ -79,15 +79,34 @@ export const authOptions: AuthOptions = {
       try {
         const { cookies } = await import("next/headers");
         const cStore = await cookies();
+        
+        // Track Platform
         const cookiePlatform = cStore.get("ourstory_platform")?.value;
         const finalPlatform = cookiePlatform ? decodeURIComponent(cookiePlatform) : "Google 🌐";
 
+        // Track Referral
+        const refCode = cStore.get("ourstory_ref_code")?.value;
+        let referredById: string | undefined = undefined;
+
+        if (refCode) {
+          const referrer = await prisma.user.findUnique({
+            where: { referralCode: refCode },
+            select: { id: true }
+          });
+          if (referrer) {
+            referredById = referrer.id;
+          }
+        }
+
         await prisma.user.update({
           where: { id: user.id },
-          data: { platform: finalPlatform } as any,
+          data: { 
+            platform: finalPlatform,
+            ...(referredById ? { referredById } : {})
+          } as any,
         });
       } catch (e) {
-        console.error("Failed to set platform on Google user create:", e);
+        console.error("Failed to set platform/referral on Google user create:", e);
       }
     },
   },

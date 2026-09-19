@@ -145,7 +145,7 @@ function TemplateReferralCard({
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent" />
-        
+
         {/* Badges on Image */}
         <div className="absolute top-3 right-3 z-10 flex flex-wrap gap-1.5 items-center">
           <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/90 backdrop-blur-sm border border-emerald-200 rounded-full px-2 py-1 flex items-center gap-1 shadow-sm">
@@ -153,7 +153,7 @@ function TemplateReferralCard({
             Earn {rewardLabel}
           </span>
         </div>
-        
+
         {/* Title overlay */}
         <div className="absolute bottom-3 left-3 right-3 z-10">
           <h3 className="font-bold text-white text-base md:text-lg leading-tight drop-shadow-md mb-1.5">{displayTitle}</h3>
@@ -183,11 +183,10 @@ function TemplateReferralCard({
           <p className="flex-1 text-[11px] font-mono text-slate-500 truncate">{referralUrl}</p>
           <button
             onClick={copyLink}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all shrink-0 ${
-              copied
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all shrink-0 ${copied
                 ? "bg-emerald-500 text-white"
                 : "bg-slate-200 hover:bg-slate-300 text-slate-700"
-            }`}
+              }`}
           >
             {copied ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
             {copied ? "Copied!" : "Copy"}
@@ -320,8 +319,8 @@ export default function ReferralPage() {
           color="bg-emerald-50 text-emerald-600" sub="Available to spend or withdraw" />
         <StatCard icon={Users} label="Friends Referred" value={`${stats?.referralCount ?? 0}`}
           color="bg-sky-50 text-sky-600" sub="Total signups via your links" />
-        <StatCard icon={TrendingUp} label="Total Earned" value={`₹${earnedRupees.toFixed(0)}`}
-          color="bg-amber-50 text-amber-600" sub="All-time referral earnings" />
+        {/* <StatCard icon={TrendingUp} label="Total Earned" value={`₹${earnedRupees.toFixed(0)}`}
+          color="bg-amber-50 text-amber-600" sub="All-time referral earnings" /> */}
       </div>
 
       {/* Wallet Actions Banner */}
@@ -456,13 +455,12 @@ export default function ReferralPage() {
                 </div>
                 <span
                   title={ref.rewardMessage}
-                  className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                    ref.rewardStatus === "EARNED"
+                  className={`text-xs font-bold px-2.5 py-1 rounded-full ${ref.rewardStatus === "EARNED"
                       ? "bg-emerald-100 text-emerald-700"
                       : ref.rewardStatus === "NOT_ELIGIBLE"
                         ? "bg-slate-100 text-slate-600"
                         : "bg-amber-100 text-amber-700"
-                  }`}
+                    }`}
                 >
                   {ref.rewardStatus === "EARNED"
                     ? `✅ ${rewardLabel} Earned`
@@ -533,9 +531,8 @@ export default function ReferralPage() {
               </div>
 
               {withdrawMsg && (
-                <div className={`mb-4 px-4 py-3 rounded-xl text-sm font-medium ${
-                  withdrawMsg.type === "success" ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
-                }`}>
+                <div className={`mb-4 px-4 py-3 rounded-xl text-sm font-medium ${withdrawMsg.type === "success" ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+                  }`}>
                   {withdrawMsg.text}
                 </div>
               )}
