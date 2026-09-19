@@ -527,24 +527,29 @@ export default function GuestCustomizeFlow({
 
         // AUTO-GENERATE TEXT ART FOR SURPRISE DEMO MAIN PHOTO
         if (demo.id === "surprise" && fieldKey === "_photo" && !isAudio) {
+          console.log("[ArtGen] Starting text-art generation for surprise photo...");
           try {
             const artBlob = await generateTextArtBlob(file);
+            console.log("[ArtGen] generateTextArtBlob result:", artBlob ? `Blob size: ${artBlob.size}` : "NULL - generation failed");
             if (artBlob) {
               const artFormData = new FormData();
-              // Name it specifically so the backend treats it as a standard upload
               artFormData.append("file", artBlob, "surprise-art.jpg");
+              console.log("[ArtGen] Uploading art to /api/upload...");
               const artRes = await fetch("/api/upload", {
                 method: "POST",
                 body: artFormData,
               });
               const artData = await artRes.json();
+              console.log("[ArtGen] Upload response:", artData);
               if (artData?.success && artData?.url) {
-                // Save it into form values so it gets saved to event customData on checkout
+                console.log("[ArtGen] ✅ Art uploaded successfully:", artData.url);
                 setFormValues((prev) => ({ ...prev, generatedThumbnailUrl: artData.url }));
+              } else {
+                console.error("[ArtGen] ❌ Upload failed:", artData);
               }
             }
           } catch (e) {
-            console.error("Failed to generate and upload text art thumbnail", e);
+            console.error("[ArtGen] ❌ Exception during art generation/upload:", e);
           }
         }
         
