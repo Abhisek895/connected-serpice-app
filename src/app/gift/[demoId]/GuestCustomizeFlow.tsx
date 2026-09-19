@@ -512,7 +512,6 @@ export default function GuestCustomizeFlow({
 
       if (data?.success && data?.url) {
         setFormValues((prev) => ({ ...prev, [fieldKey]: data.url }));
-        setFileStatuses((prev) => ({ ...prev, [fieldKey]: "done" }));
 
         // AUTO-GENERATE TEXT ART FOR SURPRISE DEMO MAIN PHOTO
         if (demo.id === "surprise" && fieldKey === "_photo" && !isAudio) {
@@ -536,6 +535,8 @@ export default function GuestCustomizeFlow({
             console.error("Failed to generate and upload text art thumbnail", e);
           }
         }
+        
+        setFileStatuses((prev) => ({ ...prev, [fieldKey]: "done" }));
         return;
       }
 
