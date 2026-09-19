@@ -596,11 +596,7 @@ export default function CheckoutModal({
                   <Heart className="w-4 h-4 fill-white text-white group-hover:scale-110 transition-transform" />
                   <span>
                     Tell Them You Love Them 💖
-                    {couponMessage.includes("Premium Member")
-                      ? " · Free for Premium ∞"
-                      : totalToPayINR === 0
-                        ? ""
-                        : ""}
+                    {couponMessage.includes("Premium Member") ? " · Free for Premium ∞" : ""}
                   </span>
                 </>
               )}

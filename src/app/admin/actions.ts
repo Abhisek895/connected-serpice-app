@@ -469,7 +469,7 @@ export async function upsertThemePricing(
   price: number,
   durationDays: number,
   isActive: boolean,
-  content?: { title?: string; description?: string; thumbnailUrl?: string }
+  content?: { title?: string; description?: string; thumbnailUrl?: string; requireEmail?: boolean }
 ) {
   await checkAuth();
   const theme = await prisma.theme.upsert({
@@ -481,6 +481,7 @@ export async function upsertThemePricing(
       ...(content?.title !== undefined && { title: content.title }),
       ...(content?.description !== undefined && { description: content.description }),
       ...(content?.thumbnailUrl !== undefined && { thumbnailUrl: content.thumbnailUrl }),
+      ...(content?.requireEmail !== undefined && { requireEmail: content.requireEmail }),
     },
     create: {
       name: demoId,
@@ -490,6 +491,7 @@ export async function upsertThemePricing(
       title: content?.title,
       description: content?.description,
       thumbnailUrl: content?.thumbnailUrl,
+      requireEmail: content?.requireEmail ?? false,
     }
   });
 

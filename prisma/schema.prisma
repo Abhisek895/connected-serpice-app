@@ -171,6 +171,7 @@ model Theme {
   title        String?   // Admin-overridable display title
   description  String?   // Admin-overridable description
   thumbnailUrl String?   // Admin-overridable thumbnail image
+  requireEmail Boolean   @default(false)
   
   events      Event[]
 }

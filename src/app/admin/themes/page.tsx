@@ -15,6 +15,7 @@ type PricingMap = Record<string, {
   title?: string | null;
   description?: string | null;
   thumbnailUrl?: string | null;
+  requireEmail?: boolean;
 }>;
 
 // ── Mini text-art portrait preview (mirrors RomanticLoveTemplate effect) ──────
@@ -83,6 +84,7 @@ export default function AdminThemesPage() {
   const [editPrice, setEditPrice] = useState(0);
   const [editDuration, setEditDuration] = useState(7);
   const [editActive, setEditActive] = useState(true);
+  const [editRequireEmail, setEditRequireEmail] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editThumbnailUrl, setEditThumbnailUrl] = useState("");
@@ -111,6 +113,7 @@ export default function AdminThemesPage() {
             title: t.title,
             description: t.description,
             thumbnailUrl: t.thumbnailUrl,
+            requireEmail: t.requireEmail,
           };
         });
         setPricingMap(map);
@@ -127,6 +130,7 @@ export default function AdminThemesPage() {
     setEditPrice(p ? p.price / 100 : 0);
     setEditDuration(p ? p.durationDays : 7);
     setEditActive(p ? p.isActive : true);
+    setEditRequireEmail(p?.requireEmail ?? false);
     setEditTitle(p?.title || demo?.title || "");
     setEditDescription(p?.description || demo?.description || "");
     const thumb = p?.thumbnailUrl || demo?.image || "";
@@ -189,6 +193,7 @@ export default function AdminThemesPage() {
           title: editTitle || undefined,
           description: editDescription || undefined,
           thumbnailUrl: editThumbnailUrl || undefined,
+          requireEmail: editRequireEmail,
         }
       );
       // Optimistic real-time update
@@ -201,6 +206,7 @@ export default function AdminThemesPage() {
           title: editTitle || null,
           description: editDescription || null,
           thumbnailUrl: editThumbnailUrl || null,
+          requireEmail: editRequireEmail,
         }
       }));
       setJustSaved(true);
@@ -505,7 +511,7 @@ export default function AdminThemesPage() {
                   <Tag className="w-3.5 h-3.5" /> Pricing &amp; Availability
                 </h4>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Price (₹)</label>
                     <div className="relative">
@@ -539,6 +545,17 @@ export default function AdminThemesPage() {
                     >
                       <option value="true">✅ Active — visible to users</option>
                       <option value="false">🚫 Disabled — hidden from users</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Require Email</label>
+                    <select
+                      value={editRequireEmail ? "true" : "false"}
+                      onChange={e => setEditRequireEmail(e.target.value === "true")}
+                      className="w-full bg-slate-900 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition"
+                    >
+                      <option value="true">✅ Required — ask at checkout</option>
+                      <option value="false">⚪ Optional (Recommended)</option>
                     </select>
                   </div>
                 </div>

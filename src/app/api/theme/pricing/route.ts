@@ -72,6 +72,7 @@ export async function GET(req: Request) {
         title: theme.title,
         description: theme.description,
         thumbnailUrl: theme.thumbnailUrl,
+        requireEmail: theme.requireEmail,
         isActive: theme.isActive,
         activeCoupons,
       });

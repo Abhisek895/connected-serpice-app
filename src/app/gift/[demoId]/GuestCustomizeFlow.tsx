@@ -337,6 +337,7 @@ export default function GuestCustomizeFlow({
   // Live pricing & coupon state
   const [liveThemePrice, setLiveThemePrice] = useState<number>(demo.price ?? 2100);
   const [liveThemeDuration, setLiveThemeDuration] = useState<number>(demo.durationDays ?? 7);
+  const [requireEmail, setRequireEmail] = useState<boolean>(false);
   const [activeCoupons, setActiveCoupons] = useState<Array<{ code: string; discountType: string; discountValue: number }>>([]);
 
   // Coupon & Payment state
@@ -406,6 +407,9 @@ export default function GuestCustomizeFlow({
           }
           if (typeof data.durationDays === "number") {
             setLiveThemeDuration(data.durationDays);
+          }
+          if (typeof data.requireEmail === "boolean") {
+            setRequireEmail(data.requireEmail);
           }
           if (Array.isArray(data.activeCoupons)) {
             setActiveCoupons(data.activeCoupons);
@@ -1221,8 +1225,11 @@ export default function GuestCustomizeFlow({
             {/* 📧 Email for guaranteed link delivery */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                Email your link (recommended)
+                {requireEmail ? (
+                  <><AlertCircle className="w-3.5 h-3.5 text-rose-500" /> Email your link (Required) <span className="text-rose-500">*</span></>
+                ) : (
+                  <><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Email your link (recommended)</>
+                )}
               </label>
               <input
                 type="email"
@@ -1277,7 +1284,7 @@ export default function GuestCustomizeFlow({
 
             <button
               onClick={handlePayment}
-              disabled={isProcessing || pollingForLink}
+              disabled={isProcessing || pollingForLink || (requireEmail && !buyerEmail.trim())}
               className="w-full py-2.5 sm:py-3 px-4 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:via-pink-600 hover:to-rose-700 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-rose-200 hover:shadow-rose-300 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer group"
             >
               {pollingForLink ? (
@@ -1287,12 +1294,7 @@ export default function GuestCustomizeFlow({
               ) : (
                 <>
                   <Heart className="w-4 h-4 fill-white text-white group-hover:scale-110 transition-transform" />
-                  <span>
-                    Tell Them You Love Them 💖
-                    {finalPriceINR === 0
-                      ? ""
-                      : ` · ₹${finalPriceINR.toFixed(0)} / ${liveThemeDuration}d`}
-                  </span>
+                  <span>Tell Them You Love Them 💖</span>
                 </>
               )}
             </button>
