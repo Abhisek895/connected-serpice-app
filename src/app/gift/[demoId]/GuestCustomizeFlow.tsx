@@ -48,66 +48,69 @@ async function generateTextArtBlob(input: File | string, phrase: string = "LOVE 
       const W = 1080;
       const H = 1080;
 
-      // ── Step 1: Draw image to a temp canvas, manually convert to grayscale + boost contrast ──
+      // ── Step 1: Draw image to temp canvas & apply exact grayscale + contrast + brightness filter ──
       const tmpCanvas = document.createElement("canvas");
       tmpCanvas.width = W;
       tmpCanvas.height = H;
       const tmpCtx = tmpCanvas.getContext("2d");
       if (!tmpCtx) return resolve(null);
 
-      // Cover-crop the image into 1080x1080
+      // Cover-crop photo to 1080x1080
       const imgRatio = img.width / img.height;
-      const canvasRatio = W / H;
       let drawW = img.width, drawH = img.height, offsetX = 0, offsetY = 0;
-      if (imgRatio > canvasRatio) {
-        drawW = img.height * canvasRatio;
+      if (imgRatio > 1) {
+        drawW = img.height;
         offsetX = (img.width - drawW) / 2;
       } else {
-        drawH = img.width / canvasRatio;
+        drawH = img.width;
         offsetY = (img.height - drawH) / 2;
       }
       tmpCtx.drawImage(img, offsetX, offsetY, drawW, drawH, 0, 0, W, H);
 
-      // Manual grayscale + contrast boost via pixel manipulation (works everywhere)
+      // Apply Grayscale (100%) + Contrast (160%) + Brightness (1.2)
       const imageData = tmpCtx.getImageData(0, 0, W, H);
       const d = imageData.data;
       for (let i = 0; i < d.length; i += 4) {
         let gray = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
-        gray = Math.min(255, Math.max(0, (gray - 128) * 1.6 + 128 * 1.2));
+        gray = ((gray - 128) * 1.6 + 128) * 1.2;
+        gray = Math.min(255, Math.max(0, gray));
         d[i] = d[i + 1] = d[i + 2] = gray;
       }
       tmpCtx.putImageData(imageData, 0, 0);
 
-      // ── Step 2: Draw text grid on final canvas, then overlay grayscale image with multiply ──
+      // ── Step 2: Draw dense white phrase text grid on black background ──
       const canvas = document.createElement("canvas");
       canvas.width = W;
       canvas.height = H;
       const ctx = canvas.getContext("2d");
       if (!ctx) return resolve(null);
 
-      // Black background
-      ctx.fillStyle = "#000";
+      ctx.fillStyle = "#000000";
       ctx.fillRect(0, 0, W, H);
 
-      // White phrase text grid
-      ctx.fillStyle = "#fff";
-      ctx.font = "bold 14px sans-serif";
+      ctx.fillStyle = "#ffffff";
+      const fontSize = 9;
+      const lineHeight = 9;
+      ctx.font = `900 ${fontSize}px sans-serif`;
       ctx.textBaseline = "top";
-      const repPhrase = (phrase.trim() || "LOVE YOU") + "  ";
-      const charsPerLine = Math.ceil(W / 8);
-      const totalLines = Math.ceil(H / 14);
-      for (let i = 0; i < totalLines; i++) {
-        let line = "";
-        while (line.length < charsPerLine) line += repPhrase;
-        ctx.fillText(line, 0, i * 14);
+
+      const repPhrase = (phrase.toUpperCase().trim() || "LOVE YOU") + "  ";
+      let lineText = "";
+      while (ctx.measureText(lineText).width < W + 300) {
+        lineText += repPhrase;
       }
 
-      // Multiply blend the grayscale photo on top
+      const totalLines = Math.ceil(H / lineHeight) + 2;
+      for (let y = 0; y < totalLines; y++) {
+        ctx.fillText(lineText, 0, y * lineHeight);
+      }
+
+      // Step 3: Multiply blend grayscale photo on top of white text grid
       ctx.globalCompositeOperation = "multiply";
       ctx.drawImage(tmpCanvas, 0, 0);
       ctx.globalCompositeOperation = "source-over";
 
-      canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.90);
+      canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.92);
     };
     img.onerror = () => {
       if (objectUrl) URL.revokeObjectURL(objectUrl);
@@ -255,13 +258,12 @@ function FieldInput({
           )}
 
           <label
-            className={`relative flex-1 flex items-center gap-3 px-4 py-2.5 rounded-xl border-2 border-dashed cursor-pointer transition ${
-              isDone
+            className={`relative flex-1 flex items-center gap-3 px-4 py-2.5 rounded-xl border-2 border-dashed cursor-pointer transition ${isDone
                 ? "border-emerald-300 bg-emerald-50/70 hover:bg-emerald-50"
                 : isImage
                   ? "border-rose-200 bg-rose-50/50 hover:border-rose-400 hover:bg-rose-50"
                   : "border-slate-200 bg-slate-50 hover:border-slate-300"
-            } ${isLoading ? "opacity-50 pointer-events-none" : ""}`}
+              } ${isLoading ? "opacity-50 pointer-events-none" : ""}`}
           >
             {fileStatus === "uploading" ? (
               <Loader2 className="w-5 h-5 animate-spin text-amber-500 flex-shrink-0" />
@@ -410,7 +412,7 @@ export default function GuestCustomizeFlow({
           }
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     // Sync URL action parameter
     if (typeof window !== "undefined") {
@@ -549,7 +551,7 @@ export default function GuestCustomizeFlow({
             console.error("[ArtGen] Generation/Upload failed:", e);
           }
         }
-        
+
         setFileStatuses((prev) => ({ ...prev, [fieldKey]: "done" }));
         return;
       }
@@ -882,11 +884,11 @@ export default function GuestCustomizeFlow({
     return (
       <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-gradient-to-br from-purple-950 via-rose-950 to-slate-950 overflow-hidden">
         <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay pointer-events-none" />
-        
+
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: [1, 1.1, 1], opacity: 1 }}
-          transition={{ 
+          transition={{
             opacity: { duration: 0.5 },
             scale: { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
           }}
@@ -895,7 +897,7 @@ export default function GuestCustomizeFlow({
           <div className="w-24 h-24 bg-rose-500/20 rounded-full blur-2xl absolute inset-0 animate-pulse" />
           <Heart className="w-16 h-16 text-rose-500 fill-rose-500 relative z-10 drop-shadow-2xl" />
         </motion.div>
-        
+
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

@@ -267,59 +267,69 @@ async function generateTextArtBlob(input: File | string, phrase: string = "LOVE 
       const W = 1080;
       const H = 1080;
 
+      // ── Step 1: Draw image to temp canvas & apply exact grayscale + contrast + brightness filter ──
       const tmpCanvas = document.createElement("canvas");
       tmpCanvas.width = W;
       tmpCanvas.height = H;
       const tmpCtx = tmpCanvas.getContext("2d");
       if (!tmpCtx) return resolve(null);
 
+      // Cover-crop photo to 1080x1080
       const imgRatio = img.width / img.height;
-      const canvasRatio = W / H;
       let drawW = img.width, drawH = img.height, offsetX = 0, offsetY = 0;
-      if (imgRatio > canvasRatio) {
-        drawW = img.height * canvasRatio;
+      if (imgRatio > 1) {
+        drawW = img.height;
         offsetX = (img.width - drawW) / 2;
       } else {
-        drawH = img.width / canvasRatio;
+        drawH = img.width;
         offsetY = (img.height - drawH) / 2;
       }
       tmpCtx.drawImage(img, offsetX, offsetY, drawW, drawH, 0, 0, W, H);
 
+      // Apply Grayscale (100%) + Contrast (160%) + Brightness (1.2)
       const imageData = tmpCtx.getImageData(0, 0, W, H);
       const d = imageData.data;
       for (let i = 0; i < d.length; i += 4) {
         let gray = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
-        gray = Math.min(255, Math.max(0, (gray - 128) * 1.6 + 128 * 1.2));
+        gray = ((gray - 128) * 1.6 + 128) * 1.2;
+        gray = Math.min(255, Math.max(0, gray));
         d[i] = d[i + 1] = d[i + 2] = gray;
       }
       tmpCtx.putImageData(imageData, 0, 0);
 
+      // ── Step 2: Draw dense white phrase text grid on black background ──
       const canvas = document.createElement("canvas");
       canvas.width = W;
       canvas.height = H;
       const ctx = canvas.getContext("2d");
       if (!ctx) return resolve(null);
 
-      ctx.fillStyle = "#000";
+      ctx.fillStyle = "#000000";
       ctx.fillRect(0, 0, W, H);
 
-      ctx.fillStyle = "#fff";
-      ctx.font = "bold 14px sans-serif";
+      ctx.fillStyle = "#ffffff";
+      const fontSize = 9;
+      const lineHeight = 9;
+      ctx.font = `900 ${fontSize}px sans-serif`;
       ctx.textBaseline = "top";
-      const repPhrase = (phrase.trim() || "LOVE YOU") + "  ";
-      const charsPerLine = Math.ceil(W / 8);
-      const totalLines = Math.ceil(H / 14);
-      for (let i = 0; i < totalLines; i++) {
-        let line = "";
-        while (line.length < charsPerLine) line += repPhrase;
-        ctx.fillText(line, 0, i * 14);
+
+      const repPhrase = (phrase.toUpperCase().trim() || "LOVE YOU") + "  ";
+      let lineText = "";
+      while (ctx.measureText(lineText).width < W + 300) {
+        lineText += repPhrase;
       }
 
+      const totalLines = Math.ceil(H / lineHeight) + 2;
+      for (let y = 0; y < totalLines; y++) {
+        ctx.fillText(lineText, 0, y * lineHeight);
+      }
+
+      // Step 3: Multiply blend grayscale photo on top of white text grid
       ctx.globalCompositeOperation = "multiply";
       ctx.drawImage(tmpCanvas, 0, 0);
       ctx.globalCompositeOperation = "source-over";
 
-      canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.90);
+      canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.92);
     };
     img.onerror = () => {
       if (objectUrl) URL.revokeObjectURL(objectUrl);
