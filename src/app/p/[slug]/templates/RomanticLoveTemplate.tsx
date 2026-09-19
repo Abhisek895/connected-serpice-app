@@ -427,7 +427,7 @@ export default function RomanticLoveTemplate({
         /* ── Buttons: base (mobile) absolute at bottom ── */
         .portrait-buttons-container {
           position: absolute;
-          bottom: max(16px, env(safe-area-inset-bottom, 0px));
+          bottom: max(40px, calc(env(safe-area-inset-bottom, 0px) + 20px));
           left: 50%;
           transform: translateX(-50%);
           display: flex;
@@ -447,14 +447,14 @@ export default function RomanticLoveTemplate({
             justify-content: center;
             align-items: center;
             padding-top: 0;
-            gap: 20px;
+            gap: 40px;
           }
           .portrait-container-wrapper {
             position: relative;
             top: unset;
             left: unset;
             width: 56vw;
-            height: 48vh;
+            height: 42vh;
             max-width: 860px;
             max-height: 520px;
             padding-top: 0;
