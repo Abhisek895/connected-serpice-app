@@ -315,89 +315,13 @@ export default function RomanticLoveTemplate({
         * { scrollbar-width: none !important; -ms-overflow-style: none !important; }
         html, body { overflow: hidden !important; overscroll-behavior: none !important; max-width: 100vw; max-height: 100vh; margin: 0; padding: 0; }
 
-        /* ── Mobile: 100% width, height auto, shifted slightly up ── */
-        .portrait-art-wrapper {
-          position: relative;
-          display: flex;
-          overflow: hidden;
-          width: 100%;
-          height: auto;
-        }
-
-        .portrait-art-img {
-          display: block;
-          position: relative;
-          z-index: 2;
-          width: 100%;
-          height: auto;
-          object-fit: cover;
-        }
-
-        /* Mobile: push the portrait a bit above center */
-        @media (max-width: 767px) {
-          .portrait-container-wrapper {
-            align-items: flex-start;
-            padding-top: 10vh;
-          }
-        }
-
-        /* ── Desktop: letterbox / cinema frame — truly centered ── */
-        @media (min-width: 768px) {
-          .portrait-page {
-            background: #000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-          }
-          .portrait-container-wrapper {
-            position: relative !important;
-            top: unset !important;
-            left: unset !important;
-            width: 56vw;
-            height: 48vh;
-            max-width: 860px;
-            max-height: 520px;
-            margin: 0 auto;
-            border: 6px solid #111;
-            box-shadow: 0 0 0 2px #333, 0 0 60px rgba(0,0,0,0.9);
-            border-radius: 8px;
-            overflow: hidden;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-          .portrait-art-wrapper {
-            width: 100%;
-            height: 100%;
-          }
-          .portrait-art-img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-          }
-          /* Buttons sit below the frame — not absolute */
-          .portrait-buttons-container {
-            position: relative !important;
-            bottom: unset !important;
-            left: unset !important;
-            transform: none !important;
-            width: auto;
-            max-width: 420px;
-          }
-        }
-
-
 
         .romantic-body {
           margin: 0;
           min-height: 100vh;
           display: flex;
-          justify-content: flex-start;
+          justify-content: center;
           align-items: center;
-          padding-top: 12vh;
           overflow: hidden;
           transition: background 1s ease;
           background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
@@ -451,6 +375,25 @@ export default function RomanticLoveTemplate({
           pointer-events: none;
         }
 
+        /* ── Portrait art: base (mobile) ── */
+        .portrait-art-wrapper {
+          position: relative;
+          display: flex;
+          overflow: hidden;
+          width: 100%;
+          height: auto;
+        }
+
+        .portrait-art-img {
+          display: block;
+          position: relative;
+          z-index: 2;
+          width: 100%;
+          height: auto;
+          object-fit: cover;
+        }
+
+        /* ── Portrait page: base (mobile) ── */
         .portrait-page {
           width: 100%;
           height: 100vh;
@@ -468,7 +411,7 @@ export default function RomanticLoveTemplate({
           will-change: transform, opacity;
         }
 
-        /* Mobile: container is absolute full-bleed */
+        /* ── Portrait container: base (mobile) absolute full-bleed ── */
         .portrait-container-wrapper {
           position: absolute;
           top: 0;
@@ -476,15 +419,16 @@ export default function RomanticLoveTemplate({
           width: 100%;
           height: 100%;
           display: flex;
-          align-items: center;
+          align-items: flex-start;
           justify-content: center;
+          padding-top: 10vh;
           z-index: 10;
           transition: transform 0.3s ease;
         }
 
+        /* ── Buttons: base (mobile) absolute at bottom ── */
         .portrait-buttons-container {
           position: absolute;
-          /* Lifted well above mobile navigation bar / home indicator */
           bottom: max(60px, calc(env(safe-area-inset-bottom, 0px) + 40px));
           left: 50%;
           transform: translateX(-50%);
@@ -496,6 +440,53 @@ export default function RomanticLoveTemplate({
           z-index: 25;
           width: calc(100% - 32px);
           max-width: 380px;
+        }
+
+        /* ── Desktop: letterbox cinema frame, centered ── */
+        @media (min-width: 768px) {
+          .portrait-page {
+            background: #000;
+            justify-content: center;
+            align-items: center;
+            padding-top: 0;
+            gap: 20px;
+          }
+          .portrait-container-wrapper {
+            position: relative;
+            top: unset;
+            left: unset;
+            width: 56vw;
+            height: 48vh;
+            max-width: 860px;
+            max-height: 520px;
+            padding-top: 0;
+            margin: 0 auto;
+            border: 6px solid #111;
+            box-shadow: 0 0 0 2px #333, 0 0 60px rgba(0,0,0,0.9);
+            border-radius: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .portrait-art-wrapper {
+            width: 100%;
+            height: 100%;
+          }
+          .portrait-art-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+          }
+          .portrait-buttons-container {
+            position: relative;
+            bottom: unset;
+            left: unset;
+            transform: none;
+            width: auto;
+            max-width: 420px;
+          }
         }
 
         .love-letter-popup {
