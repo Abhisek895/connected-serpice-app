@@ -438,7 +438,7 @@ export default function RomanticLoveTemplate({
           display: flex;
           align-items: flex-start;
           justify-content: center;
-          padding-top: 22vh;
+          padding-top: 28vh;
           z-index: 10;
           transition: transform 0.3s ease;
         }
@@ -646,49 +646,47 @@ export default function RomanticLoveTemplate({
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
             >
+              {/* ── Download Popup (Screen-level anchoring) ── */}
+              <AnimatePresence>
+                {showDownloadPopup && customData?.generatedThumbnailUrl && (
+                  <motion.div
+                    initial={{ opacity: 0, x: 50, scale: 0.9 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: 50, scale: 0.9 }}
+                    transition={{ delay: 1, type: "spring", stiffness: 200, damping: 20 }}
+                    className="absolute top-4 right-4 bg-black/60 backdrop-blur-md border border-white/20 p-4 rounded-2xl shadow-2xl flex flex-col items-center gap-3 max-w-[210px] z-50"
+                  >
+                    <div className="text-white text-[13px] font-medium text-center leading-snug">
+                      Would you like to download this text-art picture?
+                    </div>
+                    <div className="flex gap-2 w-full">
+                      <button
+                        onClick={() => {
+                          const link = document.createElement("a");
+                          link.href = customData.generatedThumbnailUrl;
+                          link.download = "romantic-love-art.jpg";
+                          link.target = "_blank"; 
+                          link.click();
+                          setShowDownloadPopup(false);
+                        }}
+                        className="flex-1 bg-rose-500 hover:bg-rose-400 text-white text-xs font-bold py-2 rounded-xl transition shadow-lg shadow-rose-500/30"
+                      >
+                        Yes
+                      </button>
+                      <button
+                        onClick={() => setShowDownloadPopup(false)}
+                        className="flex-1 bg-white/10 hover:bg-white/20 text-white text-xs font-bold py-2 rounded-xl transition"
+                      >
+                        No
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Photo & Overlay Popup Container (Dead Centered at y=50vh) */}
               <div className="portrait-container-wrapper">
                 <TextArtPortrait src={displayPhoto} phrase={patternText || "love you"} />
-
-                {/* ── Download Popup ── */}
-                <AnimatePresence>
-                  {showDownloadPopup && customData?.generatedThumbnailUrl && (
-                    <motion.div
-                      initial={{ opacity: 0, x: 50, scale: 0.9 }}
-                      animate={{ opacity: 1, x: 0, scale: 1 }}
-                      exit={{ opacity: 0, x: 50, scale: 0.9 }}
-                      transition={{ delay: 1, type: "spring", stiffness: 200, damping: 20 }}
-                      className="absolute top-4 right-4 bg-black/60 backdrop-blur-md border border-white/20 p-4 rounded-2xl shadow-2xl flex flex-col items-center gap-3 max-w-[210px] z-50"
-                    >
-                      <div className="text-white text-[13px] font-medium text-center leading-snug">
-                        Would you like to download this text-art picture?
-                      </div>
-                      <div className="flex gap-2 w-full">
-                        <button
-                          onClick={() => {
-                            const link = document.createElement("a");
-                            link.href = customData.generatedThumbnailUrl;
-                            // Add download attribute; browser will try to download it
-                            link.download = "romantic-love-art.jpg";
-                            // For cross-origin vercel blobs, downloading directly might open in new tab.
-                            link.target = "_blank"; 
-                            link.click();
-                            setShowDownloadPopup(false);
-                          }}
-                          className="flex-1 bg-rose-500 hover:bg-rose-400 text-white text-xs font-bold py-2 rounded-xl transition shadow-lg shadow-rose-500/30"
-                        >
-                          Yes
-                        </button>
-                        <button
-                          onClick={() => setShowDownloadPopup(false)}
-                          className="flex-1 bg-white/10 hover:bg-white/20 text-white text-xs font-bold py-2 rounded-xl transition"
-                        >
-                          No
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
 
                 {/* Love Letter Popup Overlay directly on top of photo */}
                 <AnimatePresence>
