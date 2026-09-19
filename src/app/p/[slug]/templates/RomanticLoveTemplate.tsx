@@ -401,13 +401,11 @@ export default function RomanticLoveTemplate({
           min-height: -webkit-fill-available;
           display: flex;
           flex-direction: column;
-          justify-content: flex-start;
+          justify-content: center;
           align-items: center;
-          padding-top: 10vh;
           position: relative;
           z-index: 10;
           overflow: hidden;
-          padding-bottom: 0;
           will-change: transform, opacity;
         }
 
@@ -421,7 +419,7 @@ export default function RomanticLoveTemplate({
           display: flex;
           align-items: flex-start;
           justify-content: center;
-          padding-top: 10vh;
+          padding-top: 22vh;
           z-index: 10;
           transition: transform 0.3s ease;
         }
@@ -429,7 +427,7 @@ export default function RomanticLoveTemplate({
         /* ── Buttons: base (mobile) absolute at bottom ── */
         .portrait-buttons-container {
           position: absolute;
-          bottom: max(60px, calc(env(safe-area-inset-bottom, 0px) + 40px));
+          bottom: max(16px, env(safe-area-inset-bottom, 0px));
           left: 50%;
           transform: translateX(-50%);
           display: flex;
@@ -475,8 +473,10 @@ export default function RomanticLoveTemplate({
             height: 100%;
           }
           .portrait-art-img {
-            width: 100%;
-            height: 100%;
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 100%;
             object-fit: contain;
           }
           .portrait-buttons-container {
