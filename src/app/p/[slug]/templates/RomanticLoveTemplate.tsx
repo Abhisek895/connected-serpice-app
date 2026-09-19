@@ -419,13 +419,15 @@ export default function RomanticLoveTemplate({
           width: 100%;
         }
         .romantic-h1 {
-          color: #d6336c;
-          font-size: 3.5rem;
+          color: #b5194e;
+          font-size: 4rem;
           margin-bottom: 50px;
-          text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+          text-shadow: 3px 3px 0px rgba(255,255,255,0.4), 1px 2px 8px rgba(181,25,78,0.2);
           animation: rFadeIn 2s ease-in;
-          line-height: 1.2;
-          font-family: 'Pacifico', cursive;
+          line-height: 1.25;
+          font-family: 'Dancing Script', cursive;
+          font-weight: 700;
+          letter-spacing: 0.5px;
         }
         @keyframes rFadeIn {
           from { opacity:0; transform:translateY(-20px); }
