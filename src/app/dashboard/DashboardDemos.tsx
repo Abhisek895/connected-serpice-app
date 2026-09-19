@@ -342,12 +342,7 @@ export default function DashboardDemos({
                       💖 Made with OurStory
                     </div>
 
-                    {/* Badges container */}
-                    <div className="absolute top-3 left-3 z-10 flex flex-wrap gap-1.5 items-center pr-3">
-                      <span className={`text-[9px] leading-[12px] px-2 py-1 rounded-full uppercase font-bold tracking-wider shadow-sm flex items-center gap-1 ${demo.badgeColor}`}>
-                        <Icon className="w-2.5 h-2.5" /> {demo.badge}
-                      </span>
-                    </div>
+
                   </div>
 
                   {/* Body */}
