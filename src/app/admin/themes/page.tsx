@@ -389,9 +389,13 @@ export default function AdminThemesPage() {
             {/* Panel header */}
             <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-800 bg-[#0f172a]/50">
               <div className="flex items-center gap-2.5 sm:gap-3">
-                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg overflow-hidden flex-shrink-0 border border-slate-700 bg-black">
+                  <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg overflow-hidden flex-shrink-0 border border-slate-700 ${selectedId === "surprise" ? "bg-black" : ""}`}>
                     {(thumbnailPreview || selectedDemo.image) ? (
-                      <MiniTextArtPreview src={thumbnailPreview || selectedDemo.image} phrase="LOVE YOU" />
+                      selectedId === "surprise" ? (
+                        <MiniTextArtPreview src={thumbnailPreview || selectedDemo.image} phrase="LOVE YOU" />
+                      ) : (
+                        <img src={thumbnailPreview || selectedDemo.image} alt="" className="w-full h-full object-cover" />
+                      )
                     ) : null}
                   </div>
                 <div className="min-w-0">
@@ -423,7 +427,11 @@ export default function AdminThemesPage() {
                       onClick={() => fileInputRef.current?.click()}
                     >
                       {thumbnailPreview ? (
-                        <MiniTextArtPreview src={thumbnailPreview} phrase="LOVE YOU" />
+                        selectedId === "surprise" ? (
+                          <MiniTextArtPreview src={thumbnailPreview} phrase="LOVE YOU" />
+                        ) : (
+                          <img src={thumbnailPreview} alt="Thumbnail" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition" />
+                        )
                       ) : (
                         <div className="flex flex-col items-center justify-center h-full text-slate-500">
                           <ImageIcon className="w-10 h-10 mb-2" />
