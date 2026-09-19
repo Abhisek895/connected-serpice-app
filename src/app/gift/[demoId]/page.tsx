@@ -26,6 +26,22 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
     openGraph: {
       title: `${title} — Made with OurStory 💖`,
       description,
+      url: `/gift/${demoId}`,
+      siteName: "OurStory 💖",
+      type: "website",
+      images: [
+        {
+          url: image,
+          width: 1200,
+          height: 630,
+          alt: title,
+        }
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} — Made with OurStory 💖`,
+      description,
       images: [image],
     },
   };
