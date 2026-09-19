@@ -37,49 +37,21 @@ async function generateTextArtBlob(file: File): Promise<Blob | null> {
     img.src = url;
     img.onload = () => {
       URL.revokeObjectURL(url);
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return resolve(null);
 
-      // Keep it a reasonable size for thumbnail
-      const w = 1080;
-      const h = 1080;
-      canvas.width = w;
-      canvas.height = h;
+      const W = 1080;
+      const H = 1080;
 
-      // 1. Draw black background
-      ctx.fillStyle = "black";
-      ctx.fillRect(0, 0, w, h);
+      // ── Step 1: Draw image to a temp canvas, manually convert to grayscale + boost contrast ──
+      const tmpCanvas = document.createElement("canvas");
+      tmpCanvas.width = W;
+      tmpCanvas.height = H;
+      const tmpCtx = tmpCanvas.getContext("2d");
+      if (!tmpCtx) return resolve(null);
 
-      // 2. Draw white text
-      ctx.fillStyle = "white";
-      ctx.font = "900 14px sans-serif";
-      ctx.textBaseline = "top";
-      const phrase = "LOVE YOU  ";
-      
-      const charsPerLine = Math.ceil(w / 8);
-      const totalLines = Math.ceil(h / 14);
-      
-      for (let i = 0; i < totalLines; i++) {
-        let line = "";
-        while (line.length < charsPerLine) {
-          line += phrase;
-        }
-        ctx.fillText(line, 0, i * 14);
-      }
-
-      // 3. Draw image with filters and multiply blend mode
-      ctx.globalCompositeOperation = "multiply";
-      ctx.filter = "grayscale(100%) contrast(160%) brightness(1.2)";
-      
-      // Calculate crop to cover 1080x1080
+      // Cover-crop the image into 1080x1080
       const imgRatio = img.width / img.height;
-      const canvasRatio = w / h;
-      let drawW = img.width;
-      let drawH = img.height;
-      let offsetX = 0;
-      let offsetY = 0;
-
+      const canvasRatio = W / H;
+      let drawW = img.width, drawH = img.height, offsetX = 0, offsetY = 0;
       if (imgRatio > canvasRatio) {
         drawW = img.height * canvasRatio;
         offsetX = (img.width - drawW) / 2;
@@ -87,12 +59,51 @@ async function generateTextArtBlob(file: File): Promise<Blob | null> {
         drawH = img.width / canvasRatio;
         offsetY = (img.height - drawH) / 2;
       }
+      tmpCtx.drawImage(img, offsetX, offsetY, drawW, drawH, 0, 0, W, H);
 
-      ctx.drawImage(img, offsetX, offsetY, drawW, drawH, 0, 0, w, h);
-      
-      canvas.toBlob((blob) => {
-        resolve(blob);
-      }, "image/jpeg", 0.85);
+      // Manual grayscale + contrast boost via pixel manipulation (works everywhere)
+      const imageData = tmpCtx.getImageData(0, 0, W, H);
+      const d = imageData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        // Grayscale: luminosity method
+        let gray = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+        // Contrast boost (factor 1.6) + brightness
+        gray = Math.min(255, Math.max(0, (gray - 128) * 1.6 + 128 * 1.2));
+        d[i] = d[i + 1] = d[i + 2] = gray;
+        // alpha stays the same
+      }
+      tmpCtx.putImageData(imageData, 0, 0);
+
+      // ── Step 2: Draw text grid on final canvas, then overlay grayscale image with multiply ──
+      const canvas = document.createElement("canvas");
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return resolve(null);
+
+      // Black background
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, W, H);
+
+      // White "LOVE YOU" text grid
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 14px sans-serif";
+      ctx.textBaseline = "top";
+      const phrase = "LOVE YOU  ";
+      const charsPerLine = Math.ceil(W / 8);
+      const totalLines = Math.ceil(H / 14);
+      for (let i = 0; i < totalLines; i++) {
+        let line = "";
+        while (line.length < charsPerLine) line += phrase;
+        ctx.fillText(line, 0, i * 14);
+      }
+
+      // Multiply blend the grayscale photo on top
+      ctx.globalCompositeOperation = "multiply";
+      ctx.drawImage(tmpCanvas, 0, 0);
+      ctx.globalCompositeOperation = "source-over";
+
+      canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.85);
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
@@ -100,6 +111,7 @@ async function generateTextArtBlob(file: File): Promise<Blob | null> {
     };
   });
 }
+
 
 function getUtmParams() {
   if (typeof window === "undefined") return { source: "", campaign: "" };
