@@ -609,6 +609,14 @@ export default function GuestCustomizeFlow({
       }
     }
 
+    // Include extra generated fields that are NOT part of the template fields
+    if (formValues["generatedThumbnailUrl"]) {
+      customDataSnapshot["generatedThumbnailUrl"] = formValues["generatedThumbnailUrl"];
+    }
+    // Always include demoId so the template can be identified server-side
+    customDataSnapshot["demoId"] = demo.id;
+
+
     try {
       const res = await fetch("/api/guest/create-order", {
         method: "POST",
