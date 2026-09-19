@@ -262,6 +262,18 @@ export default function RomanticLoveTemplate({
     }
   }, [slug]);
 
+  // Browser back button → go back to portrait image
+  useEffect(() => {
+    const handlePopState = () => {
+      setStage((prev) => {
+        if (prev === 3 || prev === 4 || prev === 5) return 2;
+        return prev;
+      });
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
   // Media resolution (prioritizes user uploaded photo & audio data URLs or DB media)
   const imageMedia = media.filter((m) => m.type === "IMAGE");
   const audioMedia = media.find((m) => m.type === "AUDIO");
@@ -304,6 +316,12 @@ export default function RomanticLoveTemplate({
   const handleReject = () => {
     setStage(5);
     recordResponseAction(slug, "REJECTED");
+  };
+
+  // Advance to proposal + push history so back button works
+  const handleGoToProposal = () => {
+    window.history.pushState({ stage: 3 }, "");
+    setStage(3);
   };
 
   return (
@@ -440,50 +458,47 @@ export default function RomanticLoveTemplate({
           max-width: 380px;
         }
 
-        /* ── Desktop: letterbox cinema frame, centered ── */
+        /* ── Desktop: image natural size, no border, buttons at screen bottom ── */
         @media (min-width: 768px) {
           .portrait-page {
             background: #000;
             justify-content: center;
             align-items: center;
-            padding-top: 0;
-            gap: 40px;
           }
           .portrait-container-wrapper {
             position: relative;
             top: unset;
             left: unset;
-            width: 56vw;
-            height: 42vh;
-            max-width: 860px;
-            max-height: 520px;
+            width: auto;
+            height: auto;
             padding-top: 0;
             margin: 0 auto;
-            border: 6px solid #111;
-            box-shadow: 0 0 0 2px #333, 0 0 60px rgba(0,0,0,0.9);
-            border-radius: 8px;
-            overflow: hidden;
+            border: none;
+            box-shadow: none;
+            border-radius: 0;
+            overflow: visible;
             flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
           }
           .portrait-art-wrapper {
-            width: 100%;
-            height: 100%;
+            width: auto;
+            height: auto;
           }
           .portrait-art-img {
             width: auto;
             height: auto;
-            max-width: 100%;
-            max-height: 100%;
+            max-width: 80vw;
+            max-height: 75vh;
             object-fit: contain;
           }
+          /* Buttons pinned to screen bottom — same as mobile */
           .portrait-buttons-container {
-            position: relative;
-            bottom: unset;
-            left: unset;
-            transform: none;
+            position: absolute;
+            bottom: max(40px, calc(env(safe-area-inset-bottom, 0px) + 20px));
+            left: 50%;
+            transform: translateX(-50%);
             width: auto;
             max-width: 420px;
           }
@@ -668,7 +683,7 @@ export default function RomanticLoveTemplate({
                   </button>
                 )}
 
-                <button className="continue-btn" onClick={() => setStage(3)}>
+                <button className="continue-btn" onClick={handleGoToProposal}>
                   ✨ Continue
                 </button>
               </div>
@@ -685,79 +700,96 @@ export default function RomanticLoveTemplate({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.05 }}
               transition={{ duration: 0.5 }}
+              onClick={() => setStage(2)}
               style={{
                 display: "flex",
-                flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
                 width: "100%",
-                maxWidth: "700px",
-                padding: "20px",
-                textAlign: "center",
+                height: "100%",
+                position: "absolute",
+                top: 0,
+                left: 0,
+                cursor: "default",
               }}
             >
-              <h1
-                style={{
-                  fontFamily: "'Pacifico', cursive",
-                  fontSize: "clamp(1.8rem,5vw,3rem)",
-                  color: "#ff4d6d",
-                  textShadow: "2px 2px 8px rgba(0,0,0,0.3)",
-                  marginBottom: 36,
-                  lineHeight: 1.3,
-                }}
-              >
-                {question || "Will you be mine? 💖"}
-              </h1>
+              {/* Inner content — stopPropagation so buttons still work */}
               <div
+                onClick={(e) => e.stopPropagation()}
                 style={{
                   display: "flex",
-                  flexDirection: "row",
+                  flexDirection: "column",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: 16,
-                  flexWrap: "nowrap",
+                  maxWidth: "700px",
+                  padding: "20px",
+                  textAlign: "center",
                   width: "100%",
                 }}
               >
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleAccept}
+                <h1
                   style={{
-                    padding: "12px 28px",
-                    background: "#ff4d6d",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 30,
-                    fontSize: "1.1rem",
-                    fontWeight: "bold",
-                    cursor: "pointer",
-                    boxShadow: "0 4px 20px rgba(255,77,109,0.4)",
-                    fontFamily: "sans-serif",
-                    whiteSpace: "nowrap",
+                    fontFamily: "'Pacifico', cursive",
+                    fontSize: "clamp(1.8rem,5vw,3rem)",
+                    color: "#ff4d6d",
+                    textShadow: "2px 2px 8px rgba(0,0,0,0.3)",
+                    marginBottom: 36,
+                    lineHeight: 1.3,
                   }}
                 >
-                  {acceptBtn || "Yes! 😍"}
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 0.95 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={handleReject}
+                  {question || "Will you be mine? 💖"}
+                </h1>
+                <div
                   style={{
-                    padding: "12px 28px",
-                    background: "#1e293b",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 30,
-                    fontSize: "1.1rem",
-                    fontWeight: "bold",
-                    cursor: "pointer",
-                    fontFamily: "sans-serif",
-                    whiteSpace: "nowrap",
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 16,
+                    flexWrap: "nowrap",
+                    width: "100%",
                   }}
                 >
-                  {rejectBtn || "No 🙈"}
-                </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleAccept}
+                    style={{
+                      padding: "12px 28px",
+                      background: "#ff4d6d",
+                      color: "white",
+                      border: "none",
+                      borderRadius: 30,
+                      fontSize: "1.1rem",
+                      fontWeight: "bold",
+                      cursor: "pointer",
+                      boxShadow: "0 4px 20px rgba(255,77,109,0.4)",
+                      fontFamily: "sans-serif",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {acceptBtn || "Yes! 😍"}
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 0.95 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={handleReject}
+                    style={{
+                      padding: "12px 28px",
+                      background: "#1e293b",
+                      color: "white",
+                      border: "none",
+                      borderRadius: 30,
+                      fontSize: "1.1rem",
+                      fontWeight: "bold",
+                      cursor: "pointer",
+                      fontFamily: "sans-serif",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {rejectBtn || "No 🙈"}
+                  </motion.button>
+                </div>
               </div>
             </motion.div>
           )}
