@@ -313,7 +313,7 @@ export default function RomanticLoveTemplate({
         * { scrollbar-width: none !important; -ms-overflow-style: none !important; }
         html, body { overflow: hidden !important; overscroll-behavior: none !important; max-width: 100vw; max-height: 100vh; margin: 0; padding: 0; }
 
-        /* ── Mobile: 100% width, height auto ── */
+        /* ── Mobile: 100% width, height auto, shifted slightly up ── */
         .portrait-art-wrapper {
           position: relative;
           display: flex;
@@ -331,27 +331,41 @@ export default function RomanticLoveTemplate({
           object-fit: cover;
         }
 
-        /* ── Desktop: letterbox / cinema frame (centered, ~30% smaller) ── */
+        /* Mobile: push the portrait a bit above center */
+        @media (max-width: 767px) {
+          .portrait-container-wrapper {
+            align-items: flex-start;
+            padding-top: 10vh;
+          }
+        }
+
+        /* ── Desktop: letterbox / cinema frame — truly centered ── */
         @media (min-width: 768px) {
           .portrait-page {
             background: #000;
-            gap: 20px;
+            display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
+            gap: 20px;
           }
           .portrait-container-wrapper {
-            position: relative;
-            top: unset;
-            left: unset;
+            position: relative !important;
+            top: unset !important;
+            left: unset !important;
             width: 56vw;
             height: 48vh;
             max-width: 860px;
             max-height: 520px;
+            margin: 0 auto;
             border: 6px solid #111;
             box-shadow: 0 0 0 2px #333, 0 0 60px rgba(0,0,0,0.9);
             border-radius: 8px;
             overflow: hidden;
             flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
           }
           .portrait-art-wrapper {
             width: 100%;
@@ -364,10 +378,10 @@ export default function RomanticLoveTemplate({
           }
           /* Buttons sit below the frame — not absolute */
           .portrait-buttons-container {
-            position: relative;
-            bottom: unset;
-            left: unset;
-            transform: none;
+            position: relative !important;
+            bottom: unset !important;
+            left: unset !important;
+            transform: none !important;
             width: auto;
             max-width: 420px;
           }
