@@ -309,6 +309,8 @@ export default function RomanticLoveTemplate({
   return (
     <>
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Pacifico&display=swap');
+
         ::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
         * { scrollbar-width: none !important; -ms-overflow-style: none !important; }
         html, body { overflow: hidden !important; overscroll-behavior: none !important; max-width: 100vw; max-height: 100vh; margin: 0; padding: 0; }
@@ -374,7 +376,7 @@ export default function RomanticLoveTemplate({
           .portrait-art-img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
           }
           /* Buttons sit below the frame — not absolute */
           .portrait-buttons-container {
@@ -387,14 +389,15 @@ export default function RomanticLoveTemplate({
           }
         }
 
-        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Pacifico&display=swap');
+
 
         .romantic-body {
           margin: 0;
           min-height: 100vh;
           display: flex;
-          justify-content: center;
+          justify-content: flex-start;
           align-items: center;
+          padding-top: 12vh;
           overflow: hidden;
           transition: background 1s ease;
           background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
@@ -422,7 +425,7 @@ export default function RomanticLoveTemplate({
           color: #b5194e;
           font-size: 4rem;
           margin-bottom: 50px;
-          text-shadow: 3px 3px 0px rgba(255,255,255,0.4), 1px 2px 8px rgba(181,25,78,0.2);
+          text-shadow: none;
           animation: rFadeIn 2s ease-in;
           line-height: 1.25;
           font-family: 'Dancing Script', cursive;
@@ -455,8 +458,9 @@ export default function RomanticLoveTemplate({
           min-height: -webkit-fill-available;
           display: flex;
           flex-direction: column;
-          justify-content: center;
+          justify-content: flex-start;
           align-items: center;
+          padding-top: 10vh;
           position: relative;
           z-index: 10;
           overflow: hidden;
