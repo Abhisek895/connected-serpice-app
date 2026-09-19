@@ -654,6 +654,95 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
       },
     ],
   },
+  {
+    id: "durga-puja",
+    title: "Durga Puja Invitation Experience 🌺",
+    hasInstantUse: true,
+    defaultData: {
+      demoId: "durga-puja",
+      title: "শুভ শারদীয়া 🌺",
+      recipientName: "Riya",
+      creatorName: "Ayan",
+      nickname: "",
+      vibe: "Romantic",
+      loveMessage: "Puja has always been special to me, but this year I couldn't imagine walking under the pandal lights with anyone else.",
+      personalMessage: "Puja has always been special to me, but this year I couldn't imagine walking under the pandal lights with anyone else.",
+      foodOptions: "Phuchka, Momos, Kathi Roll, Biryani, Something sweet, You choose",
+      venueName: "Maddox Square",
+      address: "Ballygunge, Kolkata",
+      date: "Maha Saptami",
+      time: "6:30 PM",
+    },
+    steps: [
+      {
+        title: "Names & Celebration Vibe",
+        description: "Personalize the recipient, creator name, and the overall mood of the Puja invitation.",
+        fields: [
+          {
+            key: "recipientName",
+            label: "Recipient Name",
+            type: "text",
+            placeholder: "Riya",
+            presetSuggestions: ["Riya", "Priya ✨", "Someone Special ✨"],
+          },
+          {
+            key: "creatorName",
+            label: "Creator Name (Your Name)",
+            type: "text",
+            placeholder: "Ayan",
+            presetSuggestions: ["Ayan", "Your Name"],
+          },
+          {
+            key: "vibe",
+            label: "Celebration Vibe",
+            type: "text",
+            placeholder: "Romantic",
+            presetSuggestions: ["Romantic", "Cute", "Elegant", "Playful"],
+          },
+        ],
+      },
+      {
+        title: "Personal Message & Food Preferences",
+        description: "Add your personal message and configure food choices for the celebration.",
+        fields: [
+          {
+            key: "loveMessage",
+            label: "Personal Message",
+            type: "textarea",
+            placeholder: "Write something only they would understand...",
+            presetSuggestions: [
+              "Puja has always been special to me, but this year I couldn't imagine walking under the pandal lights with anyone else.",
+              "I've been thinking about asking you this for a while... Let's wander under the festival lights together.",
+            ],
+          },
+          {
+            key: "foodOptions",
+            label: "Food Options (Comma-separated)",
+            type: "text",
+            placeholder: "Phuchka, Momos, Kathi Roll, Biryani, Something sweet, You choose",
+            presetSuggestions: [
+              "Phuchka, Momos, Kathi Roll, Biryani, Something sweet, You choose",
+              "Phuchka, Egg Roll, Chicken Biryani, Mishti Doi",
+            ],
+          },
+          {
+            key: "venueName",
+            label: "Meeting Point / Pandal (optional)",
+            type: "text",
+            placeholder: "Maddox Square",
+            presetSuggestions: ["Maddox Square", "College Square", "Ekdalia Evergreen"],
+          },
+          {
+            key: "_audio",
+            label: "Custom Dhak / Festival Audio (optional)",
+            type: "file-audio",
+            accept: "audio/*",
+            hint: "Optional audio track. Uses built-in authentic Dhak soundscape by default.",
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 /** Find a template class definition by demoId */

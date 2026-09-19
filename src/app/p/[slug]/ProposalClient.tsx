@@ -6,6 +6,7 @@ import DatePlannerTemplate from "./templates/DatePlannerTemplate";
 import BirthdayTemplate from "./templates/BirthdayTemplate";
 import SheCantSayNoTemplate from "./templates/SheCantSayNoTemplate";
 import ImSorryTemplate from "./templates/ImSorryTemplate";
+import DurgaPujaTemplate from "./templates/DurgaPujaTemplate";
 import { RecipientActionBar } from "@/components/ui/RecipientActionBar";
 
 type MediaItem = {
@@ -52,11 +53,14 @@ export default function ProposalClient(props: ProposalClientProps) {
     content = <DatePlannerTemplate {...props} />;
   } else if (demoId === "birthday-wish") {
     content = <BirthdayTemplate {...props} />;
+  } else if (demoId === "durga-puja" || demoId === "puja") {
+    content = <DurgaPujaTemplate {...props} />;
   } else if (demoId === "surprise") {
     content = <RomanticLoveTemplate {...props} />;
   }
 
   const url = typeof window !== "undefined" ? window.location.href : "";
+  const isPuja = demoId === "durga-puja" || demoId === "puja";
 
   return (
     <>
@@ -65,7 +69,7 @@ export default function ProposalClient(props: ProposalClientProps) {
         url={url} 
         recipientName={props.recipientName}
         title={props.title}
-        themeColors={{ primary: "#e11d48", secondary: "#f43f5e" }} // Update based on theme later
+        themeColors={isPuja ? { primary: "#631726", secondary: "#D4AF37" } : { primary: "#e11d48", secondary: "#f43f5e" }}
       />
     </>
   );

@@ -93,6 +93,7 @@ export default function DashboardDemos({
       image: dbPricing?.thumbnailUrl || demo.image,
     };
   }).filter(d => d.isActive).filter(d => {
+    if (selectedCategory === "festival") return d.id === "durga-puja";
     if (selectedCategory === "romantic") return d.id === "surprise" || d.id === "nasamajh-lakri" || d.id === "she-cant-say-no" || d.id === "im-sorry";
     if (selectedCategory === "birthday") return d.id === "birthday-wish";
     if (selectedCategory === "planner") return d.id.includes("planner");
@@ -261,6 +262,7 @@ export default function DashboardDemos({
             <div className="flex flex-wrap gap-2 mt-4">
               {[
                 { id: "all", label: "🎨 All Templates" },
+                { id: "festival", label: "🌺 Durga Puja / Festival" },
                 { id: "romantic", label: "❤️ Romantic Proposals" },
                 { id: "birthday", label: "🎂 Birthday Cards" },
                 { id: "planner", label: "🌸 Date Planners" },

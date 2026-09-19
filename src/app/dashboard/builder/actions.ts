@@ -245,6 +245,16 @@ export async function createInstantEventFromTemplate(themeName: string, title?: 
       hasDefaultMusic: true,
       hasSummaryCard: true,
     },
+    "durga-puja": {
+      title: "শুভ শারদীয়া 🌺",
+      question: "আমার সাথে পুজোয় যাবে?",
+      acceptBtn: "হ্যাঁ, যাবো ❤️",
+      rejectBtn: "একটু ভাবি... 🌸",
+      loveMessage: "Puja has always been special to me, but this year I couldn't imagine walking under the pandal lights with anyone else.",
+      foodOptions: "Phuchka, Momos, Kathi Roll, Biryani, Something sweet, You choose",
+      hasDefaultMusic: false,
+      hasSummaryCard: true,
+    },
   };
 
   const classDefaults = CLASS_DEFAULTS[demoId || ""] || {

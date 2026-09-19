@@ -74,6 +74,9 @@ export default async function Home({
     }
 
     const refQuery = ref ? `?ref=${encodeURIComponent(ref.trim())}` : "";
+    if (resolvedDemoId === "durga-puja" || resolvedDemoId === "puja") {
+      redirect(`/puja${refQuery}`);
+    }
     redirect(`/gift/${resolvedDemoId}${refQuery}`);
   }
 
@@ -111,6 +114,15 @@ export default async function Home({
       {/* 2. HERO SECTION                                           */}
       {/* ========================================================= */}
       <main className="flex-1 flex flex-col items-center justify-center text-center px-4 sm:px-6 pt-6 sm:pt-10 pb-16 sm:pb-24 max-w-6xl mx-auto w-full">
+
+        {/* Durga Puja Special Banner */}
+        <Link
+          href="/puja"
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#631726]/10 border border-[#D4AF37]/50 text-[#631726] hover:bg-[#631726]/15 text-xs sm:text-sm font-semibold mb-4 sm:mb-5 transition-all shadow-xs group"
+        >
+          <span className="font-bengali">🌺 শুভ শারদীয়া:</span>
+          <span>Create a Durga Puja Invitation Experience →</span>
+        </Link>
 
         {/* Top Emotional Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-rose-100/90 border border-rose-200 text-rose-600 text-xs sm:text-sm font-semibold mb-6 sm:mb-8 shadow-xs">

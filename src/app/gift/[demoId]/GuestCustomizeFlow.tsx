@@ -8,7 +8,7 @@ import { useSession, signIn } from "next-auth/react";
 import {
   X, ChevronRight, ChevronLeft, Loader2, Send,
   CheckCircle2, Copy, ExternalLink, Image as ImageIcon, Music,
-  AlertCircle, Smartphone, Edit3, Tag, Heart, Compass, Gift, Zap, Eye, Bell, ShieldCheck, RefreshCw, HeartHandshake, LucideIcon,
+  AlertCircle, Smartphone, Edit3, Tag, Heart, Compass, Gift, Zap, Eye, Bell, ShieldCheck, RefreshCw, HeartHandshake, Flame, LucideIcon,
 } from "lucide-react";
 import type { DemoItem } from "@/app/dashboard/demoConfig";
 import type { TemplateClass, TemplateField } from "@/app/dashboard/templateConfig";
@@ -28,6 +28,7 @@ const DEMO_ICONS: Record<string, LucideIcon> = {
   "nasamajh-lakri": Music,
   "date-planner": Compass,
   "jalpaiguri-planner": Compass,
+  "durga-puja": Flame,
 };
 
 async function generateTextArtBlob(input: File | string, phrase: string = "LOVE YOU"): Promise<Blob | null> {

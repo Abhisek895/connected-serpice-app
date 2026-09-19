@@ -41,6 +41,16 @@ const TEMPLATE_META: Record<string, { emoji: string; ogTitle: (name?: string) =>
     ogTitle: (name) => `${name ? name + " planned" : "Someone planned"} a Date Night for you 🌿`,
     ogDesc: "A romantic date night plan is ready for you. Open to see every detail! 🌙",
   },
+  "durga-puja": {
+    emoji: "🌺",
+    ogTitle: (name) => `${name ? name + " invited" : "Someone invited"} you to Durga Puja! 🌺`,
+    ogDesc: "A cinematic Durga Puja invitation created specially for you. Tap to open! ✨",
+  },
+  puja: {
+    emoji: "🌺",
+    ogTitle: (name) => `${name ? name + " invited" : "Someone invited"} you to Durga Puja! 🌺`,
+    ogDesc: "A cinematic Durga Puja invitation created specially for you. Tap to open! ✨",
+  },
 };
 
 import { headers } from "next/headers";

@@ -1,4 +1,4 @@
-import { Compass, Gift, Heart, HeartHandshake, Music } from "lucide-react";
+import { Compass, Flame, Gift, Heart, HeartHandshake, Music } from "lucide-react";
 
 export type DemoItem = {
   id: string;
@@ -121,5 +121,20 @@ export const demos: DemoItem[] = [
     hasInstantUse: true,
     price: 1500,
     durationDays: 7
+  },
+  {
+    id: "durga-puja",
+    title: "Durga Puja Invitation Experience 🌺",
+    badge: "Instant Available",
+    badgeColor: "bg-[#631726] text-[#FDFBF7]",
+    description: "A cinematic digital Durga Puja invitation with falling shiuli flowers, dhak beats, and heartfelt personal choices.",
+    previewUrl: "/demos/durga-puja/index.html",
+    builderTheme: "Romantic",
+    image: "/demos/durga-puja/thumb_durga_puja.jpg",
+    icon: Flame,
+    borderColor: "border-[#D4AF37]",
+    hasInstantUse: true,
+    price: 1500,
+    durationDays: 14
   }
 ];

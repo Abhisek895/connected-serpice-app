@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, MousePointer2, ShieldCheck, Zap, Share2, Check, Lock, X, Gift } from "lucide-react";
+import { Heart, MousePointer2, ShieldCheck, Zap, Share2, Check, Lock, X, Gift, Flame } from "lucide-react";
 import CanvasConfetti from "./CanvasConfetti";
 import { RecipientActionBar } from "@/components/ui/RecipientActionBar";
 import { useSession } from "next-auth/react";
@@ -137,6 +137,7 @@ export default function AutoClickSimulatedPreview({
   const isSurprise = demoId === "surprise";
   const isProposal = demoId === "she-cant-say-no" || demoId === "nasamajh-lakri";
   const isApology = demoId === "im-sorry" || demoId === "apology";
+  const isPuja = demoId === "durga-puja" || demoId === "puja";
 
   // Dynamic Admin Pricing State
   const [pricing, setPricing] = useState({
@@ -362,6 +363,7 @@ export default function AutoClickSimulatedPreview({
 
   const getBgClass = () => {
     if (isSurprise && simStage !== "landing") return "bg-black";
+    if (isPuja) return "bg-[#161413]";
     if (isBirthday) return "bg-gradient-to-br from-rose-950 to-black";
     if (isApology) return "bg-[#090312]";
     if (demoId === "she-cant-say-no") return "bg-[#DF98A2]";
@@ -737,6 +739,60 @@ export default function AutoClickSimulatedPreview({
                       </motion.div>
                     ) : null}
                   </AnimatePresence>
+                ) : isPuja ? (
+                  /* Durga Puja Cinematic Invitation Flow */
+                  <div className="space-y-1.5 px-1 font-serif">
+                    <div className="w-8 h-8 rounded-full bg-[#631726]/80 border border-[#D4AF37]/50 text-[#D4AF37] flex items-center justify-center mx-auto shadow-md">
+                      <Flame className="w-4 h-4 text-[#D4AF37]" />
+                    </div>
+                    <span className="text-[7.5px] uppercase tracking-widest text-[#D4AF37] font-sans font-bold block">
+                      Bengal After Dusk
+                    </span>
+                    <h4 className="text-xs font-bold text-[#FAF7F0] font-bengali leading-tight">
+                      {displayTitle || "শুভ শারদীয়া 🌺"}
+                    </h4>
+                    <p className="text-[9px] font-medium text-[#D4AF37]/90 italic">
+                      For <span className="font-bold text-white">{displayRecipient}</span>
+                    </p>
+                    {simStage === "accepted" ? (
+                      <motion.div
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="bg-[#24201D]/90 border border-[#D4AF37]/40 p-2 rounded-xl text-center space-y-1 font-sans"
+                      >
+                        <div className="text-[10px] font-bold text-[#FAF7F0] font-bengali flex items-center justify-center gap-1">
+                          🌺 পুজোয় একসাথে যাওয়া পাকা!
+                        </div>
+                        <p className="text-[8px] text-[#FAF7F0]/80 italic line-clamp-2">
+                          "{displayMessage || "Puja has always been special to me, but this year I couldn't imagine walking under the pandal lights with anyone else."}"
+                        </p>
+                        <span className="inline-block px-2 py-0.5 rounded-full bg-[#631726] text-[7.5px] font-semibold text-[#D4AF37] border border-[#D4AF37]/30">
+                          Phuchka &amp; Pandal Hopping 🌸
+                        </span>
+                      </motion.div>
+                    ) : (
+                      <div className="space-y-1.5 pt-0.5 font-sans">
+                        <p className="text-[8.5px] font-serif text-[#FAF7F0]/90 italic">
+                          "{displayQuestion || "আমার সাথে পুজোয় যাবে?"}"
+                        </p>
+                        <div className="flex gap-1 justify-center pt-0.5">
+                          <motion.span
+                            animate={simStage === "accept_clicked" ? { scale: 0.92 } : { scale: 1 }}
+                            className={`px-2.5 py-0.5 text-[8px] rounded-full font-bold shadow-sm transition-all ${
+                              simStage === "accept_clicked"
+                                ? "bg-[#C0422B] text-white ring-2 ring-[#D4AF37]"
+                                : "bg-[#631726] text-[#FAF7F0] border border-[#D4AF37]/50"
+                            }`}
+                          >
+                            {acceptBtn || "হ্যাঁ, যাবো ❤️"}
+                          </motion.span>
+                          <span className="px-2 py-0.5 text-[8px] bg-white/10 text-white/70 rounded-full font-medium border border-white/15">
+                            {rejectBtn || "একটু ভাবি... 🌸"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   /* Romantic Love Surprise / Catch-all Fallback */
                   <div className="space-y-1 px-1">

@@ -29,6 +29,15 @@ button,
   cursor: pointer;
 }
 
+/* ─── Bengali & Editorial Typography Tokens ───────────────────────────────── */
+.font-bengali {
+  font-family: 'Noto Serif Bengali', -apple-system, BlinkMacSystemFont, serif;
+}
+
+.font-editorial {
+  font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+}
+
 /* Custom Scrollbars — rose brand color */
 * {
   scrollbar-width: thin;

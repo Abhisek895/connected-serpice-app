@@ -18,6 +18,7 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
   const isPlanner = demoId.includes("planner");
   const isSurprise = demoId === "surprise";
   const isApology = demoId === "im-sorry" || demoId === "apology";
+  const isPuja = demoId === "durga-puja" || demoId === "puja";
 
   const displayTitle = formValues["title"] || defaultData["title"] || "A Surprise For You... 😊";
   const displayRecipient = formValues["recipientName"] || defaultData["recipientName"] || "Someone Special ✨";
@@ -64,11 +65,11 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
 
         {/* Screen */}
         <div className={`w-full h-[480px] rounded-[30px] overflow-hidden relative flex flex-col justify-between p-4 pt-10 text-white text-center shadow-inner transition-all duration-300 ${
-          isStep2 && isSurprise ? "bg-black" : "bg-gradient-to-br from-purple-950 via-rose-900 to-slate-950"
+          isStep2 && isSurprise ? "bg-black" : isPuja ? "bg-[#161413]" : "bg-gradient-to-br from-purple-950 via-rose-900 to-slate-950"
         }`}>
 
           {/* Ambient Glow */}
-          {(!isStep2 || isBirthday) && (
+          {(!isStep2 || isBirthday) && !isPuja && (
             <>
               <div className="absolute -top-12 -left-12 w-36 h-36 bg-pink-500/35 rounded-full blur-2xl pointer-events-none" />
               <div className="absolute top-1/2 -right-12 w-36 h-36 bg-amber-400/25 rounded-full blur-2xl pointer-events-none" />
@@ -76,9 +77,58 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
             </>
           )}
 
+          {isPuja && (
+            <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-40 h-40 bg-[#C0422B]/20 rounded-full blur-2xl pointer-events-none" />
+          )}
 
-          {/* Content Body — Step 2 View for Romantic Surprise (Matches Real Generated Page) */}
-          {isStep2 && isSurprise ? (
+          {/* Content Body */}
+          {isPuja ? (
+            <div className="relative z-10 h-full w-full flex flex-col justify-between py-2 px-1 text-center">
+              <div className="space-y-2 mt-4">
+                <span className="text-[10px] text-[#D4AF37] uppercase tracking-widest block font-medium">
+                  Autumn • Sharodiya
+                </span>
+                <h4 className="text-xl font-bold text-[#FDFBF7] font-serif">
+                  শুভ শারদীয়া 🌺
+                </h4>
+                <p className="text-[10px] text-[#D4AF37] italic">
+                  For {displayRecipient}
+                </p>
+              </div>
+
+              {isStep2 ? (
+                <div className="bg-[#FAF7F0] text-[#161413] rounded-2xl p-3 shadow-lg border border-[#D4AF37]/40 text-left space-y-1.5">
+                  <span className="text-[9px] font-bold text-[#C0422B] uppercase tracking-wider block">
+                    Personal Note
+                  </span>
+                  <p className="text-[10px] italic leading-snug line-clamp-4 text-[#161413]/90">
+                    &ldquo;{displayMessage}&rdquo;
+                  </p>
+                  <div className="pt-1 text-[9px] font-bold text-[#631726]">
+                    Menu: <span className="font-normal text-[#161413]/80">{formValues["foodOptions"] || "Phuchka, Biryani, Momos"}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-[#24201D] border border-[#D4AF37]/30 rounded-2xl p-3 text-center space-y-2">
+                  <p className="text-[10.5px] text-[#FDFBF7]/90 font-serif italic">
+                    &ldquo;আমার সাথে পুজোয় যাবে?&rdquo;
+                  </p>
+                  <div className="flex gap-2 justify-center pt-1">
+                    <span className="px-3 py-1 text-[9px] bg-[#631726] border border-[#D4AF37]/40 text-white rounded-full font-bold">
+                      হ্যাঁ, যাবো ❤️
+                    </span>
+                    <span className="px-2.5 py-1 text-[9px] bg-[#2E2926] text-white/70 rounded-full">
+                      একটু ভাবি... 🌸
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <div className="text-[9px] text-[#FDFBF7]/40 pb-4">
+                Bengal After Dusk • Experience
+              </div>
+            </div>
+          ) : isStep2 && isSurprise ? (
             <div className="absolute inset-0 z-30 flex flex-col justify-center items-center bg-black rounded-[30px] overflow-hidden">
               {/* Dead-Centered Portrait Container */}
               <div className="absolute inset-0 flex items-center justify-center w-full h-full pb-12">

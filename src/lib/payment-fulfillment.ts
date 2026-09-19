@@ -32,6 +32,7 @@ const GUEST_SLUG_PREFIX_MAP: Record<string, string> = {
   "nasamajh-lakri": "nasamajh",
   "date-planner": "dateplan",
   "jalpaiguri-planner": "dateplan",
+  "durga-puja": "puja",
 };
 
 const CLASS_DEFAULTS: Record<string, any> = {
@@ -82,6 +83,15 @@ const CLASS_DEFAULTS: Record<string, any> = {
     title: "Date Planner 🌿",
     question: "Let's plan our perfect date! 🌿",
     hasDefaultMusic: true,
+    hasSummaryCard: true,
+  },
+  "durga-puja": {
+    title: "শুভ শারদীয়া 🌺",
+    question: "আমার সাথে পুজোয় যাবে?",
+    acceptBtn: "হ্যাঁ, যাবো ❤️",
+    rejectBtn: "একটু ভাবি... 🌸",
+    loveMessage: "Puja has always been special to me, but this year I couldn't imagine walking under the pandal lights with anyone else.",
+    hasDefaultMusic: false,
     hasSummaryCard: true,
   },
 };
