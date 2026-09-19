@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { AnimatePresence, motion } from "framer-motion"
+import { Loader2 } from "lucide-react"
 import { recordResponseAction } from "../actions"
 import OurStoryWatermark from "./OurStoryWatermark"
 
@@ -343,6 +344,7 @@ export default function RomanticLoveTemplate({
   const [stage, setStage] = useState<0 | 1 | 2 | 3 | 4 | 5>(0);
   const [showLetter, setShowLetter] = useState(false);
   const [showDownloadPopup, setShowDownloadPopup] = useState(true);
+  const [isDownloading, setIsDownloading] = useState(false);
   const hasViewedRef = useRef(false);
 
   useEffect(() => {
@@ -744,7 +746,7 @@ export default function RomanticLoveTemplate({
                     animate={{ opacity: 1, y: 0, x: "-50%", scale: 1 }}
                     exit={{ opacity: 0, y: -20, x: "-50%", scale: 0.9 }}
                     transition={{ delay: 1, type: "spring", stiffness: 200, damping: 20 }}
-                    className="absolute top-2.5 left-1/2 bg-black/60 backdrop-blur-md border border-white/20 p-2.5 rounded-2xl shadow-2xl flex flex-col items-center gap-2 w-[90%] max-w-[240px] z-50"
+                    className="absolute top-1.5 left-1/2 bg-black/60 backdrop-blur-md border border-white/20 p-2.5 rounded-2xl shadow-2xl flex flex-col items-center gap-2 w-[90%] max-w-[240px] z-50"
                   >
                     <div className="text-white text-xs font-medium text-center leading-snug">
                       Would you like to download this picture?
@@ -752,7 +754,8 @@ export default function RomanticLoveTemplate({
                     <div className="flex gap-2 w-full">
                       <button
                         onClick={async () => {
-                          setShowDownloadPopup(false);
+                          if (isDownloading) return;
+                          setIsDownloading(true);
                           try {
                             let blob: Blob | null = null;
                             if (customData?.generatedThumbnailUrl) {
@@ -764,7 +767,10 @@ export default function RomanticLoveTemplate({
                             if (!blob && displayPhoto) {
                               blob = await generateTextArtBlob(displayPhoto, patternText || "LOVE YOU");
                             }
-                            if (!blob) return;
+                            if (!blob) {
+                              setIsDownloading(false);
+                              return;
+                            }
 
                             const blobUrl = URL.createObjectURL(blob);
                             const link = document.createElement("a");
@@ -774,17 +780,29 @@ export default function RomanticLoveTemplate({
                             link.click();
                             document.body.removeChild(link);
                             setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+                            
+                            setShowDownloadPopup(false);
                           } catch (e) {
                             console.error("[Download] Error:", e);
+                          } finally {
+                            setIsDownloading(false);
                           }
                         }}
-                        className="flex-1 bg-rose-500 hover:bg-rose-400 text-white text-xs font-bold py-2 rounded-xl transition shadow-lg shadow-rose-500/30"
+                        disabled={isDownloading}
+                        className="flex-1 flex items-center justify-center gap-1.5 bg-rose-500 hover:bg-rose-400 text-white text-xs font-bold py-2 rounded-xl transition shadow-lg shadow-rose-500/30 disabled:opacity-70 disabled:cursor-not-allowed"
                       >
-                        Yes
+                        {isDownloading ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            Loading...
+                          </>
+                        ) : (
+                          "Yes ❤️"
+                        )}
                       </button>
                       <button
                         onClick={() => setShowDownloadPopup(false)}
-                        className="flex-1 bg-white/10 hover:bg-white/20 text-white text-xs font-bold py-2 rounded-xl transition"
+                        className="flex-1 bg-white/10 hover:bg-white/20 text-white/90 hover:text-white text-xs font-bold py-2 rounded-xl transition-all hover:scale-[1.03] active:scale-[0.97]"
                       >
                         No
                       </button>
