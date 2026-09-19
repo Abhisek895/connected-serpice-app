@@ -51,9 +51,11 @@ export const metadata: Metadata = {
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ ref?: string; demo?: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const { ref, demo } = await searchParams;
+  const resolvedParams = await searchParams;
+  const demo = typeof resolvedParams.demo === "string" ? resolvedParams.demo : undefined;
+  const ref = typeof resolvedParams.ref === "string" ? resolvedParams.ref : undefined;
 
   if (demo) {
     let resolvedDemoId = demo.trim();
@@ -73,11 +75,18 @@ export default async function Home({
       }
     }
 
-    const refQuery = ref ? `?ref=${encodeURIComponent(ref.trim())}` : "";
-    if (resolvedDemoId === "durga-puja" || resolvedDemoId === "puja") {
-      redirect(`/puja${refQuery}`);
+    const forwardParams = new URLSearchParams();
+    for (const [key, val] of Object.entries(resolvedParams)) {
+      if (key !== "demo" && typeof val === "string" && val.trim()) {
+        forwardParams.set(key, val.trim());
+      }
     }
-    redirect(`/gift/${resolvedDemoId}${refQuery}`);
+    const queryString = forwardParams.toString() ? `?${forwardParams.toString()}` : "";
+
+    if (resolvedDemoId === "durga-puja" || resolvedDemoId === "puja") {
+      redirect(`/puja/builder${queryString}`);
+    }
+    redirect(`/gift/${resolvedDemoId}${queryString}`);
   }
 
   return (

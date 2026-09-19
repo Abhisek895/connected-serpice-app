@@ -709,6 +709,11 @@
     const soundIcon = document.getElementById('soundIcon');
     const soundText = document.getElementById('soundText');
 
+    // Default Audio: Mayabono Biharini Horini
+    const audioTrack = new Audio('/demos/durga-puja/mayabono_biharini.mp3');
+    audioTrack.loop = true;
+    let isMusicPlaying = false;
+
     function updateSoundUI(active) {
       if (active) {
         soundBtn.classList.add('active');
@@ -721,10 +726,34 @@
       }
     }
 
-    soundBtn.addEventListener('click', () => {
-      const active = dhak.toggle();
-      updateSoundUI(active);
-    });
+    function playMusic() {
+      audioTrack.play()
+        .then(() => {
+          isMusicPlaying = true;
+          updateSoundUI(true);
+        })
+        .catch(() => {
+          dhak.start();
+          updateSoundUI(true);
+        });
+    }
+
+    function pauseMusic() {
+      audioTrack.pause();
+      dhak.stop();
+      isMusicPlaying = false;
+      updateSoundUI(false);
+    }
+
+    function toggleMusic() {
+      if (isMusicPlaying || dhak.isPlaying) {
+        pauseMusic();
+      } else {
+        playMusic();
+      }
+    }
+
+    soundBtn.addEventListener('click', toggleMusic);
 
     // Screen Switching
     function showScreen(id) {
@@ -734,9 +763,8 @@
     }
 
     document.getElementById('btnOpen').addEventListener('click', () => {
-      if (!dhak.isPlaying) {
-        dhak.start();
-        updateSoundUI(true);
+      if (!isMusicPlaying && !dhak.isPlaying) {
+        playMusic();
       }
       showScreen('screen-2');
     });

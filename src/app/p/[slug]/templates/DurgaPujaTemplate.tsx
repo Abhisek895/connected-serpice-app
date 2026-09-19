@@ -382,32 +382,49 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
     };
   }, []);
 
-  const toggleSound = () => {
-    if (props.audioUrl || custom.audioUrl) {
-      if (!customAudioRef.current) {
-        customAudioRef.current = new Audio(props.audioUrl || custom.audioUrl);
-        customAudioRef.current.loop = true;
-      }
-      if (isAudioActive) {
-        customAudioRef.current.pause();
-        setIsAudioActive(false);
-      } else {
-        customAudioRef.current.play().then(() => setIsAudioActive(true)).catch(() => {});
-      }
-      return;
-    }
+  const effectiveAudioUrl =
+    props.audioUrl ||
+    custom.audioUrl ||
+    "https://k4q9rpuc4cgssyjq.public.blob.vercel-storage.com/audio/mayabono_biharini_horini.mp3";
 
-    if (soundEngineRef.current) {
-      const active = soundEngineRef.current.toggle();
-      setIsAudioActive(active);
+  const toggleSound = () => {
+    if (!customAudioRef.current) {
+      customAudioRef.current = new Audio(effectiveAudioUrl);
+      customAudioRef.current.loop = true;
+    }
+    if (isAudioActive) {
+      customAudioRef.current.pause();
+      setIsAudioActive(false);
+    } else {
+      customAudioRef.current
+        .play()
+        .then(() => setIsAudioActive(true))
+        .catch(() => {
+          // Fallback to synthetic dhak engine if external audio is blocked
+          if (soundEngineRef.current) {
+            const active = soundEngineRef.current.toggle();
+            setIsAudioActive(active);
+          }
+        });
     }
   };
 
   const handleOpenInvitation = () => {
-    // Start audio softly if user hasn't toggled yet
-    if (!isAudioActive && soundEngineRef.current) {
-      soundEngineRef.current.start();
-      setIsAudioActive(true);
+    // Start audio softly upon first interaction
+    if (!isAudioActive) {
+      if (!customAudioRef.current) {
+        customAudioRef.current = new Audio(effectiveAudioUrl);
+        customAudioRef.current.loop = true;
+      }
+      customAudioRef.current
+        .play()
+        .then(() => setIsAudioActive(true))
+        .catch(() => {
+          if (soundEngineRef.current) {
+            soundEngineRef.current.start();
+            setIsAudioActive(true);
+          }
+        });
     }
     setCurrentScreen(2);
   };

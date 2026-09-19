@@ -252,7 +252,8 @@ export async function createInstantEventFromTemplate(themeName: string, title?: 
       rejectBtn: "একটু ভাবি... 🌸",
       loveMessage: "Puja has always been special to me, but this year I couldn't imagine walking under the pandal lights with anyone else.",
       foodOptions: "Phuchka, Momos, Kathi Roll, Biryani, Something sweet, You choose",
-      hasDefaultMusic: false,
+      hasDefaultMusic: true,
+      audioUrl: "https://k4q9rpuc4cgssyjq.public.blob.vercel-storage.com/audio/mayabono_biharini_horini.mp3",
       hasSummaryCard: true,
     },
   };

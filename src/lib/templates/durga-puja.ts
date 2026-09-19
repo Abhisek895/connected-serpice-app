@@ -101,6 +101,9 @@ export const DEFAULT_ACTIVITIES = [
   "Dhunuchi Naach",
 ];
 
+export const DEFAULT_PUJA_AUDIO_URL = "https://k4q9rpuc4cgssyjq.public.blob.vercel-storage.com/audio/mayabono_biharini_horini.mp3";
+export const DEFAULT_PUJA_LOCAL_AUDIO_URL = "/demos/durga-puja/mayabono_biharini.mp3";
+
 export const DURGA_PUJA_DEFAULT_DATA: DurgaPujaCustomData = {
   demoId: "durga-puja",
   recipientName: "Riya",
@@ -117,4 +120,5 @@ export const DURGA_PUJA_DEFAULT_DATA: DurgaPujaCustomData = {
   date: "",
   time: "",
   soundEnabledByDefault: false,
+  audioUrl: DEFAULT_PUJA_AUDIO_URL,
 };

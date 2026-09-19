@@ -732,13 +732,6 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
             placeholder: "Maddox Square",
             presetSuggestions: ["Maddox Square", "College Square", "Ekdalia Evergreen"],
           },
-          {
-            key: "_audio",
-            label: "Custom Dhak / Festival Audio (optional)",
-            type: "file-audio",
-            accept: "audio/*",
-            hint: "Optional audio track. Uses built-in authentic Dhak soundscape by default.",
-          },
         ],
       },
     ],

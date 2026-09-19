@@ -99,7 +99,7 @@ export async function POST(req: Request) {
       googleMapsUrl: googleMapsUrl?.trim() || "",
       date: date || "",
       time: time || "",
-      audioUrl: audioUrl || "",
+      audioUrl: audioUrl || "https://k4q9rpuc4cgssyjq.public.blob.vercel-storage.com/audio/mayabono_biharini_horini.mp3",
       createdAt: new Date().toISOString(),
     };
 
