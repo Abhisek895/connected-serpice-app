@@ -249,13 +249,20 @@ function FieldInput({
   return null;
 }
 
-async function generateTextArtBlob(file: File): Promise<Blob | null> {
+async function generateTextArtBlob(input: File | string, phrase: string = "LOVE YOU"): Promise<Blob | null> {
   return new Promise((resolve) => {
     const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.src = url;
+    img.crossOrigin = "anonymous";
+    let objectUrl: string | null = null;
+    if (typeof input === "string") {
+      img.src = input;
+    } else {
+      objectUrl = URL.createObjectURL(input);
+      img.src = objectUrl;
+    }
+
     img.onload = () => {
-      URL.revokeObjectURL(url);
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
 
       const W = 1080;
       const H = 1080;
@@ -299,12 +306,12 @@ async function generateTextArtBlob(file: File): Promise<Blob | null> {
       ctx.fillStyle = "#fff";
       ctx.font = "bold 14px sans-serif";
       ctx.textBaseline = "top";
-      const phrase = "LOVE YOU  ";
+      const repPhrase = (phrase.trim() || "LOVE YOU") + "  ";
       const charsPerLine = Math.ceil(W / 8);
       const totalLines = Math.ceil(H / 14);
       for (let i = 0; i < totalLines; i++) {
         let line = "";
-        while (line.length < charsPerLine) line += phrase;
+        while (line.length < charsPerLine) line += repPhrase;
         ctx.fillText(line, 0, i * 14);
       }
 
@@ -312,10 +319,10 @@ async function generateTextArtBlob(file: File): Promise<Blob | null> {
       ctx.drawImage(tmpCanvas, 0, 0);
       ctx.globalCompositeOperation = "source-over";
 
-      canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.85);
+      canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.90);
     };
     img.onerror = () => {
-      URL.revokeObjectURL(url);
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
       resolve(null);
     };
   });
@@ -485,7 +492,8 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
           setFormValues((prev) => ({ ...prev, generatedThumbnailUrl: data.url }));
 
           try {
-            const artBlob = await generateTextArtBlob(file);
+            const customPatternText = formValues["patternText"] || "LOVE YOU";
+            const artBlob = await generateTextArtBlob(file, customPatternText);
             if (artBlob) {
               const artFormData = new FormData();
               artFormData.append("file", artBlob, "surprise-art.jpg");

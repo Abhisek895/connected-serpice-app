@@ -28,6 +28,85 @@ export type ProposalClientProps = {
   media: { id: string; url: string; type: string }[];
 };
 
+async function generateTextArtBlob(input: File | string, phrase: string = "LOVE YOU"): Promise<Blob | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    let objectUrl: string | null = null;
+    if (typeof input === "string") {
+      img.src = input;
+    } else {
+      objectUrl = URL.createObjectURL(input);
+      img.src = objectUrl;
+    }
+
+    img.onload = () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+
+      const W = 1080;
+      const H = 1080;
+
+      const tmpCanvas = document.createElement("canvas");
+      tmpCanvas.width = W;
+      tmpCanvas.height = H;
+      const tmpCtx = tmpCanvas.getContext("2d");
+      if (!tmpCtx) return resolve(null);
+
+      const imgRatio = img.width / img.height;
+      const canvasRatio = W / H;
+      let drawW = img.width, drawH = img.height, offsetX = 0, offsetY = 0;
+      if (imgRatio > canvasRatio) {
+        drawW = img.height * canvasRatio;
+        offsetX = (img.width - drawW) / 2;
+      } else {
+        drawH = img.width / canvasRatio;
+        offsetY = (img.height - drawH) / 2;
+      }
+      tmpCtx.drawImage(img, offsetX, offsetY, drawW, drawH, 0, 0, W, H);
+
+      const imageData = tmpCtx.getImageData(0, 0, W, H);
+      const d = imageData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        let gray = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+        gray = Math.min(255, Math.max(0, (gray - 128) * 1.6 + 128 * 1.2));
+        d[i] = d[i + 1] = d[i + 2] = gray;
+      }
+      tmpCtx.putImageData(imageData, 0, 0);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return resolve(null);
+
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 14px sans-serif";
+      ctx.textBaseline = "top";
+      const repPhrase = (phrase.trim() || "LOVE YOU") + "  ";
+      const charsPerLine = Math.ceil(W / 8);
+      const totalLines = Math.ceil(H / 14);
+      for (let i = 0; i < totalLines; i++) {
+        let line = "";
+        while (line.length < charsPerLine) line += repPhrase;
+        ctx.fillText(line, 0, i * 14);
+      }
+
+      ctx.globalCompositeOperation = "multiply";
+      ctx.drawImage(tmpCanvas, 0, 0);
+      ctx.globalCompositeOperation = "source-over";
+
+      canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.90);
+    };
+    img.onerror = () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      resolve(null);
+    };
+  });
+}
+
 // ─── Portrait Text-Art Generator ─────────────────────────────────────────────
 function TextArtPortrait({
   src,
@@ -661,13 +740,32 @@ export default function RomanticLoveTemplate({
                     </div>
                     <div className="flex gap-2 w-full">
                       <button
-                        onClick={() => {
-                          const link = document.createElement("a");
-                          link.href = customData?.generatedThumbnailUrl || displayPhoto;
-                          link.download = "romantic-love-art.jpg";
-                          link.target = "_blank"; 
-                          link.click();
+                        onClick={async () => {
                           setShowDownloadPopup(false);
+                          try {
+                            let blob: Blob | null = null;
+                            if (customData?.generatedThumbnailUrl) {
+                              try {
+                                const res = await fetch(customData.generatedThumbnailUrl);
+                                if (res.ok) blob = await res.blob();
+                              } catch {}
+                            }
+                            if (!blob && displayPhoto) {
+                              blob = await generateTextArtBlob(displayPhoto, patternText || "LOVE YOU");
+                            }
+                            if (!blob) return;
+
+                            const blobUrl = URL.createObjectURL(blob);
+                            const link = document.createElement("a");
+                            link.href = blobUrl;
+                            link.download = "romantic-love-art.jpg";
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+                          } catch (e) {
+                            console.error("[Download] Error:", e);
+                          }
                         }}
                         className="flex-1 bg-rose-500 hover:bg-rose-400 text-white text-xs font-bold py-2 rounded-xl transition shadow-lg shadow-rose-500/30"
                       >
