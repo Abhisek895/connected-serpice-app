@@ -394,7 +394,7 @@ export default function RomanticLoveTemplate({
     const audio = new Audio(audioSrc);
     audio.loop = true;
     audio.volume = 1.0;
-    audio.play().catch(() => {});
+    audio.play().catch(() => { });
     // After 1s fade, show portrait
     setTimeout(() => setStage(2), 1000);
   };
@@ -739,14 +739,14 @@ export default function RomanticLoveTemplate({
               <AnimatePresence>
                 {showDownloadPopup && (customData?.generatedThumbnailUrl || displayPhoto) && (
                   <motion.div
-                    initial={{ opacity: 0, x: 50, scale: 0.9 }}
-                    animate={{ opacity: 1, x: 0, scale: 1 }}
-                    exit={{ opacity: 0, x: 50, scale: 0.9 }}
+                    initial={{ opacity: 0, y: -20, x: "-50%", scale: 0.9 }}
+                    animate={{ opacity: 1, y: 0, x: "-50%", scale: 1 }}
+                    exit={{ opacity: 0, y: -20, x: "-50%", scale: 0.9 }}
                     transition={{ delay: 1, type: "spring", stiffness: 200, damping: 20 }}
-                    className="absolute top-4 right-4 bg-black/60 backdrop-blur-md border border-white/20 p-4 rounded-2xl shadow-2xl flex flex-col items-center gap-3 max-w-[210px] z-50"
+                    className="absolute top-2 left-1/2 bg-black/60 backdrop-blur-md border border-white/20 p-3 rounded-2xl shadow-2xl flex flex-col items-center gap-2 w-[90%] max-w-[260px] z-50"
                   >
                     <div className="text-white text-[13px] font-medium text-center leading-snug">
-                      Would you like to download this text-art picture?
+                      Would you like to download this picture?
                     </div>
                     <div className="flex gap-2 w-full">
                       <button
@@ -758,7 +758,7 @@ export default function RomanticLoveTemplate({
                               try {
                                 const res = await fetch(customData.generatedThumbnailUrl);
                                 if (res.ok) blob = await res.blob();
-                              } catch {}
+                              } catch { }
                             }
                             if (!blob && displayPhoto) {
                               blob = await generateTextArtBlob(displayPhoto, patternText || "LOVE YOU");
