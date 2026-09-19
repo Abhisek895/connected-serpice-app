@@ -331,20 +331,22 @@ export default function RomanticLoveTemplate({
           object-fit: cover;
         }
 
-        /* ── Desktop: letterbox / cinema frame ── */
+        /* ── Desktop: letterbox / cinema frame (centered, ~30% smaller) ── */
         @media (min-width: 768px) {
           .portrait-page {
             background: #000;
-            gap: 24px;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
           }
           .portrait-container-wrapper {
             position: relative;
             top: unset;
             left: unset;
-            width: auto;
-            height: auto;
-            max-width: 80vw;
-            max-height: 68vh;
+            width: 56vw;
+            height: 48vh;
+            max-width: 860px;
+            max-height: 520px;
             border: 6px solid #111;
             box-shadow: 0 0 0 2px #333, 0 0 60px rgba(0,0,0,0.9);
             border-radius: 8px;
