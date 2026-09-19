@@ -525,16 +525,13 @@ export default function GuestCustomizeFlow({
       if (data?.success && data?.url) {
         setFormValues((prev) => ({ ...prev, [fieldKey]: data.url }));
 
-        // For surprise demo: use the uploaded photo URL directly as the thumbnail
-        // so the download popup and OG image always work, even without canvas art.
-        if (demo.id === "surprise" && fieldKey === "_photo" && !isAudio) {
+        // For surprise/romantic demo: generate and upload text-art thumbnail synchronously
+        if (!isAudio && (demo.id === "surprise" || fieldKey === "_photo" || fieldKey === "_photo1" || fieldKey === "photoUrl")) {
           setFormValues((prev) => ({ ...prev, generatedThumbnailUrl: data.url }));
 
-          // Also attempt to generate and upload the text-art version in background
-          // If it succeeds it will OVERWRITE the simple fallback with the proper art.
-          generateTextArtBlob(file).then(async (artBlob) => {
-            if (!artBlob) return;
-            try {
+          try {
+            const artBlob = await generateTextArtBlob(file);
+            if (artBlob) {
               const artFormData = new FormData();
               artFormData.append("file", artBlob, "surprise-art.jpg");
               const artRes = await fetch("/api/upload", { method: "POST", body: artFormData });
@@ -542,12 +539,10 @@ export default function GuestCustomizeFlow({
               if (artData?.success && artData?.url) {
                 setFormValues((prev) => ({ ...prev, generatedThumbnailUrl: artData.url }));
               }
-            } catch (e) {
-              console.error("[ArtGen] Upload failed:", e);
             }
-          }).catch((e) => {
-            console.error("[ArtGen] Canvas generation failed:", e);
-          });
+          } catch (e) {
+            console.error("[ArtGen] Generation/Upload failed:", e);
+          }
         }
         
         setFileStatuses((prev) => ({ ...prev, [fieldKey]: "done" }));

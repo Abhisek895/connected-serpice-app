@@ -249,6 +249,78 @@ function FieldInput({
   return null;
 }
 
+async function generateTextArtBlob(file: File): Promise<Blob | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.src = url;
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+
+      const W = 1080;
+      const H = 1080;
+
+      const tmpCanvas = document.createElement("canvas");
+      tmpCanvas.width = W;
+      tmpCanvas.height = H;
+      const tmpCtx = tmpCanvas.getContext("2d");
+      if (!tmpCtx) return resolve(null);
+
+      const imgRatio = img.width / img.height;
+      const canvasRatio = W / H;
+      let drawW = img.width, drawH = img.height, offsetX = 0, offsetY = 0;
+      if (imgRatio > canvasRatio) {
+        drawW = img.height * canvasRatio;
+        offsetX = (img.width - drawW) / 2;
+      } else {
+        drawH = img.width / canvasRatio;
+        offsetY = (img.height - drawH) / 2;
+      }
+      tmpCtx.drawImage(img, offsetX, offsetY, drawW, drawH, 0, 0, W, H);
+
+      const imageData = tmpCtx.getImageData(0, 0, W, H);
+      const d = imageData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        let gray = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+        gray = Math.min(255, Math.max(0, (gray - 128) * 1.6 + 128 * 1.2));
+        d[i] = d[i + 1] = d[i + 2] = gray;
+      }
+      tmpCtx.putImageData(imageData, 0, 0);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return resolve(null);
+
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 14px sans-serif";
+      ctx.textBaseline = "top";
+      const phrase = "LOVE YOU  ";
+      const charsPerLine = Math.ceil(W / 8);
+      const totalLines = Math.ceil(H / 14);
+      for (let i = 0; i < totalLines; i++) {
+        let line = "";
+        while (line.length < charsPerLine) line += phrase;
+        ctx.fillText(line, 0, i * 14);
+      }
+
+      ctx.globalCompositeOperation = "multiply";
+      ctx.drawImage(tmpCanvas, 0, 0);
+      ctx.globalCompositeOperation = "source-over";
+
+      canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.85);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(null);
+    };
+  });
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // CustomizeModal — main component
 // ─────────────────────────────────────────────────────────────────────────────
@@ -407,6 +479,27 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
 
       if (data?.success && data?.url) {
         setFormValues((prev) => ({ ...prev, [fieldKey]: data.url }));
+
+        // For surprise/romantic demo: generate and upload text-art thumbnail synchronously
+        if (!isAudio && (demoId === "surprise" || fieldKey === "_photo" || fieldKey === "_photo1" || fieldKey === "photoUrl")) {
+          setFormValues((prev) => ({ ...prev, generatedThumbnailUrl: data.url }));
+
+          try {
+            const artBlob = await generateTextArtBlob(file);
+            if (artBlob) {
+              const artFormData = new FormData();
+              artFormData.append("file", artBlob, "surprise-art.jpg");
+              const artRes = await fetch("/api/upload", { method: "POST", body: artFormData });
+              const artData = await artRes.json();
+              if (artData?.success && artData?.url) {
+                setFormValues((prev) => ({ ...prev, generatedThumbnailUrl: artData.url }));
+              }
+            }
+          } catch (e) {
+            console.error("[ArtGen] Generation/Upload failed in CustomizeModal:", e);
+          }
+        }
+
         setFileStatuses((prev) => ({ ...prev, [fieldKey]: "done" }));
         return;
       }
@@ -470,6 +563,9 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
             if (field.key === "_audio") overrides["audioUrl"] = val;
           }
         }
+      }
+      if (formValues["generatedThumbnailUrl"]) {
+        overrides["generatedThumbnailUrl"] = formValues["generatedThumbnailUrl"];
       }
 
       if (editEventId && activeEventId) {

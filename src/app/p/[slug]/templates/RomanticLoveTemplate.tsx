@@ -648,7 +648,7 @@ export default function RomanticLoveTemplate({
             >
               {/* ── Download Popup (Screen-level anchoring) ── */}
               <AnimatePresence>
-                {showDownloadPopup && customData?.generatedThumbnailUrl && (
+                {showDownloadPopup && (customData?.generatedThumbnailUrl || displayPhoto) && (
                   <motion.div
                     initial={{ opacity: 0, x: 50, scale: 0.9 }}
                     animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -663,7 +663,7 @@ export default function RomanticLoveTemplate({
                       <button
                         onClick={() => {
                           const link = document.createElement("a");
-                          link.href = customData.generatedThumbnailUrl;
+                          link.href = customData?.generatedThumbnailUrl || displayPhoto;
                           link.download = "romantic-love-art.jpg";
                           link.target = "_blank"; 
                           link.click();
