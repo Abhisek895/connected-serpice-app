@@ -525,9 +525,10 @@ export default function RomanticLoveTemplate({
           width: 100%;
           height: 100%;
           display: flex;
-          align-items: flex-start;
+          align-items: center;
           justify-content: center;
-          padding-top: 28vh;
+          padding-top: 0;
+          margin-top: -4vh;
           z-index: 10;
           transition: transform 0.3s ease;
         }
@@ -743,9 +744,9 @@ export default function RomanticLoveTemplate({
                     animate={{ opacity: 1, y: 0, x: "-50%", scale: 1 }}
                     exit={{ opacity: 0, y: -20, x: "-50%", scale: 0.9 }}
                     transition={{ delay: 1, type: "spring", stiffness: 200, damping: 20 }}
-                    className="absolute top-2 left-1/2 bg-black/60 backdrop-blur-md border border-white/20 p-3 rounded-2xl shadow-2xl flex flex-col items-center gap-2 w-[90%] max-w-[260px] z-50"
+                    className="absolute top-2.5 left-1/2 bg-black/60 backdrop-blur-md border border-white/20 p-2.5 rounded-2xl shadow-2xl flex flex-col items-center gap-2 w-[90%] max-w-[240px] z-50"
                   >
-                    <div className="text-white text-[13px] font-medium text-center leading-snug">
+                    <div className="text-white text-xs font-medium text-center leading-snug">
                       Would you like to download this picture?
                     </div>
                     <div className="flex gap-2 w-full">
