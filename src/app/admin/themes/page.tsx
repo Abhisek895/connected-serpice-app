@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { Tag, Loader2, Check, X, Edit3, Eye, Search, Palette, Upload, ImageIcon, Type, AlignLeft } from "lucide-react";
 import { getAdminThemes, upsertThemePricing } from "@/app/admin/actions";
 import { demos } from "@/app/dashboard/demoConfig";
@@ -15,6 +15,62 @@ type PricingMap = Record<string, {
   description?: string | null;
   thumbnailUrl?: string | null;
 }>;
+
+// ── Mini text-art portrait preview (mirrors RomanticLoveTemplate effect) ──────
+function MiniTextArtPreview({ src, phrase = "LOVE YOU" }: { src: string; phrase?: string }) {
+  const textRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  const generateArt = useCallback(() => {
+    const img = imgRef.current;
+    const wall = textRef.current;
+    if (!img || !wall || !img.complete || img.naturalWidth === 0) return;
+    const w = img.clientWidth;
+    const h = img.clientHeight;
+    const multiplier = 3;
+    const charsPerLine = Math.ceil((w * multiplier) / 5);
+    const totalLines = Math.ceil((h * multiplier) / 8);
+    const totalChars = charsPerLine * totalLines * 1.5;
+    const repeatPhrase = phrase.trim() + "  ";
+    wall.innerText = repeatPhrase.repeat(Math.ceil(totalChars / repeatPhrase.length));
+  }, [phrase]);
+
+  useEffect(() => {
+    window.addEventListener("resize", generateArt);
+    return () => window.removeEventListener("resize", generateArt);
+  }, [generateArt]);
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%", background: "#000", overflow: "hidden" }}>
+      <div
+        ref={textRef}
+        style={{
+          position: "absolute", top: 0, left: 0,
+          width: "300%", height: "300%",
+          transform: "scale(0.3333)", transformOrigin: "top left",
+          zIndex: 1, backgroundColor: "black", color: "white",
+          fontSize: "8px", lineHeight: "8px", letterSpacing: "0px",
+          fontWeight: 900, wordBreak: "break-all", overflow: "hidden",
+          textAlign: "justify",
+        }}
+      />
+      <img
+        ref={imgRef}
+        src={src}
+        alt="Portrait preview"
+        onLoad={generateArt}
+        style={{
+          position: "absolute", top: 0, left: 0,
+          width: "100%", height: "100%",
+          objectFit: "cover",
+          filter: "grayscale(100%) contrast(160%) brightness(1.2)",
+          mixBlendMode: "multiply",
+          zIndex: 2,
+        }}
+      />
+    </div>
+  );
+}
 
 export default function AdminThemesPage() {
   const [pricingMap, setPricingMap] = useState<PricingMap>({});
@@ -328,9 +384,11 @@ export default function AdminThemesPage() {
             {/* Panel header */}
             <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-800 bg-[#0f172a]/50">
               <div className="flex items-center gap-2.5 sm:gap-3">
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg overflow-hidden flex-shrink-0 border border-slate-700">
-                  <img src={thumbnailPreview || selectedDemo.image} alt="" className="w-full h-full object-cover" />
-                </div>
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg overflow-hidden flex-shrink-0 border border-slate-700 bg-black">
+                    {(thumbnailPreview || selectedDemo.image) ? (
+                      <MiniTextArtPreview src={thumbnailPreview || selectedDemo.image} phrase="LOVE YOU" />
+                    ) : null}
+                  </div>
                 <div className="min-w-0">
                   <h3 className="text-white font-bold text-xs sm:text-sm truncate">{editTitle || selectedDemo.title}</h3>
                   <p className="text-slate-500 text-[10px] sm:text-xs truncate">Editing template content &amp; pricing</p>
@@ -356,11 +414,11 @@ export default function AdminThemesPage() {
                       Thumbnail Image
                     </label>
                     <div
-                      className="relative h-44 bg-slate-900 rounded-xl border-2 border-dashed border-slate-700 hover:border-indigo-500/60 overflow-hidden group cursor-pointer transition"
+                      className="relative h-44 bg-black rounded-xl border-2 border-dashed border-slate-700 hover:border-indigo-500/60 overflow-hidden group cursor-pointer transition"
                       onClick={() => fileInputRef.current?.click()}
                     >
                       {thumbnailPreview ? (
-                        <img src={thumbnailPreview} alt="Thumbnail" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition" />
+                        <MiniTextArtPreview src={thumbnailPreview} phrase="LOVE YOU" />
                       ) : (
                         <div className="flex flex-col items-center justify-center h-full text-slate-500">
                           <ImageIcon className="w-10 h-10 mb-2" />
