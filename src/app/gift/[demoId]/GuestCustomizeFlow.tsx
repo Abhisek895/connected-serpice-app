@@ -525,32 +525,29 @@ export default function GuestCustomizeFlow({
       if (data?.success && data?.url) {
         setFormValues((prev) => ({ ...prev, [fieldKey]: data.url }));
 
-        // AUTO-GENERATE TEXT ART FOR SURPRISE DEMO MAIN PHOTO
+        // For surprise demo: use the uploaded photo URL directly as the thumbnail
+        // so the download popup and OG image always work, even without canvas art.
         if (demo.id === "surprise" && fieldKey === "_photo" && !isAudio) {
-          console.log("[ArtGen] Starting text-art generation for surprise photo...");
-          try {
-            const artBlob = await generateTextArtBlob(file);
-            console.log("[ArtGen] generateTextArtBlob result:", artBlob ? `Blob size: ${artBlob.size}` : "NULL - generation failed");
-            if (artBlob) {
+          setFormValues((prev) => ({ ...prev, generatedThumbnailUrl: data.url }));
+
+          // Also attempt to generate and upload the text-art version in background
+          // If it succeeds it will OVERWRITE the simple fallback with the proper art.
+          generateTextArtBlob(file).then(async (artBlob) => {
+            if (!artBlob) return;
+            try {
               const artFormData = new FormData();
               artFormData.append("file", artBlob, "surprise-art.jpg");
-              console.log("[ArtGen] Uploading art to /api/upload...");
-              const artRes = await fetch("/api/upload", {
-                method: "POST",
-                body: artFormData,
-              });
+              const artRes = await fetch("/api/upload", { method: "POST", body: artFormData });
               const artData = await artRes.json();
-              console.log("[ArtGen] Upload response:", artData);
               if (artData?.success && artData?.url) {
-                console.log("[ArtGen] ✅ Art uploaded successfully:", artData.url);
                 setFormValues((prev) => ({ ...prev, generatedThumbnailUrl: artData.url }));
-              } else {
-                console.error("[ArtGen] ❌ Upload failed:", artData);
               }
+            } catch (e) {
+              console.error("[ArtGen] Upload failed:", e);
             }
-          } catch (e) {
-            console.error("[ArtGen] ❌ Exception during art generation/upload:", e);
-          }
+          }).catch((e) => {
+            console.error("[ArtGen] Canvas generation failed:", e);
+          });
         }
         
         setFileStatuses((prev) => ({ ...prev, [fieldKey]: "done" }));
