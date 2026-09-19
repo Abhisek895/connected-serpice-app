@@ -947,21 +947,7 @@ export default function GuestCustomizeFlow({
                   💖 Made with OurStory
                 </div>
 
-                {/* Badges container */}
-                <div className="absolute top-3 left-3 z-10 flex flex-wrap gap-1.5 items-center pr-3">
-                  <span className={`text-[9px] leading-[12px] px-2 py-1 rounded-full uppercase font-bold tracking-wider shadow-sm flex items-center gap-1 ${demo.badgeColor}`}>
-                    <Icon className="w-2.5 h-2.5" /> {demo.badge}
-                  </span>
-                  {(demo.price ?? 0) > 0 ? (
-                    <span className="text-[9px] leading-[12px] px-2 py-1 rounded-full uppercase font-bold tracking-wider shadow-sm bg-amber-400 text-amber-900 border border-amber-300">
-                      ₹{((demo.price ?? 0) / 100).toFixed(0)} / {demo.durationDays ?? 14}d
-                    </span>
-                  ) : (
-                    <span className="text-[9px] leading-[12px] px-2 py-1 rounded-full uppercase font-bold tracking-wider shadow-sm bg-emerald-500/90 text-white border border-emerald-400/50">
-                      Free
-                    </span>
-                  )}
-                </div>
+
               </div>
 
               {/* Body */}
