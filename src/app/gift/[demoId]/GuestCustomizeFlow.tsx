@@ -30,6 +30,77 @@ const DEMO_ICONS: Record<string, LucideIcon> = {
   "jalpaiguri-planner": Compass,
 };
 
+async function generateTextArtBlob(file: File): Promise<Blob | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.src = url;
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return resolve(null);
+
+      // Keep it a reasonable size for thumbnail
+      const w = 1080;
+      const h = 1080;
+      canvas.width = w;
+      canvas.height = h;
+
+      // 1. Draw black background
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, w, h);
+
+      // 2. Draw white text
+      ctx.fillStyle = "white";
+      ctx.font = "900 14px sans-serif";
+      ctx.textBaseline = "top";
+      const phrase = "LOVE YOU  ";
+      
+      const charsPerLine = Math.ceil(w / 8);
+      const totalLines = Math.ceil(h / 14);
+      
+      for (let i = 0; i < totalLines; i++) {
+        let line = "";
+        while (line.length < charsPerLine) {
+          line += phrase;
+        }
+        ctx.fillText(line, 0, i * 14);
+      }
+
+      // 3. Draw image with filters and multiply blend mode
+      ctx.globalCompositeOperation = "multiply";
+      ctx.filter = "grayscale(100%) contrast(160%) brightness(1.2)";
+      
+      // Calculate crop to cover 1080x1080
+      const imgRatio = img.width / img.height;
+      const canvasRatio = w / h;
+      let drawW = img.width;
+      let drawH = img.height;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      if (imgRatio > canvasRatio) {
+        drawW = img.height * canvasRatio;
+        offsetX = (img.width - drawW) / 2;
+      } else {
+        drawH = img.width / canvasRatio;
+        offsetY = (img.height - drawH) / 2;
+      }
+
+      ctx.drawImage(img, offsetX, offsetY, drawW, drawH, 0, 0, w, h);
+      
+      canvas.toBlob((blob) => {
+        resolve(blob);
+      }, "image/jpeg", 0.85);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(null);
+    };
+  });
+}
+
 function getUtmParams() {
   if (typeof window === "undefined") return { source: "", campaign: "" };
   const p = new URLSearchParams(window.location.search);
@@ -442,6 +513,29 @@ export default function GuestCustomizeFlow({
       if (data?.success && data?.url) {
         setFormValues((prev) => ({ ...prev, [fieldKey]: data.url }));
         setFileStatuses((prev) => ({ ...prev, [fieldKey]: "done" }));
+
+        // AUTO-GENERATE TEXT ART FOR SURPRISE DEMO MAIN PHOTO
+        if (demo.id === "surprise" && fieldKey === "_photo" && !isAudio) {
+          try {
+            const artBlob = await generateTextArtBlob(file);
+            if (artBlob) {
+              const artFormData = new FormData();
+              // Name it specifically so the backend treats it as a standard upload
+              artFormData.append("file", artBlob, "surprise-art.jpg");
+              const artRes = await fetch("/api/upload", {
+                method: "POST",
+                body: artFormData,
+              });
+              const artData = await artRes.json();
+              if (artData?.success && artData?.url) {
+                // Save it into form values so it gets saved to event customData on checkout
+                setFormValues((prev) => ({ ...prev, generatedThumbnailUrl: artData.url }));
+              }
+            }
+          } catch (e) {
+            console.error("Failed to generate and upload text art thumbnail", e);
+          }
+        }
         return;
       }
 

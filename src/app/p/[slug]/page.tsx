@@ -81,7 +81,7 @@ export async function generateMetadata(
   const title = customData.title || (templateMeta ? templateMeta.ogTitle(recipientName) : `🎁 Something Special For You...`);
   const description = "A special romantic surprise page was created just for you. Tap to open your card! 💝";
 
-  const ogImage = `${baseUrl}/something-special-card.png`;
+  const ogImage = customData.generatedThumbnailUrl || `${baseUrl}/something-special-card.png`;
   const pageUrl = `${baseUrl}/p/${slug}`;
 
   return {
