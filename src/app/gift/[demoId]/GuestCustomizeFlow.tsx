@@ -17,6 +17,7 @@ import AutoClickSimulatedPreview from "@/components/ui/AutoClickSimulatedPreview
 import { loadRazorpayScript } from "@/hooks/useRazorpay";
 import { compressImage } from "@/lib/clientImageCompressor";
 import ImageCropModal from "@/components/ImageCropModal";
+import MiniTextArtPreviewShared from "@/components/MiniTextArtPreview";
 
 // Map demoId → icon client-side (icons are functions, can't be serialized server→client)
 const DEMO_ICONS: Record<string, LucideIcon> = {
@@ -929,11 +930,15 @@ export default function GuestCustomizeFlow({
             <div className="bg-white rounded-3xl shadow-2xl overflow-y-auto border border-white/10 w-full">
               {/* Thumbnail */}
               <div className="relative h-56 shrink-0 w-full overflow-hidden bg-slate-100 group">
-                <img
-                  src={demo.image}
-                  alt={demo.title}
-                  className="w-full h-full object-cover object-[center_25%] group-hover:scale-105 transition-transform duration-500"
-                />
+                {demo.id === "surprise" ? (
+                  <MiniTextArtPreviewShared src={demo.image} phrase="LOVE YOU" />
+                ) : (
+                  <img
+                    src={demo.image}
+                    alt={demo.title}
+                    className="w-full h-full object-cover object-[center_25%] group-hover:scale-105 transition-transform duration-500"
+                  />
+                )}
                 {/* Light gradient just for text readability at the bottom, no dark overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent" />
 

@@ -299,7 +299,21 @@ export default function AdminThemesPage() {
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-[#111827]/60 via-transparent to-transparent" />
 
-
+                    {/* Badges container */}
+                    <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 items-center pr-3">
+                      <span className={`text-[9px] leading-[12px] px-2 py-1 rounded-full uppercase font-bold tracking-wider shadow-sm flex items-center gap-1 ${demo.badgeColor}`}>
+                        {demo.badge}
+                      </span>
+                      {price > 0 ? (
+                        <span className="text-[9px] leading-[12px] px-2 py-1 rounded-full uppercase font-bold tracking-wider shadow-sm bg-amber-400 text-amber-900 border border-amber-300">
+                          ₹{(price / 100).toFixed(0)} / {p?.durationDays ?? 7}d
+                        </span>
+                      ) : (
+                        <span className="text-[9px] leading-[12px] px-2 py-1 rounded-full uppercase font-bold tracking-wider shadow-sm bg-emerald-500/90 text-white border border-emerald-400/50">
+                          Free
+                        </span>
+                      )}
+                    </div>
 
                     <div className="absolute top-3 right-3">
                       {isActive
