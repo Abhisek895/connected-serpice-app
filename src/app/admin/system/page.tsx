@@ -493,7 +493,7 @@ export default function SystemHealthPage() {
             <ul className="text-xs text-slate-400 space-y-1.5 list-disc pl-4">
               <li>Works for <strong>both guest buyers</strong> (who type their email at checkout) and <strong>registered logged-in users</strong>.</li>
               <li>Delivered instantly via SMTP to the user's Gmail address upon payment capture.</li>
-              <li>Contains the full, clickable surprise link (e.g. <code>https://connected-serpice-app.vercel.app/p/birthday-xyz</code>).</li>
+              <li>Contains the full, clickable surprise link (e.g. <code>https://www.ourstories.shop/p/birthday-xyz</code>).</li>
               <li>If you click <strong>"Stop Sending Emails"</strong>, the backend immediately halts all post-payment email dispatch.</li>
             </ul>
           </div>
@@ -509,7 +509,7 @@ export default function SystemHealthPage() {
                 <p className="font-bold text-rose-400">Payment Successful! 💖</p>
                 <p>Hi! Thank you for your payment. Your surprise page has been created and is live now!</p>
                 <p className="p-2 bg-rose-950/40 border border-rose-500/30 rounded text-rose-300 font-semibold break-all text-xs underline">
-                  https://connected-serpice-app.vercel.app/p/[user-created-link]
+                  https://www.ourstories.shop/p/[user-created-link]
                 </p>
                 <p className="text-[11px] text-slate-400">You can copy this link and send it directly to your special someone via WhatsApp, Instagram, or SMS.</p>
               </div>

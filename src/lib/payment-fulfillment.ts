@@ -179,7 +179,7 @@ export async function fulfillPayment(
         const appUrl =
           envUrl && !envUrl.includes("loca.lt") && !envUrl.includes("localhost")
             ? envUrl
-            : "https://connected-serpice-app.vercel.app";
+            : "https://www.ourstories.shop";
 
         await sendPaymentSuccessEmail({
           to: buyerEmail,
@@ -363,7 +363,7 @@ export async function fulfillPayment(
     const appUrl =
       envUrl && !envUrl.includes("loca.lt") && !envUrl.includes("localhost")
         ? envUrl
-        : "https://connected-serpice-app.vercel.app";
+        : "https://www.ourstories.shop";
 
     const displayTitle =
       (finalCustomData as any)?.title ||

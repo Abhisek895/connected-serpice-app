@@ -83,7 +83,7 @@ export async function sendPaymentSuccessEmail(opts: {
   const appUrl =
     envUrl && !envUrl.includes("loca.lt") && !envUrl.includes("localhost")
       ? envUrl
-      : "https://connected-serpice-app.vercel.app";
+      : "https://www.ourstories.shop";
   const fullShareUrl = opts.shareUrl.startsWith("http") ? opts.shareUrl : `${appUrl}${opts.shareUrl}`;
   const title = opts.templateTitle || "Your Surprise Page";
   const expiryText = opts.expiresAt
