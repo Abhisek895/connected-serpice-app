@@ -374,6 +374,20 @@ export default function GuestCustomizeFlow({
     }
   }, [currentStep]);
 
+  // Lock background/behind-screen scrolling when post-payment preview is shown
+  useEffect(() => {
+    if (publishedUrl) {
+      const originalBodyOverflow = document.body.style.overflow;
+      const originalHtmlOverflow = document.documentElement.style.overflow;
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalBodyOverflow;
+        document.documentElement.style.overflow = originalHtmlOverflow;
+      };
+    }
+  }, [publishedUrl]);
+
   // Initialize form with template defaultData & check URL params
   useEffect(() => {
     const vals: Record<string, string> = {};
@@ -925,8 +939,8 @@ export default function GuestCustomizeFlow({
   // ───────────────────────────────────────────────────────────────────────────
   if (publishedUrl) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-3 sm:p-6">
-        <div className="bg-white rounded-3xl p-4 sm:p-6 max-w-2xl w-full max-h-[95vh] overflow-y-auto shadow-2xl border border-rose-100 relative">
+      <div className="fixed inset-0 z-50 h-[100dvh] w-full min-h-screen bg-slate-950 flex items-center justify-center p-3 sm:p-6 overflow-hidden">
+        <div className="bg-white rounded-3xl p-4 sm:p-6 max-w-2xl w-full max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto overscroll-contain shadow-2xl border border-rose-100 relative">
           <AutoClickSimulatedPreview
             demoId={demo.id}
             formValues={formValues}
@@ -934,6 +948,7 @@ export default function GuestCustomizeFlow({
             publishedUrl={publishedUrl}
             isPaid={true}
             onClose={() => {
+              setPublishedUrl(null);
               setViewState("landing");
             }}
             onActivateOffer={() => { }}
