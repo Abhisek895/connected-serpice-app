@@ -120,12 +120,12 @@ export const DEFAULT_ADVENTURE_OPTIONS: ChoiceCard[] = [
 ];
 
 export const DEFAULT_FOOD_OPTIONS = [
-  { id: "phuchka", name: "Phuchka", icon: "🧆", desc: "Crispy, tangy & irresistible", image: "/images/food/phuchka.jpg" },
-  { id: "momos", name: "Momos", icon: "🥟", desc: "Steaming hot with spicy chutney", image: "/images/food/momos.jpg" },
-  { id: "roll", name: "Kathi Roll", icon: "🌯", desc: "Classic festival street food", image: "/images/food/kathi_roll.jpg" },
-  { id: "biryani", name: "Biryani", icon: "🥘", desc: "Fragrant, royal & comforting", image: "/images/food/biryani.jpg" },
-  { id: "sweet", name: "Rosogolla", icon: "⚪", desc: "The classic sweet to end the day", image: "/images/food/rosogolla.jpg" },
-  { id: "you-choose", name: "You choose", icon: "❤️", desc: "Surprise me with your pick", image: "/images/food/you_choose.jpg" },
+  { id: "phuchka", name: "Phuchka", icon: "🧆", desc: "Crispy, tangy & irresistible", image: "/images/food/phuchka.webp" },
+  { id: "momos", name: "Momos", icon: "🥟", desc: "Steaming hot with spicy chutney", image: "/images/food/momos.webp" },
+  { id: "roll", name: "Kathi Roll", icon: "🌯", desc: "Classic festival street food", image: "/images/food/kathi_roll.webp" },
+  { id: "biryani", name: "Biryani", icon: "🥘", desc: "Fragrant, royal & comforting", image: "/images/food/biryani.webp" },
+  { id: "sweet", name: "Rosogolla", icon: "⚪", desc: "The classic sweet to end the day", image: "/images/food/rosogolla.webp" },
+  { id: "you-choose", name: "You choose", icon: "❤️", desc: "Surprise me with your pick", image: "/images/food/you_choose.webp" },
 ];
 
 export const DEFAULT_ACTIVITIES = [
