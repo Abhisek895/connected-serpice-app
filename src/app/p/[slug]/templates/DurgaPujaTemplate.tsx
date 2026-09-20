@@ -1034,9 +1034,15 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-2xl">{food.icon}</span>
+                        <div className="relative w-10 h-10 rounded-full overflow-hidden border border-[#D4AF37]/20 shrink-0 bg-[#24201D] shadow-sm">
+                          {food.image ? (
+                            <img src={food.image} alt={food.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-2xl flex items-center justify-center w-full h-full">{food.icon}</span>
+                          )}
+                        </div>
                         {isSelected && (
-                          <span className="w-4 h-4 rounded-full bg-[#D4AF37] text-[#161413] flex items-center justify-center text-[10px] font-bold">
+                          <span className="w-5 h-5 rounded-full bg-[#D4AF37] text-[#161413] flex items-center justify-center text-[10px] font-bold shadow-md">
                             ✓
                           </span>
                         )}
@@ -1172,12 +1178,41 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
             >
               <AlpanaMotif className="w-40 text-[#D4AF37] mx-auto" />
 
-              <div className="space-y-3 font-editorial text-base sm:text-lg text-[#FDFBF7]/85 italic leading-relaxed max-w-sm mx-auto">
-                <p>Maybe we&apos;ll remember the pandal.</p>
-                <p>Maybe we&apos;ll remember what we ate.</p>
-                <p>Maybe we&apos;ll remember how much we laughed.</p>
-                <p className="text-[#D4AF37] font-medium pt-1">But hopefully...</p>
-              </div>
+              {(() => {
+                const day = DEFAULT_PUJA_DAYS.find((d) => d.id === selectedDay)?.title || "Puja";
+                const vibe = DEFAULT_PUJA_VIBE_OPTIONS.find((v) => v.id === selectedVibe)?.title || "a great vibe";
+                const adventure = DEFAULT_ADVENTURE_OPTIONS.find((a) => a.id === selectedAdventure)?.title?.toLowerCase() || "wander around";
+                const foods = foodChoices
+                  .filter((f: any) => selectedFoods.includes(f.id))
+                  .map((f: any) => f.name)
+                  .join(", ") || "good food";
+                
+                const locMap: Record<string, string> = {
+                  close: "somewhere close",
+                  explore: "to explore the city",
+                  favourite: "at your favorite place",
+                  surprise: "at a surprise location",
+                };
+                const venueStr = recipientVenue 
+                  ? (recipientVenue.toLowerCase().startsWith("at ") ? recipientVenue : `at ${recipientVenue}`)
+                  : (locMap[selectedLocationPref] || "somewhere special");
+
+                return (
+                  <div className="space-y-3 font-editorial text-base sm:text-lg text-[#FDFBF7]/85 italic leading-relaxed max-w-sm mx-auto">
+                    <p>So it&apos;s decided...</p>
+                    <p>
+                      We will meet on <strong className="text-[#D4AF37] font-semibold">{day}</strong> and <strong className="text-[#D4AF37] font-semibold">{adventure}</strong>.
+                    </p>
+                    <p>
+                      Our vibe will be <strong className="text-[#D4AF37] font-semibold">{vibe}</strong>, eating <strong className="text-[#D4AF37] font-semibold">{foods}</strong>.
+                    </p>
+                    <p>
+                      And we&apos;ll meet <strong className="text-[#D4AF37] font-semibold">{venueStr}</strong>.
+                    </p>
+                    <p className="text-[#D4AF37] font-medium pt-1">But most importantly...</p>
+                  </div>
+                );
+              })()}
 
               <div className="space-y-3 pt-2">
                 <h2 className="font-editorial text-2xl sm:text-3xl font-bold text-[#FDFBF7]">
