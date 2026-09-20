@@ -30,6 +30,13 @@ export async function recordResponseAction(slug: string, action: string, metadat
       }
     }
 
+    // ── Check for spam/deduplication ─────────────────────────────────────────
+    // We check if this action was already recorded previously to avoid spamming 
+    // the creator if the receiver clicks the same button 5 times.
+    const isNewAction = await prisma.response.findFirst({
+      where: { eventId: event.id, action: action },
+    }) === null;
+
     const response = await recordResponse({
       eventId: event.id,
       action: action,
@@ -40,7 +47,7 @@ export async function recordResponseAction(slug: string, action: string, metadat
 
     // ── Fire creator notification email (skip VIEWED to avoid spam) ──────────
     const skipActions = ["VIEWED"];
-    const shouldEmail = !skipActions.includes(action) && response.success;
+    const shouldEmail = !skipActions.includes(action) && response.success && isNewAction;
 
     if (shouldEmail) {
       // Find creator email: registered user email first, then payment buyerEmail
@@ -60,8 +67,8 @@ export async function recordResponseAction(slug: string, action: string, metadat
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://www.ourstories.shop";
         const shareUrl = `${appUrl}/p/${slug}`;
 
-        // Fire async — don't block the response to the receiver
-        sendReceiverActionEmail({
+        // Await the email send to ensure Vercel doesn't kill the serverless function before it finishes
+        await sendReceiverActionEmail({
           to: creatorEmail,
           demoId,
           templateTitle,

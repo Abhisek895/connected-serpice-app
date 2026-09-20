@@ -38,6 +38,11 @@ export async function POST(
     const rawKey = `${event.id}:${ipAddress}`;
     const idempotencyKey = crypto.createHash("sha256").update(rawKey).digest("hex");
 
+    // ── Check for spam/deduplication ─────────────────────────────────────────
+    const isNewAction = await prisma.response.findFirst({
+      where: { eventId: event.id, action: action || "ACCEPTED" },
+    }) === null;
+
     // Upsert response
     const responseRecord = await prisma.response.upsert({
       where: { idempotencyKey },
@@ -57,7 +62,7 @@ export async function POST(
 
     // ── Fire creator notification email ──────────────────────────────────────
     const skipActions = ["VIEWED"];
-    if (!skipActions.includes(action || "ACCEPTED")) {
+    if (!skipActions.includes(action || "ACCEPTED") && isNewAction) {
       let creatorEmail: string | null = event.user?.email ?? null;
 
       if (!creatorEmail) {
@@ -74,7 +79,7 @@ export async function POST(
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://www.ourstories.shop";
         const shareUrl = `${appUrl}/p/${event.slug ?? id}`;
 
-        sendReceiverActionEmail({
+        await sendReceiverActionEmail({
           to: creatorEmail,
           demoId,
           templateTitle,

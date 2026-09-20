@@ -197,7 +197,7 @@ export async function sendReceiverActionEmail(opts: {
   // DatePlanner embeds JSON in action string: "ACCEPTED|{place,food,date,time}"
   let datePlanMeta: Record<string, string> | null = null;
   if (action.startsWith("ACCEPTED|")) {
-    try { datePlanMeta = JSON.parse(action.split("|")[1]); } catch { }
+    try { datePlanMeta = JSON.parse(action.substring(9)); } catch { }
   }
 
   // ── Build action headline ──────────────────────────────────────────────────
