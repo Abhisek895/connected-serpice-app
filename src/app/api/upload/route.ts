@@ -12,6 +12,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: "No file provided" }, { status: 400 });
     }
 
+    const isAudio = (file.type && file.type.startsWith("audio/")) || Boolean(file.name?.match(/\.(mp3|wav|m4a|aac|ogg|flac)$/i));
+    if (isAudio && file.size > 2 * 1024 * 1024) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Audio file size (${(file.size / (1024 * 1024)).toFixed(1)} MB) exceeds the 2.0 MB limit. Please trim your audio.`,
+        },
+        { status: 400 }
+      );
+    }
+
     if (file.size > 4.5 * 1024 * 1024) {
       return NextResponse.json(
         {

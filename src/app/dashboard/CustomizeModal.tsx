@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, ChevronRight, ChevronLeft, Loader2, Send,
-  CheckCircle2, Copy, ExternalLink, Image as ImageIcon, Music,
+  CheckCircle2, Copy, ExternalLink, Image as ImageIcon, Music, Play, Pause,
   AlertCircle, MessageCircle, Smartphone, Edit3, SlidersHorizontal,
 } from "lucide-react";
 import { getTemplateClass, TemplateClass, TemplateField } from "./templateConfig";
@@ -23,6 +23,7 @@ import AutoClickSimulatedPreview from "@/components/ui/AutoClickSimulatedPreview
 import CheckoutModal from "./CheckoutModal";
 import { compressImage } from "@/lib/clientImageCompressor";
 import ImageCropModal from "@/components/ImageCropModal";
+import AudioTrimModal from "@/components/AudioTrimModal";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -86,6 +87,18 @@ function FieldInput({
   fileStatus?: "idle" | "uploading" | "done";
   isLoading?: boolean;
 }) {
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const audioPreviewRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (audioPreviewRef.current) {
+        audioPreviewRef.current.pause();
+        audioPreviewRef.current = null;
+      }
+    };
+  }, []);
+
   const baseInput =
     "w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition";
 
@@ -223,18 +236,52 @@ function FieldInput({
               disabled={isLoading}
               onChange={(e) => {
                 const file = e.target.files?.[0];
-                if (file) onFileChange?.(file, field.key);
+                if (file) {
+                  onFileChange?.(file, field.key);
+                  e.target.value = "";
+                }
               }}
             />
           </label>
+
+          {/* Inline audio preview button if audio is attached */}
+          {!isImage && hasValue && (
+            <button
+              type="button"
+              onClick={() => {
+                if (!audioPreviewRef.current) {
+                  audioPreviewRef.current = new Audio(value);
+                  audioPreviewRef.current.onended = () => setIsPlayingAudio(false);
+                }
+                if (isPlayingAudio) {
+                  audioPreviewRef.current.pause();
+                  setIsPlayingAudio(false);
+                } else {
+                  audioPreviewRef.current.play().catch(() => {});
+                  setIsPlayingAudio(true);
+                }
+              }}
+              title={isPlayingAudio ? "Pause attached song" : "Listen to attached song"}
+              className="px-3 py-2.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold transition shrink-0 flex items-center gap-1.5 cursor-pointer"
+            >
+              {isPlayingAudio ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              <span className="hidden sm:inline">{isPlayingAudio ? "Pause" : "Play"}</span>
+            </button>
+          )}
 
           {/* Remove / Reset button if custom file was selected */}
           {hasValue && (
             <button
               type="button"
-              onClick={() => onChange?.("")}
+              onClick={() => {
+                if (audioPreviewRef.current) {
+                  audioPreviewRef.current.pause();
+                  setIsPlayingAudio(false);
+                }
+                onChange?.("");
+              }}
               title="Remove and use default"
-              className="px-2.5 py-2.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold transition shrink-0"
+              className="px-2.5 py-2.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold transition shrink-0 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -368,6 +415,11 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
     fieldKey: string;
     objectUrl: string;
   } | null>(null);
+  const [audioTrimTarget, setAudioTrimTarget] = useState<{
+    file: File;
+    fieldKey: string;
+    objectUrl: string;
+  } | null>(null);
 
   const demoItem = demos.find((d) => d.id === demoId);
 
@@ -495,13 +547,20 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
     setError(null);
 
     try {
-      // Validate file size (max 4.5MB hard limit for Vercel Serverless request body)
+      // Validate file size (max 2MB strict limit for audio, max 4.5MB for images/general files)
+      if (isAudio && file.size > 2 * 1024 * 1024) {
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+        throw new Error(
+          `Audio file (${sizeMb} MB) exceeds the 2.0 MB limit. Please trim your audio clip to under 2.0 MB.`
+        );
+      }
+
       const MAX_FILE_SIZE = 4.5 * 1024 * 1024;
       if (file.size > MAX_FILE_SIZE) {
         const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
         throw new Error(
           isAudio
-            ? `Audio file (${sizeMb} MB) exceeds the 4.5 MB server limit. Please select an MP3 under 4.5 MB or compress your audio file.`
+            ? `Audio file (${sizeMb} MB) exceeds the 2.0 MB limit. Please trim your audio clip.`
             : `File (${sizeMb} MB) exceeds the 4.5 MB server limit. Please select a smaller file.`
         );
       }
@@ -597,8 +656,15 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
       return;
     }
 
-    // For audio and other files, proceed directly
-    await performFileUpload(file, fieldKey, isAudio);
+    // For audio: Open interactive audio trimmer modal so user can edit & stay under 2MB!
+    if (isAudio) {
+      const objectUrl = URL.createObjectURL(file);
+      setAudioTrimTarget({ file, fieldKey, objectUrl });
+      return;
+    }
+
+    // For other files, proceed directly
+    await performFileUpload(file, fieldKey, false);
   };
 
   const handleSubmit = async () => {
@@ -959,6 +1025,22 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
             URL.revokeObjectURL(objectUrl);
             setCropTarget(null);
             await performFileUpload(croppedFile, fieldKey, false);
+          }}
+        />
+      )}
+
+      {audioTrimTarget && (
+        <AudioTrimModal
+          file={audioTrimTarget.file}
+          onCancel={() => {
+            URL.revokeObjectURL(audioTrimTarget.objectUrl);
+            setAudioTrimTarget(null);
+          }}
+          onComplete={async (trimmedFile) => {
+            const { fieldKey, objectUrl } = audioTrimTarget;
+            URL.revokeObjectURL(objectUrl);
+            setAudioTrimTarget(null);
+            await performFileUpload(trimmedFile, fieldKey, true);
           }}
         />
       )}

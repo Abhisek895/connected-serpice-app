@@ -328,6 +328,16 @@ export default function RomanticLoveTemplate({
   const [showLetter, setShowLetter] = useState(false);
   const [showDownloadPopup, setShowDownloadPopup] = useState(true);
   const hasViewedRef = useRef(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!hasViewedRef.current) {
@@ -379,6 +389,7 @@ export default function RomanticLoveTemplate({
     audio.loop = true;
     audio.volume = 1.0;
     audio.play().catch(() => { });
+    audioRef.current = audio;
     // After 1s fade, show portrait
     setTimeout(() => setStage(2), 1000);
   };

@@ -6,6 +6,7 @@ import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import ImageCropModal from "@/components/ImageCropModal"
+import AudioTrimModal from "@/components/AudioTrimModal"
 
 function BuilderWizard() {
   const router = useRouter()
@@ -27,6 +28,7 @@ function BuilderWizard() {
   const [error, setError] = useState<string | null>(null)
   const [premiumUpgradePrice, setPremiumUpgradePrice] = useState(5000)
   const [cropTarget, setCropTarget] = useState<{ file: File; objectUrl: string } | null>(null)
+  const [audioTrimTarget, setAudioTrimTarget] = useState<{ file: File; objectUrl: string } | null>(null)
 
   useEffect(() => {
     fetch("/api/system/pricing")
@@ -173,6 +175,12 @@ function BuilderWizard() {
     if (type === "image") {
       const objectUrl = URL.createObjectURL(file);
       setCropTarget({ file, objectUrl });
+      return;
+    }
+
+    if (type === "audio") {
+      const objectUrl = URL.createObjectURL(file);
+      setAudioTrimTarget({ file, objectUrl });
       return;
     }
 
@@ -393,7 +401,7 @@ function BuilderWizard() {
                 <motion.label whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className={`border-2 border-dashed border-slate-200 rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-center transition-colors cursor-pointer relative ${isLoading ? 'bg-slate-100 opacity-50' : 'hover:bg-slate-50 hover:border-slate-300 text-slate-400'}`}>
                   {isLoading ? <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 mb-3 sm:mb-4 animate-spin text-rose-500" /> : <Music className="w-8 h-8 sm:w-10 sm:h-10 mb-3 sm:mb-4" />}
                   <p className="font-medium text-slate-700 text-sm sm:text-base">{isLoading ? 'Uploading...' : 'Upload Background Music'}</p>
-                  <p className="text-xs mt-1 text-slate-400">MP3 up to 10MB</p>
+                  <p className="text-xs mt-1 text-slate-400">MP3 up to 2MB (Click to Trim)</p>
                   <input type="file" accept="audio/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={(e) => handleFileUpload(e, 'audio')} disabled={isLoading} />
                 </motion.label>
               </div>
@@ -493,6 +501,38 @@ function BuilderWizard() {
             setCropTarget(null);
           }}
           onComplete={handleCropComplete}
+        />
+      )}
+
+      {audioTrimTarget && (
+        <AudioTrimModal
+          file={audioTrimTarget.file}
+          onCancel={() => {
+            URL.revokeObjectURL(audioTrimTarget.objectUrl);
+            setAudioTrimTarget(null);
+          }}
+          onComplete={async (trimmedFile) => {
+            if (audioTrimTarget.objectUrl) URL.revokeObjectURL(audioTrimTarget.objectUrl);
+            setAudioTrimTarget(null);
+            setIsLoading(true);
+            setError(null);
+            try {
+              const formData = new FormData();
+              formData.append("file", trimmedFile);
+              const res = await fetch("/api/upload", { method: "POST", body: formData });
+              const data = await res.json();
+              if (data?.success && data?.url) {
+                // Attach uploaded audio
+                if (eventId) {
+                  await updateEventCustomData(eventId, { audioUrl: data.url });
+                }
+              }
+            } catch (e: any) {
+              console.error(e);
+              setError("Failed to upload trimmed audio.");
+            }
+            setIsLoading(false);
+          }}
         />
       )}
     </div>

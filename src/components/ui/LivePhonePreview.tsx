@@ -27,6 +27,7 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
   const patternText = (formValues["patternText"] && formValues["patternText"].trim()) ? formValues["patternText"].trim() : (defaultData["patternText"] || "love you");
   const acceptBtn = formValues["acceptBtn"] || defaultData["acceptBtn"] || (isBirthday ? "Love ❤️" : "Yes! 😍");
   const rejectBtn = formValues["rejectBtn"] || defaultData["rejectBtn"] || (isBirthday ? "Hate 💔" : "No 🙈");
+  const hasCustomAudio = Boolean(formValues["_audio"] || formValues["audioUrl"]);
 
   const userBirthdayPhotos = [
     formValues["_photo"],
@@ -67,6 +68,14 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
         <div className={`w-full h-[480px] rounded-[30px] overflow-hidden relative flex flex-col justify-between p-4 pt-10 text-white text-center shadow-inner transition-all duration-300 ${
           isStep2 && isSurprise ? "bg-black" : isPuja ? "bg-[#161413]" : "bg-gradient-to-br from-purple-950 via-rose-900 to-slate-950"
         }`}>
+
+          {/* Custom audio active indicator */}
+          {hasCustomAudio && (
+            <div className="absolute top-8 left-1/2 -translate-x-1/2 z-30 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-rose-500/40 text-[8px] font-semibold text-rose-300 flex items-center gap-1 shadow-sm whitespace-nowrap">
+              <Music className="w-2.5 h-2.5 text-rose-400 animate-pulse" />
+              <span>Custom Audio Attached 🎵</span>
+            </div>
+          )}
 
           {/* Ambient Glow */}
           {(!isStep2 || isBirthday) && !isPuja && (
