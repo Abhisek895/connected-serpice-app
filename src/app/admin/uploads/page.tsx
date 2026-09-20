@@ -16,36 +16,140 @@ export default async function AdminUploadsPage() {
     redirect("/admin/overview");
   }
 
-  // 1. Fetch all users who have created events, including those events and their media
-  const usersWithEvents = await prisma.user.findMany({
-    where: {
-      events: {
-        some: {}, // Only fetch users who have at least one event
+  // 1. Fetch all events with user, theme, media, responses
+  const events = await prisma.event.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      user: {
+        select: { id: true, name: true, email: true, role: true, plan: true },
       },
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      events: {
-        orderBy: {
-          createdAt: "desc",
-        },
-        include: {
-          theme: {
-            select: {
-              name: true,
-              title: true,
-            },
-          },
-          media: true,
-        },
+      theme: {
+        select: { id: true, name: true, title: true, price: true },
       },
-    },
-    orderBy: {
-      createdAt: "desc", // Order users by newest first
+      media: true,
+      responses: {
+        select: { action: true, createdAt: true },
+      },
     },
   });
+
+  // 2. Fetch all payment fulfillments (with payment)
+  const fulfillments = await prisma.paymentFulfillment.findMany({
+    include: {
+      payment: {
+        select: {
+          id: true,
+          amount: true,
+          currency: true,
+          status: true,
+          buyerEmail: true,
+          buyerPhone: true,
+          razorpayOrderId: true,
+          razorpayPaymentId: true,
+          createdAt: true,
+        },
+      },
+    },
+  });
+
+  // 3. Fetch all payments to match by razorpayOrderId
+  const payments = await prisma.payment.findMany({
+    select: {
+      id: true,
+      amount: true,
+      currency: true,
+      status: true,
+      buyerEmail: true,
+      buyerPhone: true,
+      razorpayOrderId: true,
+      razorpayPaymentId: true,
+      createdAt: true,
+    },
+  });
+
+  const fulfillmentByEventId = new Map(fulfillments.map((f) => [f.eventId, f]));
+  const paymentByOrderId = new Map(payments.map((p) => [p.razorpayOrderId, p]));
+
+  // Enrich each event with complete creator, buyer, link, and customData attributes
+  const enrichedEvents = events.map((event) => {
+    let customDataObj: Record<string, any> = {};
+    try {
+      customDataObj = JSON.parse(event.customData || "{}");
+    } catch {}
+
+    const fulfillment = fulfillmentByEventId.get(event.id);
+    const orderId = customDataObj.razorpayOrderId || fulfillment?.payment?.razorpayOrderId;
+    const payment = fulfillment?.payment || (orderId ? paymentByOrderId.get(orderId) : null);
+
+    const isGuest =
+      event.user?.email === "guest@ourstory.internal" ||
+      customDataObj.isGuest === true;
+
+    // Resolve the real buyer/creator email and phone
+    const buyerEmail =
+      payment?.buyerEmail ||
+      customDataObj.buyerEmail ||
+      customDataObj.email ||
+      (isGuest ? null : event.user?.email);
+
+    const buyerPhone = payment?.buyerPhone || customDataObj.buyerPhone || customDataObj.phone || null;
+
+    return {
+      id: event.id,
+      slug: event.slug,
+      status: event.status,
+      createdAt: event.createdAt.toISOString(),
+      expiresAt: event.expiresAt?.toISOString() || null,
+      theme: event.theme,
+      themeId: event.themeId,
+      media: event.media,
+      user: event.user,
+      isGuest,
+      buyerEmail,
+      buyerPhone,
+      customData: event.customData,
+      customDataParsed: customDataObj,
+      payment: payment
+        ? {
+            amount: payment.amount,
+            currency: payment.currency,
+            status: payment.status,
+            razorpayOrderId: payment.razorpayOrderId,
+            razorpayPaymentId: payment.razorpayPaymentId,
+            createdAt: payment.createdAt.toISOString(),
+          }
+        : null,
+      viewsCount: event.responses.length,
+      acceptedCount: event.responses.filter((r) => r.action === "ACCEPTED").length,
+    };
+  });
+
+  // Group events by user (or by distinct guest buyer email)
+  const userMap = new Map<string, { id: string; name: string; email: string; isGuest?: boolean; events: typeof enrichedEvents }>();
+
+  for (const ev of enrichedEvents) {
+    const groupKey = ev.isGuest
+      ? (ev.buyerEmail ? `guest_${ev.buyerEmail}` : `guest_anonymous`)
+      : ev.user?.id || "unknown";
+
+    if (!userMap.has(groupKey)) {
+      userMap.set(groupKey, {
+        id: groupKey,
+        name: ev.isGuest
+          ? (ev.buyerEmail ? `Guest: ${ev.buyerEmail.split("@")[0]}` : "Anonymous Guest")
+          : (ev.user?.name || "Unknown User"),
+        email: ev.isGuest ? (ev.buyerEmail || "guest@ourstory.internal") : (ev.user?.email || "—"),
+        isGuest: ev.isGuest,
+        events: [],
+      });
+    }
+
+    userMap.get(groupKey)!.events.push(ev);
+  }
+
+  const usersWithEvents = Array.from(userMap.values()).sort(
+    (a, b) => b.events.length - a.events.length
+  );
 
   // 2. Fetch all raw blobs from Vercel Cloud Storage
   let allBlobs: any[] = [];
@@ -55,8 +159,6 @@ export default async function AdminUploadsPage() {
       Object.entries(process.env).find(([k]) => k.endsWith("_READ_WRITE_TOKEN"))?.[1];
 
     if (blobToken) {
-       // Note: list() has a limit. By default it fetches up to 1000 items.
-       // Since this is for the admin gallery, fetching the first 1000 is usually enough for a dashboard view.
        const { blobs } = await list({ token: blobToken });
        allBlobs = blobs;
     }
@@ -74,13 +176,13 @@ export default async function AdminUploadsPage() {
             Uploads & Storage Explorer
           </h1>
           <p className="text-slate-400 text-sm mt-1">
-            Track templates data or browse every single file currently sitting in the cloud storage bucket.
+            Track all template creations (registered users & guests) or browse raw files in the cloud storage bucket.
           </p>
         </div>
       </div>
 
       {/* Tabs Wrapper (Handles switching between User Templates and Raw Blobs) */}
-      <UploadsTabs usersData={usersWithEvents} blobs={allBlobs} />
+      <UploadsTabs usersData={usersWithEvents} allEvents={enrichedEvents} blobs={allBlobs} />
     </div>
   );
 }

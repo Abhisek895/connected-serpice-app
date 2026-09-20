@@ -25,6 +25,7 @@ import { AnimatePresence, motion } from "framer-motion";
 
 type UploadsTabsProps = {
   usersData: any[];
+  allEvents?: any[];
   blobs: any[];
 };
 
@@ -49,7 +50,7 @@ function formatDate(dateStr?: string | Date) {
   }
 }
 
-export default function UploadsTabs({ usersData = [], blobs = [] }: UploadsTabsProps) {
+export default function UploadsTabs({ usersData = [], allEvents = [], blobs = [] }: UploadsTabsProps) {
   const [activeTab, setActiveTab] = useState<"grouped" | "gallery">("gallery");
   const [blobList, setBlobList] = useState<any[]>(blobs || []);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
@@ -287,7 +288,7 @@ export default function UploadsTabs({ usersData = [], blobs = [] }: UploadsTabsP
       {/* Tab Content */}
       <div className="mt-4">
         {activeTab === "grouped" ? (
-          <UploadsViewer usersData={usersData} />
+          <UploadsViewer usersData={usersData} allEvents={allEvents} />
         ) : (
           <div className="space-y-6 bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl">
             {/* Header & Controls Bar */}
