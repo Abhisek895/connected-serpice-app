@@ -311,8 +311,24 @@ async function generateTextArtBlob(input: File | string, phrase?: string): Promi
     img.onload = () => {
       if (objectUrl) URL.revokeObjectURL(objectUrl);
 
-      const W = 1080;
-      const H = 1080;
+      // Preserve exact aspect ratio selected/cropped by user (max dimension 1080px for performance & crispness)
+      const maxDim = 1080;
+      let naturalW = img.naturalWidth || img.width || 1080;
+      let naturalH = img.naturalHeight || img.height || 1080;
+
+      let W = naturalW;
+      let H = naturalH;
+      if (W > maxDim || H > maxDim) {
+        if (W >= H) {
+          H = Math.round((H * maxDim) / W);
+          W = maxDim;
+        } else {
+          W = Math.round((W * maxDim) / H);
+          H = maxDim;
+        }
+      }
+      W = Math.max(100, W);
+      H = Math.max(100, H);
 
       // ── Step 1: Draw image to temp canvas & apply exact grayscale + contrast + brightness filter ──
       const tmpCanvas = document.createElement("canvas");
@@ -321,17 +337,8 @@ async function generateTextArtBlob(input: File | string, phrase?: string): Promi
       const tmpCtx = tmpCanvas.getContext("2d");
       if (!tmpCtx) return resolve(null);
 
-      // Cover-crop photo to 1080x1080
-      const imgRatio = img.width / img.height;
-      let drawW = img.width, drawH = img.height, offsetX = 0, offsetY = 0;
-      if (imgRatio > 1) {
-        drawW = img.height;
-        offsetX = (img.width - drawW) / 2;
-      } else {
-        drawH = img.width;
-        offsetY = (img.height - drawH) / 2;
-      }
-      tmpCtx.drawImage(img, offsetX, offsetY, drawW, drawH, 0, 0, W, H);
+      // Draw the exact user-selected photo without forced square cover-crop
+      tmpCtx.drawImage(img, 0, 0, W, H);
 
       // Apply Grayscale (100%) + Contrast (160%) + Brightness (1.2)
       const imageData = tmpCtx.getImageData(0, 0, W, H);
@@ -1015,7 +1022,7 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
         <ImageCropModal
           imageSrc={cropTarget.objectUrl}
           originalFileName={cropTarget.file.name}
-          initialAspect={1}
+          initialAspect={-1}
           onCancel={() => {
             URL.revokeObjectURL(cropTarget.objectUrl);
             setCropTarget(null);

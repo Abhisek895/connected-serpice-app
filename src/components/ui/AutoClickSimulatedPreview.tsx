@@ -85,7 +85,7 @@ function TextArtPortraitMock({
           width: "100%",
           height: "auto",
           maxHeight: "100%",
-          objectFit: "cover",
+          objectFit: "contain",
           position: "relative",
           zIndex: 2,
           filter: "grayscale(100%) contrast(160%) brightness(1.2)",

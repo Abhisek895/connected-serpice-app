@@ -43,8 +43,24 @@ async function generateTextArtBlob(input: File | string, phrase?: string): Promi
     img.onload = () => {
       if (objectUrl) URL.revokeObjectURL(objectUrl);
 
-      const W = 1080;
-      const H = 1080;
+      // Preserve exact aspect ratio selected/cropped by user (max dimension 1080px for performance & crispness)
+      const maxDim = 1080;
+      let naturalW = img.naturalWidth || img.width || 1080;
+      let naturalH = img.naturalHeight || img.height || 1080;
+
+      let W = naturalW;
+      let H = naturalH;
+      if (W > maxDim || H > maxDim) {
+        if (W >= H) {
+          H = Math.round((H * maxDim) / W);
+          W = maxDim;
+        } else {
+          W = Math.round((W * maxDim) / H);
+          H = maxDim;
+        }
+      }
+      W = Math.max(100, W);
+      H = Math.max(100, H);
 
       // ── Step 1: Draw image to temp canvas & apply exact grayscale + contrast + brightness filter ──
       const tmpCanvas = document.createElement("canvas");
@@ -53,17 +69,8 @@ async function generateTextArtBlob(input: File | string, phrase?: string): Promi
       const tmpCtx = tmpCanvas.getContext("2d");
       if (!tmpCtx) return resolve(null);
 
-      // Cover-crop photo to 1080x1080
-      const imgRatio = img.width / img.height;
-      let drawW = img.width, drawH = img.height, offsetX = 0, offsetY = 0;
-      if (imgRatio > 1) {
-        drawW = img.height;
-        offsetX = (img.width - drawW) / 2;
-      } else {
-        drawH = img.width;
-        offsetY = (img.height - drawH) / 2;
-      }
-      tmpCtx.drawImage(img, offsetX, offsetY, drawW, drawH, 0, 0, W, H);
+      // Draw the exact user-selected photo without forced square cover-crop
+      tmpCtx.drawImage(img, 0, 0, W, H);
 
       // Apply Grayscale (100%) + Contrast (160%) + Brightness (1.2)
       const imageData = tmpCtx.getImageData(0, 0, W, H);
@@ -164,9 +171,6 @@ function TextArtPortrait({
         onLoad={() => setIsLoaded(true)}
         style={{
           display: "block",
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
           filter: artImageSrc ? "none" : "grayscale(100%) contrast(160%) brightness(1.2)",
           opacity: isLoaded ? 1 : 0.95,
           transition: "opacity 0.2s ease-in-out",
@@ -478,16 +482,17 @@ export default function RomanticLoveTemplate({
           pointer-events: none;
         }
 
-        /* ── Portrait art: base (mobile) ── */
+        /* ── Portrait art: base (mobile) — matches user's exact selected aspect ratio & size ── */
         .portrait-art-wrapper {
           position: relative;
-          display: flex;
+          display: inline-flex;
           align-items: center;
           justify-content: center;
           overflow: hidden;
-          width: min(86vw, 380px, 48vh);
-          height: min(86vw, 380px, 48vh);
-          max-height: 48vh;
+          width: auto;
+          height: auto;
+          max-width: min(88vw, 380px);
+          max-height: 52vh;
           border-radius: 24px;
           box-shadow: 0 18px 48px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.15);
         }
@@ -496,9 +501,12 @@ export default function RomanticLoveTemplate({
           display: block;
           position: relative;
           z-index: 2;
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
+          width: auto;
+          height: auto;
+          max-width: min(88vw, 380px);
+          max-height: 52vh;
+          object-fit: contain;
+          border-radius: 24px;
         }
 
         /* ── Portrait page: base (mobile) ── */
@@ -560,16 +568,20 @@ export default function RomanticLoveTemplate({
             margin: auto 0;
           }
           .portrait-art-wrapper {
-            width: min(78vw, 480px, 56vh);
-            height: min(78vw, 480px, 56vh);
-            max-height: 56vh;
+            width: auto;
+            height: auto;
+            max-width: min(80vw, 480px);
+            max-height: 58vh;
             border-radius: 28px;
             box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.18);
           }
           .portrait-art-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            width: auto;
+            height: auto;
+            max-width: min(80vw, 480px);
+            max-height: 58vh;
+            object-fit: contain;
+            border-radius: 28px;
           }
           .portrait-buttons-container {
             margin-top: 16px;
