@@ -1,8 +1,340 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Heart, Music, Image as ImageIcon, MessageSquare } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Heart, Music, MousePointer2 } from "lucide-react";
 import { RecipientActionBar } from "./RecipientActionBar";
+
+// ─── Text-Art Portrait Mock (matches real RomanticLoveTemplate effect) ─────────
+function SurpriseTextArtPortrait({
+  src,
+  phrase = "love you",
+}: {
+  src: string;
+  phrase?: string;
+}) {
+  const textRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  const generate = useCallback(() => {
+    const img = imgRef.current;
+    const wall = textRef.current;
+    if (!img || !wall || !img.complete || img.naturalWidth === 0) return;
+    const w = img.clientWidth;
+    const h = img.clientHeight;
+    const multiplier = 3;
+    const charsPerLine = Math.ceil((w * multiplier) / 5);
+    const totalLines = Math.ceil((h * multiplier) / 8);
+    const totalChars = charsPerLine * totalLines * 1.5;
+    const eff = (phrase && phrase.trim()) ? phrase.trim() : "love you";
+    const rep = eff.toUpperCase() + "  ";
+    wall.innerText = rep.repeat(Math.ceil(totalChars / rep.length));
+  }, [phrase]);
+
+  useEffect(() => {
+    window.addEventListener("resize", generate);
+    return () => window.removeEventListener("resize", generate);
+  }, [generate]);
+
+  return (
+    <div style={{ position: "relative", display: "flex", width: "100%", height: "auto", overflow: "hidden" }}>
+      {/* Text pixel layer */}
+      <div
+        ref={textRef}
+        style={{
+          position: "absolute",
+          top: 0, left: 0,
+          width: "300%", height: "300%",
+          transform: "scale(0.3333)",
+          transformOrigin: "top left",
+          zIndex: 1,
+          backgroundColor: "black",
+          color: "white",
+          fontSize: "8px",
+          lineHeight: "8px",
+          letterSpacing: "0px",
+          fontWeight: 900,
+          wordBreak: "break-all",
+          overflow: "hidden",
+          textAlign: "justify",
+          willChange: "transform",
+        }}
+      />
+      {/* Source image */}
+      <img
+        ref={imgRef}
+        src={src}
+        alt="Portrait"
+        onLoad={generate}
+        style={{
+          display: "block",
+          width: "100%",
+          height: "auto",
+          objectFit: "contain",
+          position: "relative",
+          zIndex: 2,
+          filter: "grayscale(100%) contrast(160%) brightness(1.2)",
+          mixBlendMode: "multiply",
+        }}
+      />
+    </div>
+  );
+}
+
+// ─── Romantic Surprise Animated Phone Preview ─────────────────────────────────
+type SurpriseStage =
+  | "landing" | "tap_heart" | "portrait" | "read_letter"
+  | "continue_proposal" | "accept_clicked" | "accepted";
+
+function RomanticSurpriseAnimatedPreview({
+  photoUrl,
+  patternText,
+  displayTitle,
+  displayMessage,
+  displayQuestion,
+  acceptBtn,
+  rejectBtn,
+}: {
+  photoUrl: string;
+  patternText: string;
+  displayTitle: string;
+  displayMessage: string;
+  displayQuestion: string;
+  acceptBtn: string;
+  rejectBtn: string;
+}) {
+  const [stage, setStage] = useState<SurpriseStage>("landing");
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  useEffect(() => {
+    let timers: NodeJS.Timeout[] = [];
+
+    const runCycle = () => {
+      setStage("landing");
+      setShowConfetti(false);
+      timers.push(setTimeout(() => setStage("tap_heart"), 1400));
+      timers.push(setTimeout(() => setStage("portrait"), 1900));
+      timers.push(setTimeout(() => setStage("read_letter"), 4200));
+      timers.push(setTimeout(() => setStage("continue_proposal"), 6800));
+      timers.push(setTimeout(() => setStage("accept_clicked"), 9000));
+      timers.push(setTimeout(() => {
+        setStage("accepted");
+        setShowConfetti(true);
+      }, 9400));
+      timers.push(setTimeout(() => runCycle(), 14000));
+    };
+
+    runCycle();
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
+  // Virtual cursor target per stage
+  const cursorTarget = (() => {
+    switch (stage) {
+      case "landing":    return { top: "62%", left: "50%", opacity: 1, scale: 1 };
+      case "tap_heart":  return { top: "62%", left: "50%", opacity: 1, scale: 0.82 };
+      case "portrait":   return { top: "80%", left: "30%", opacity: 1, scale: 1 };
+      case "read_letter": return { top: "80%", left: "30%", opacity: 1, scale: 0.82 };
+      case "continue_proposal": return { top: "80%", left: "65%", opacity: 1, scale: 1 };
+      case "accept_clicked":    return { top: "78%", left: "32%", opacity: 1, scale: 0.82 };
+      default: return { top: "75%", left: "50%", opacity: 0, scale: 1 };
+    }
+  })();
+
+  const isDark = stage !== "landing" && stage !== "tap_heart";
+  const bgClass = isDark ? "bg-black" : "bg-gradient-to-br from-rose-950 via-purple-950 to-slate-950";
+
+  return (
+    /* Outer phone frame */
+    <div className="w-full max-w-[175px] sm:max-w-[210px] bg-slate-950 p-2 rounded-[30px] shadow-2xl border-4 border-slate-800 relative mx-auto">
+      {/* Dynamic Island */}
+      <div className="absolute top-1 left-1/2 -translate-x-1/2 w-14 h-3 bg-black rounded-full z-20 flex items-center justify-center pointer-events-none">
+        <div className="w-1.5 h-1.5 rounded-full bg-slate-900/80 mr-1.5" />
+        <div className="w-1 h-1 rounded-full bg-blue-900/80" />
+      </div>
+
+      {/* Screen */}
+      <div className={`w-full h-[270px] sm:h-[330px] rounded-[22px] overflow-hidden relative text-white text-center shadow-inner transition-colors duration-500 ${bgClass}`}>
+
+        {/* Ambient glow (landing only) */}
+        {!isDark && (
+          <>
+            <div className="absolute -top-8 -left-8 w-24 h-24 bg-rose-500/20 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-8 -right-8 w-24 h-24 bg-purple-500/20 rounded-full blur-2xl pointer-events-none" />
+          </>
+        )}
+
+        {/* Virtual cursor */}
+        <motion.div
+          className="absolute z-40 pointer-events-none"
+          animate={cursorTarget}
+          transition={{ duration: 0.55, ease: "easeInOut" }}
+        >
+          <div className="relative">
+            <MousePointer2 className="w-4 h-4 text-white fill-slate-900 drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]" />
+            {(stage === "tap_heart" || stage === "read_letter" || stage === "accept_clicked") && (
+              <motion.span
+                initial={{ scale: 0.5, opacity: 1 }}
+                animate={{ scale: 1.8, opacity: 0 }}
+                className="absolute -top-1 -left-1 w-6 h-6 rounded-full bg-rose-400/50 border border-white"
+              />
+            )}
+          </div>
+        </motion.div>
+
+        {/* Content */}
+        <div className="relative z-10 w-full h-full flex flex-col items-center justify-center">
+
+          {/* ── STAGE 0/1: Landing ── */}
+          <AnimatePresence mode="wait">
+            {(stage === "landing" || stage === "tap_heart") && (
+              <motion.div
+                key="landing"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.85 }}
+                className="flex flex-col items-center justify-center gap-3 px-3 w-full"
+              >
+                <motion.div
+                  animate={{ scale: [1, 1.09, 1] }}
+                  transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+                  className="w-14 h-14 rounded-full bg-gradient-to-tr from-rose-600 via-pink-500 to-purple-600 flex items-center justify-center shadow-[0_0_36px_rgba(244,63,94,0.75)] border-2 border-rose-300/50"
+                >
+                  <Heart className="w-7 h-7 text-white fill-white" />
+                </motion.div>
+                <h4 className="text-[10px] sm:text-[11px] font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-200 via-pink-200 to-purple-200 leading-tight px-2">
+                  {displayTitle}
+                </h4>
+                <motion.span
+                  animate={stage === "tap_heart" ? { scale: 0.9, backgroundColor: "rgba(244,63,94,0.95)" } : { scale: 1 }}
+                  className="px-4 py-1.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-full text-[8px] sm:text-[9px] font-black shadow-lg border border-rose-300/40"
+                >
+                  Open Surprise 💌
+                </motion.span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ── STAGE 2/3: Portrait + Letter ── */}
+          {(stage === "portrait" || stage === "read_letter") && (
+            <motion.div
+              key="portrait"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="absolute inset-0 flex items-center justify-center overflow-hidden"
+            >
+              {/* Full portrait fills screen */}
+              <div className="w-full h-full flex items-center justify-center overflow-hidden pb-10">
+                <SurpriseTextArtPortrait
+                  src={photoUrl}
+                  phrase={patternText}
+                />
+              </div>
+
+              {/* Read letter button (bottom) */}
+              {stage === "portrait" && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="absolute bottom-9 left-0 right-0 flex justify-center gap-2 z-20 px-4"
+                >
+                  <span className="px-3 py-1 bg-white/90 text-rose-600 rounded-full text-[8px] font-bold shadow-md">
+                    💌 Read My Message
+                  </span>
+                  <span className="px-3 py-1 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-full text-[8px] font-bold shadow-md">
+                    💖 Continue
+                  </span>
+                </motion.div>
+              )}
+
+              {/* Love letter popup */}
+              <AnimatePresence>
+                {stage === "read_letter" && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.82 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.82 }}
+                    className="absolute inset-x-3 top-1/2 -translate-y-1/2 z-30 bg-white/97 backdrop-blur-md rounded-xl p-2.5 text-slate-900 flex flex-col items-center text-center shadow-2xl border border-white/70"
+                    style={{ fontFamily: "'Dancing Script', cursive" }}
+                  >
+                    <span className="text-[8px] font-extrabold text-rose-500 uppercase tracking-wider mb-0.5" style={{ fontFamily: "sans-serif" }}>
+                      💌 Message for you
+                    </span>
+                    <p className="text-[9px] font-medium leading-tight line-clamp-4">"{displayMessage}"</p>
+                    <span className="text-[7px] text-slate-400 mt-1 font-bold" style={{ fontFamily: "sans-serif" }}>(Tap note to close)</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Continue button when letter open */}
+              {stage === "read_letter" && (
+                <div className="absolute bottom-9 left-0 right-0 flex justify-center z-20">
+                  <span className="px-3 py-1 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-full text-[8px] font-bold shadow-md">
+                    💖 Continue
+                  </span>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* ── STAGE 4/5: Proposal question ── */}
+          <AnimatePresence mode="wait">
+            {(stage === "continue_proposal" || stage === "accept_clicked") && (
+              <motion.div
+                key="proposal"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex flex-col items-center justify-center gap-3 px-3"
+              >
+                <h4 className="text-[10px] sm:text-[11px] font-black text-rose-300 leading-tight px-1">
+                  {displayQuestion}
+                </h4>
+                <div className="flex gap-2 justify-center">
+                  <motion.span
+                    animate={stage === "accept_clicked" ? { scale: 0.92 } : { scale: 1 }}
+                    className={`px-3 py-1.5 text-[8px] rounded-full font-black shadow-md transition-all ${
+                      stage === "accept_clicked"
+                        ? "bg-emerald-500 text-white ring-2 ring-emerald-300"
+                        : "bg-gradient-to-r from-rose-500 to-pink-500 text-white"
+                    }`}
+                  >
+                    {acceptBtn}
+                  </motion.span>
+                  <span className="px-3 py-1.5 text-[8px] bg-white/15 text-white rounded-full font-bold border border-white/20">
+                    {rejectBtn}
+                  </span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ── STAGE 6: Accepted ── */}
+          <AnimatePresence mode="wait">
+            {stage === "accepted" && (
+              <motion.div
+                key="accepted"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="mx-3 bg-gradient-to-r from-rose-500/40 to-pink-500/40 backdrop-blur-md border border-rose-400/50 p-3 rounded-xl text-center space-y-1.5"
+              >
+                <div className="text-[11px] font-black text-rose-200">💖 She Said Yes! 💖</div>
+                <p className="text-[8px] text-pink-100 font-semibold line-clamp-2 leading-tight">
+                  "{displayMessage}"
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* iPhone Home Bar */}
+        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-16 h-0.5 bg-white/30 rounded-full z-30" />
+      </div>
+    </div>
+  );
+}
+
+// ─── Main LivePhonePreview ─────────────────────────────────────────────────────
 
 interface LivePhonePreviewProps {
   demoId: string;
@@ -50,9 +382,45 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
     ? userBirthdayPhotos[bdaySlideIndex % userBirthdayPhotos.length]
     : defaultData["_photo"] || defaultData["photo"] || "/demos/birthday-wish/s0.jpeg";
 
-  const photoUrl = userBirthdayPhotos[0] || formValues["_photo"] || formValues["_photo1"] || defaultData["_photo"] || defaultData["photo"];
+  const photoUrl = formValues["_photo"] || formValues["_photo1"] || formValues["photoUrl"] || defaultData["_photo"] || defaultData["photo"] || "/demos/surprise/cute_woman.png";
 
   const isStep2 = currentStep === 1;
+
+  // ── Romantic Surprise: render full animated simulation in place of the phone ──
+  if (isSurprise) {
+    return (
+      <div className="w-full flex flex-col items-center select-none gap-2">
+        {/* Label */}
+        <div className="text-center">
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+            📱 Live Recipient Preview
+          </p>
+          <p className="text-[9px] text-slate-400 font-medium mt-0.5">
+            Auto-simulating exactly what they'll see ✨
+          </p>
+        </div>
+
+        {/* Custom audio badge */}
+        {hasCustomAudio && (
+          <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-600 text-[9px] font-bold">
+            <Music className="w-2.5 h-2.5 animate-pulse" />
+            Custom Audio Attached 🎵
+          </div>
+        )}
+
+        {/* The animated phone mockup */}
+        <RomanticSurpriseAnimatedPreview
+          photoUrl={photoUrl}
+          patternText={patternText}
+          displayTitle={displayTitle}
+          displayMessage={displayMessage}
+          displayQuestion={displayQuestion}
+          acceptBtn={acceptBtn}
+          rejectBtn={rejectBtn}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-[280px] mx-auto select-none">
@@ -66,7 +434,7 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
 
         {/* Screen */}
         <div className={`w-full h-[480px] rounded-[30px] overflow-hidden relative flex flex-col justify-between p-4 pt-10 text-white text-center shadow-inner transition-all duration-300 ${
-          isStep2 && isSurprise ? "bg-black" : isPuja ? "bg-[#161413]" : "bg-gradient-to-br from-purple-950 via-rose-900 to-slate-950"
+          isPuja ? "bg-[#161413]" : "bg-gradient-to-br from-purple-950 via-rose-900 to-slate-950"
         }`}>
 
           {/* Custom audio active indicator */}
@@ -78,7 +446,7 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
           )}
 
           {/* Ambient Glow */}
-          {(!isStep2 || isBirthday) && !isPuja && (
+          {!isPuja && (
             <>
               <div className="absolute -top-12 -left-12 w-36 h-36 bg-pink-500/35 rounded-full blur-2xl pointer-events-none" />
               <div className="absolute top-1/2 -right-12 w-36 h-36 bg-amber-400/25 rounded-full blur-2xl pointer-events-none" />
@@ -137,63 +505,6 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
                 Bengal After Dusk • Experience
               </div>
             </div>
-          ) : isStep2 && isSurprise ? (
-            <div className="absolute inset-0 z-30 flex flex-col justify-center items-center bg-black rounded-[30px] overflow-hidden">
-              {/* Dead-Centered Portrait Container */}
-              <div className="absolute inset-0 flex items-center justify-center w-full h-full pb-12">
-                <div className="relative flex items-center justify-center overflow-hidden w-full">
-                  {/* 1. Ultra-dense White Monospace Text Pixel Matrix (Spans ONLY image bounds) */}
-                  <div
-                    className="absolute inset-0 w-[300%] h-[300%] bg-black text-white text-[8px] font-black leading-[8px] tracking-tighter overflow-hidden select-none pointer-events-none break-all text-justify p-0 origin-top-left z-0"
-                    style={{
-                      fontFamily: "monospace",
-                      transform: "scale(0.33333)",
-                      willChange: "transform",
-                    }}
-                  >
-                    {((patternText.trim().toUpperCase() || "LOVE YOU") + "  ").repeat(3000)}
-                  </div>
-
-                  {/* 2. Source Image with Natural Aspect Ratio + Grayscale + Contrast + Multiply Blend Mode */}
-                  <img
-                    src={photoUrl || "/demos/surprise/cute_woman.png"}
-                    alt="Portrait Preview"
-                    className="relative z-10 w-full h-auto object-cover block"
-                    style={{
-                      filter: "grayscale(100%) contrast(160%) brightness(1.2)",
-                      mixBlendMode: "multiply",
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Popup Note Overlay */}
-              {showLetterPreview && (
-                <div
-                  onClick={() => setShowLetterPreview(false)}
-                  className="absolute inset-x-4 top-1/2 -translate-y-1/2 z-40 bg-white/95 backdrop-blur-md rounded-xl p-3 text-slate-900 flex flex-col items-center justify-center text-center shadow-2xl border border-white/60 cursor-pointer animate-in zoom-in-95 duration-200"
-                >
-                  <span className="text-[9px] font-extrabold text-rose-500 uppercase tracking-wider mb-1">💌 Message for you</span>
-                  <p className="text-[10px] font-medium italic leading-snug line-clamp-4">"{displayMessage}"</p>
-                  <span className="text-[8px] text-slate-400 mt-2 font-bold">(Tap note to close)</span>
-                </div>
-              )}
-
-              {/* Page 2 Buttons at Bottom */}
-              <div className="absolute bottom-10 left-0 right-0 flex flex-row items-center justify-center gap-1.5 w-full max-w-[210px] mx-auto z-40">
-                {!showLetterPreview && (
-                  <button
-                    onClick={() => setShowLetterPreview(true)}
-                    className="flex-1 py-1 rounded-full bg-white/95 text-rose-600 text-[8px] font-bold shadow-md tracking-tight hover:bg-white cursor-pointer transition transform active:scale-95 text-center whitespace-nowrap"
-                  >
-                    💌 Message
-                  </button>
-                )}
-                <span className="flex-1 py-1 rounded-full bg-gradient-to-r from-rose-500 to-rose-600 text-white text-[8px] font-bold shadow-md shadow-rose-950/60 text-center whitespace-nowrap">
-                  ✨ Continue
-                </span>
-              </div>
-            </div>
           ) : isBirthday ? (
             <div className="relative z-10 h-full w-full flex flex-col justify-center items-center py-2 px-1">
               {/* Glass Card Container (Matches Real Birthday Card & Photos) */}
@@ -228,7 +539,7 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
             </div>
           ) : isApology ? (
             isStep2 ? (
-              /* Apology Template Step 2 Preview: Exact 'A Letter From My Heart' Modal Card (Matching User Screenshot) */
+              /* Apology Template Step 2 Preview: Exact 'A Letter From My Heart' Modal Card */
               <div className="relative z-10 my-auto w-full px-1">
                 <div className="bg-gradient-to-br from-slate-900 via-rose-950 to-slate-950 border border-rose-500/50 rounded-2xl p-3 text-white shadow-2xl space-y-2 text-left">
                   {/* Header */}
@@ -346,12 +657,11 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
             </div>
           )}
 
-
           {/* iPhone Home Bar */}
           <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-24 h-1 bg-white/40 rounded-full" />
-          
+
           <div className="absolute bottom-6 w-full left-0 z-50 flex justify-center scale-90">
-            <RecipientActionBar 
+            <RecipientActionBar
               url={typeof window !== "undefined" ? window.location.origin + "/p/preview" : ""}
               recipientName={displayRecipient}
               title={displayTitle}
