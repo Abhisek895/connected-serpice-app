@@ -1022,7 +1022,7 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
         <ImageCropModal
           imageSrc={cropTarget.objectUrl}
           originalFileName={cropTarget.file.name}
-          initialAspect={1}
+          initialAspect={-1}
           onCancel={() => {
             URL.revokeObjectURL(cropTarget.objectUrl);
             setCropTarget(null);
