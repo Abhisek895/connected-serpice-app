@@ -113,10 +113,11 @@ export async function PUT(req: Request) {
       else cleanContentType = "image/jpeg";
     }
 
-    // Overwrite the blob at the exact pathname
+    // Overwrite the blob at the exact pathname (allowOverwrite: true permits replacing existing files)
     const newBlob = await put(cleanPathname, buffer, {
       access: "public",
-      addRandomSuffix: false, // Overwrites directly at this pathname!
+      addRandomSuffix: false,
+      allowOverwrite: true,
       contentType: cleanContentType,
       token: token || undefined,
     });
