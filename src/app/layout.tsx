@@ -19,6 +19,20 @@ export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: "OurStory | Digital Memories & Proposals",
   description: "Create beautiful, interactive memory pages and proposals for your loved ones without writing any code.",
+  openGraph: {
+    title: "OurStory | Digital Memories & Proposals",
+    description: "Create beautiful, interactive memory pages and proposals for your loved ones.",
+    url: baseUrl,
+    siteName: "OurStory",
+    images: [`${baseUrl}/something-special-card.png`],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "OurStory | Digital Memories & Proposals",
+    description: "Create beautiful, interactive memory pages and proposals for your loved ones.",
+    images: [`${baseUrl}/something-special-card.png`],
+  },
 };
 
 export default function RootLayout({

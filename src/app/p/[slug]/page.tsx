@@ -60,16 +60,41 @@ export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
   const { slug } = await params;
+  let event;
+  try {
+    event = await prisma.event.findUnique({
+      where: { slug },
+      include: { theme: true, media: true },
+    });
+  } catch (error) {
+    console.error("Database error in generateMetadata:", error);
+    // Continue with event = undefined to trigger the fallback below
+  }
 
-  const event = await prisma.event.findUnique({
-    where: { slug },
-    include: { theme: true, media: true },
-  });
+  const envUrl = process.env.NEXT_PUBLIC_APP_URL;
+  const headersList = await headers();
+  const host = headersList.get("host") || "localhost:3000";
+  const protocol = host.includes("localhost") ? "http" : "https";
+  const baseUrl = envUrl && !envUrl.includes("localhost") ? envUrl : `${protocol}://${host}`;
 
   if (!event || event.status !== "PUBLISHED") {
     return {
       title: "OurStory — Digital Memories & Proposals",
       description: "Create beautiful, interactive memory pages for your loved ones.",
+      openGraph: {
+        title: "OurStory — Digital Memories & Proposals",
+        description: "Create beautiful, interactive memory pages for your loved ones.",
+        url: `${baseUrl}/p/${slug}`,
+        siteName: "OurStory",
+        images: [`${baseUrl}/something-special-card.png`],
+        type: "website",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: "OurStory — Digital Memories & Proposals",
+        description: "Create beautiful, interactive memory pages for your loved ones.",
+        images: [`${baseUrl}/something-special-card.png`],
+      }
     };
   }
 
