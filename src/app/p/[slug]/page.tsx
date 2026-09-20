@@ -71,11 +71,10 @@ export async function generateMetadata(
     // Continue with event = undefined to trigger the fallback below
   }
 
-  const envUrl = process.env.NEXT_PUBLIC_APP_URL;
   const headersList = await headers();
-  const host = headersList.get("host") || "localhost:3000";
+  const host = headersList.get("host") || "ourstories.shop";
   const protocol = host.includes("localhost") ? "http" : "https";
-  const baseUrl = envUrl && !envUrl.includes("localhost") ? envUrl : `${protocol}://${host}`;
+  const baseUrl = `${protocol}://${host}`;
 
   if (!event || event.status !== "PUBLISHED") {
     return {

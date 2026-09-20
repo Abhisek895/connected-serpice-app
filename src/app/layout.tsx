@@ -13,7 +13,7 @@ const GA_MEASUREMENT_ID = "G-XXXXXXXXXX";   // TODO: replace with your GA4 ID
 const META_PIXEL_ID     = "XXXXXXXXXXXXXXX"; // TODO: replace with your Meta Pixel ID
 // ─────────────────────────────────────────────────────────────────────────────
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : "http://localhost:3000");
+const baseUrl = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}` : (process.env.NEXT_PUBLIC_APP_URL || "https://ourstories.shop");
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
