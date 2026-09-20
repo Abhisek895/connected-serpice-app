@@ -171,6 +171,9 @@ function TextArtPortrait({
         onLoad={() => setIsLoaded(true)}
         style={{
           display: "block",
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
           filter: artImageSrc ? "none" : "grayscale(100%) contrast(160%) brightness(1.2)",
           opacity: isLoaded ? 1 : 0.95,
           transition: "opacity 0.2s ease-in-out",
@@ -482,30 +485,28 @@ export default function RomanticLoveTemplate({
           pointer-events: none;
         }
 
-        /* ── Portrait art: base (mobile) — matches user's exact selected aspect ratio & size ── */
+        /* ── Portrait art: base (mobile) — uniform consistent prominent size for every picture ── */
         .portrait-art-wrapper {
           position: relative;
-          display: inline-flex;
+          display: flex;
           align-items: center;
           justify-content: center;
           overflow: hidden;
-          width: auto;
-          height: auto;
-          max-width: min(88vw, 380px);
-          max-height: 52vh;
+          width: min(86vw, 360px, 48vh);
+          height: min(86vw, 360px, 48vh);
+          aspect-ratio: 1 / 1;
           border-radius: 24px;
           box-shadow: 0 18px 48px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.15);
+          flex-shrink: 0;
         }
 
         .portrait-art-img {
           display: block;
           position: relative;
           z-index: 2;
-          width: auto;
-          height: auto;
-          max-width: min(88vw, 380px);
-          max-height: 52vh;
-          object-fit: contain;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
           border-radius: 24px;
         }
 
@@ -568,19 +569,17 @@ export default function RomanticLoveTemplate({
             margin: auto 0;
           }
           .portrait-art-wrapper {
-            width: auto;
-            height: auto;
-            max-width: min(80vw, 480px);
-            max-height: 58vh;
+            width: min(76vw, 440px, 54vh);
+            height: min(76vw, 440px, 54vh);
+            aspect-ratio: 1 / 1;
             border-radius: 28px;
             box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.18);
+            flex-shrink: 0;
           }
           .portrait-art-img {
-            width: auto;
-            height: auto;
-            max-width: min(80vw, 480px);
-            max-height: 58vh;
-            object-fit: contain;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             border-radius: 28px;
           }
           .portrait-buttons-container {
