@@ -231,17 +231,34 @@ function RomanticSurpriseAnimatedPreview({
                 />
               </div>
 
-              {/* Read letter button (bottom) */}
+              {/* Read letter button (bottom) — matches love-letter-btn + continue-btn */}
               {stage === "portrait" && (
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="absolute bottom-9 left-0 right-0 flex justify-center gap-2 z-20 px-4"
+                  className="absolute bottom-8 left-0 right-0 flex justify-center gap-2 z-20 px-3"
                 >
-                  <span className="px-3 py-1 bg-white/90 text-rose-600 rounded-full text-[8px] font-bold shadow-md">
+                  <span
+                    className="flex-1 text-center px-2 py-1.5 rounded-full text-[7.5px] font-bold shadow-lg border border-white/80"
+                    style={{
+                      background: "rgba(255,255,255,0.98)",
+                      color: "#d6336c",
+                      fontFamily: "'Dancing Script', cursive",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.4), 0 1px 4px rgba(214,51,108,0.25)",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     💌 Read My Message
                   </span>
-                  <span className="px-3 py-1 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-full text-[8px] font-bold shadow-md">
+                  <span
+                    className="flex-1 text-center px-2 py-1.5 rounded-full text-[7.5px] font-bold shadow-lg"
+                    style={{
+                      background: "linear-gradient(135deg, #ff4d6d, #e8003d)",
+                      color: "white",
+                      boxShadow: "0 4px 12px rgba(255,77,109,0.5)",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     💖 Continue
                   </span>
                 </motion.div>
@@ -266,10 +283,18 @@ function RomanticSurpriseAnimatedPreview({
                 )}
               </AnimatePresence>
 
-              {/* Continue button when letter open */}
+              {/* Continue button when letter open — matches continue-btn */}
               {stage === "read_letter" && (
-                <div className="absolute bottom-9 left-0 right-0 flex justify-center z-20">
-                  <span className="px-3 py-1 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-full text-[8px] font-bold shadow-md">
+                <div className="absolute bottom-8 left-3 right-3 flex justify-center z-20">
+                  <span
+                    className="flex-1 text-center px-2 py-1.5 rounded-full text-[7.5px] font-bold shadow-lg"
+                    style={{
+                      background: "linear-gradient(135deg, #ff4d6d, #e8003d)",
+                      color: "white",
+                      boxShadow: "0 4px 12px rgba(255,77,109,0.5)",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     💖 Continue
                   </span>
                 </div>
@@ -277,7 +302,7 @@ function RomanticSurpriseAnimatedPreview({
             </motion.div>
           )}
 
-          {/* ── STAGE 4/5: Proposal question ── */}
+          {/* ── STAGE 4/5: Proposal question — matches RomanticLoveTemplate proposal buttons ── */}
           <AnimatePresence mode="wait">
             {(stage === "continue_proposal" || stage === "accept_clicked") && (
               <motion.div
@@ -287,21 +312,34 @@ function RomanticSurpriseAnimatedPreview({
                 exit={{ opacity: 0 }}
                 className="flex flex-col items-center justify-center gap-3 px-3"
               >
-                <h4 className="text-[10px] sm:text-[11px] font-black text-rose-300 leading-tight px-1">
+                <h4
+                  className="text-[10px] sm:text-[11px] font-black leading-tight px-1"
+                  style={{ color: "#ff4d6d", fontFamily: "'Pacifico', cursive", textShadow: "1px 1px 4px rgba(0,0,0,0.3)" }}
+                >
                   {displayQuestion}
                 </h4>
                 <div className="flex gap-2 justify-center">
                   <motion.span
                     animate={stage === "accept_clicked" ? { scale: 0.92 } : { scale: 1 }}
-                    className={`px-3 py-1.5 text-[8px] rounded-full font-black shadow-md transition-all ${
-                      stage === "accept_clicked"
-                        ? "bg-emerald-500 text-white ring-2 ring-emerald-300"
-                        : "bg-gradient-to-r from-rose-500 to-pink-500 text-white"
-                    }`}
+                    className="px-3 py-1.5 text-[8px] rounded-full font-black shadow-md transition-all"
+                    style={{
+                      background: stage === "accept_clicked" ? "#10b981" : "#ff4d6d",
+                      color: "white",
+                      boxShadow: stage === "accept_clicked" ? "0 2px 8px rgba(16,185,129,0.5)" : "0 3px 10px rgba(255,77,109,0.45)",
+                      outline: stage === "accept_clicked" ? "2px solid #6ee7b7" : "none",
+                      fontFamily: "sans-serif",
+                    }}
                   >
                     {acceptBtn}
                   </motion.span>
-                  <span className="px-3 py-1.5 text-[8px] bg-white/15 text-white rounded-full font-bold border border-white/20">
+                  <span
+                    className="px-3 py-1.5 text-[8px] rounded-full font-bold"
+                    style={{
+                      background: "#1e293b",
+                      color: "white",
+                      fontFamily: "sans-serif",
+                    }}
+                  >
                     {rejectBtn}
                   </span>
                 </div>

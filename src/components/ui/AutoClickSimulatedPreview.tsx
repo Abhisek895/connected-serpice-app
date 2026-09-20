@@ -506,12 +506,20 @@ export default function AutoClickSimulatedPreview({
                           </AnimatePresence>
                         </div>
 
+                        {/* Portrait stage: Read My Message button — love-letter-btn style */}
                         {simStage !== "read_letter" && (
-                          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 w-full flex justify-center">
+                          <div className="absolute bottom-8 left-2 right-2 z-20 flex justify-center">
                             <motion.button
                               animate={{ scale: 1 }}
-                              className="px-4 py-1.5 bg-white/95 text-rose-600 rounded-full text-[10px] shadow-lg border border-white/80"
-                              style={{ fontFamily: "'Dancing Script', cursive", fontWeight: "bold" }}
+                              className="flex-1 text-center px-3 py-1.5 rounded-full text-[9px] shadow-lg"
+                              style={{
+                                background: "rgba(255,255,255,0.98)",
+                                color: "#d6336c",
+                                fontFamily: "'Dancing Script', cursive",
+                                fontWeight: "bold",
+                                boxShadow: "0 4px 16px rgba(0,0,0,0.45), 0 1px 4px rgba(214,51,108,0.25)",
+                                border: "1px solid rgba(255,255,255,0.8)",
+                              }}
                             >
                               💌 Read My Message
                             </motion.button>
@@ -526,21 +534,34 @@ export default function AutoClickSimulatedPreview({
                         exit={{ opacity: 0 }}
                         className="space-y-3"
                       >
-                        <h4 className="text-xs font-black text-rose-300 leading-tight px-1">
+                        <h4
+                          className="text-xs font-black leading-tight px-1"
+                          style={{ color: "#ff4d6d", fontFamily: "'Pacifico', cursive", textShadow: "1px 1px 4px rgba(0,0,0,0.3)" }}
+                        >
                           {displayQuestion}
                         </h4>
                         <div className="flex gap-1.5 justify-center pt-1">
                           <motion.span
                             animate={simStage === "accept_clicked" ? { scale: 0.92 } : { scale: 1 }}
-                            className={`px-3 py-1 text-[9px] rounded-full font-bold shadow-md transition-all ${
-                              simStage === "accept_clicked"
-                                ? "bg-emerald-500 text-white ring-2 ring-emerald-300"
-                                : "bg-rose-500 text-white"
-                            }`}
+                            className="px-3 py-1 text-[9px] rounded-full font-bold shadow-md transition-all"
+                            style={{
+                              background: simStage === "accept_clicked" ? "#10b981" : "#ff4d6d",
+                              color: "white",
+                              boxShadow: simStage === "accept_clicked" ? "0 2px 8px rgba(16,185,129,0.5)" : "0 3px 12px rgba(255,77,109,0.45)",
+                              outline: simStage === "accept_clicked" ? "2px solid #6ee7b7" : "none",
+                              fontFamily: "sans-serif",
+                            }}
                           >
                             {acceptBtn}
                           </motion.span>
-                          <span className="px-3 py-1 text-[9px] bg-white/20 text-white rounded-full font-medium border border-white/20">
+                          <span
+                            className="px-3 py-1 text-[9px] rounded-full font-medium"
+                            style={{
+                              background: "#1e293b",
+                              color: "white",
+                              fontFamily: "sans-serif",
+                            }}
+                          >
                             {rejectBtn}
                           </span>
                         </div>
