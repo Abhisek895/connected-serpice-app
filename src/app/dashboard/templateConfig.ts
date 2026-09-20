@@ -702,8 +702,8 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
         ],
       },
       {
-        title: "Personal Message & Food Preferences",
-        description: "Add your personal message and configure food choices for the celebration.",
+        title: "Personal Message",
+        description: "Add your personal message for the celebration.",
         fields: [
           {
             key: "loveMessage",
@@ -713,16 +713,6 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
             presetSuggestions: [
               "Puja has always been special to me, but this year I couldn't imagine walking under the pandal lights with anyone else.",
               "I've been thinking about asking you this for a while... Let's wander under the festival lights together.",
-            ],
-          },
-          {
-            key: "foodOptions",
-            label: "Food Options (Comma-separated)",
-            type: "text",
-            placeholder: "Phuchka, Momos, Kathi Roll, Biryani, Something sweet, You choose",
-            presetSuggestions: [
-              "Phuchka, Momos, Kathi Roll, Biryani, Something sweet, You choose",
-              "Phuchka, Egg Roll, Chicken Biryani, Mishti Doi",
             ],
           },
         ],
