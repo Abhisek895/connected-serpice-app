@@ -122,75 +122,57 @@ async function generateTextArtBlob(input: File | string, phrase?: string): Promi
 function TextArtPortrait({
   src,
   phrase = "love you",
+  generatedUrl,
 }: {
   src: string;
   phrase?: string;
+  generatedUrl?: string | null;
 }) {
-  const textRef = useRef<HTMLDivElement>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
-
-  const generateArt = useCallback(() => {
-    const img = imgRef.current;
-    const wall = textRef.current;
-    if (!img || !wall || !img.complete || img.naturalWidth === 0) return;
-    const w = img.clientWidth;
-    const h = img.clientHeight;
-    const multiplier = 3;
-    const charsPerLine = Math.ceil((w * multiplier) / 5);
-    const totalLines = Math.ceil((h * multiplier) / 8);
-    const totalChars = charsPerLine * totalLines * 1.5;
-    const effective = (phrase && phrase.trim()) ? phrase.trim() : "love you";
-    const repeatPhrase = effective.toUpperCase() + "  "; // Add spacing so words don't stick together
-    const repeatCount = Math.ceil(totalChars / repeatPhrase.length);
-    wall.innerText = repeatPhrase.repeat(repeatCount);
-  }, [phrase]);
+  const [artImageSrc, setArtImageSrc] = useState<string>(generatedUrl || "");
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    window.addEventListener("resize", generateArt);
-    return () => window.removeEventListener("resize", generateArt);
-  }, [generateArt]);
+    let isMounted = true;
+    let objectUrlToRevoke: string | null = null;
+
+    if (generatedUrl) {
+      setArtImageSrc(generatedUrl);
+      return;
+    }
+
+    const effectivePhrase = (phrase && phrase.trim()) ? phrase.trim() : "love you";
+    generateTextArtBlob(src, effectivePhrase).then((blob) => {
+      if (blob && isMounted) {
+        const blobUrl = URL.createObjectURL(blob);
+        objectUrlToRevoke = blobUrl;
+        setArtImageSrc(blobUrl);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      if (objectUrlToRevoke) URL.revokeObjectURL(objectUrlToRevoke);
+    };
+  }, [src, phrase, generatedUrl]);
 
   return (
-    <>
-      <div className="portrait-art-wrapper">
-        {/* Text pixel layer */}
-        <div
-          ref={textRef}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "300%",
-            height: "300%",
-            transform: "scale(0.3333)",
-            transformOrigin: "top left",
-            zIndex: 1,
-            backgroundColor: "black",
-            color: "white",
-            fontSize: "8px",
-            lineHeight: "8px",
-            letterSpacing: "0px",
-            fontWeight: 900,
-            wordBreak: "break-all",
-            overflow: "hidden",
-            textAlign: "justify",
-            willChange: "transform",
-          }}
-        />
-        {/* Source image */}
-        <img
-          ref={imgRef}
-          src={src}
-          alt="Portrait"
-          onLoad={generateArt}
-          className="portrait-art-img"
-          style={{
-            filter: "grayscale(100%) contrast(160%) brightness(1.2)",
-            mixBlendMode: "multiply",
-          }}
-        />
-      </div>
-    </>
+    <div className="portrait-art-wrapper">
+      <img
+        src={artImageSrc || src}
+        alt="Portrait"
+        className="portrait-art-img"
+        onLoad={() => setIsLoaded(true)}
+        style={{
+          display: "block",
+          width: "100%",
+          height: "auto",
+          objectFit: "cover",
+          filter: artImageSrc ? "none" : "grayscale(100%) contrast(160%) brightness(1.2)",
+          opacity: isLoaded ? 1 : 0.95,
+          transition: "opacity 0.2s ease-in-out",
+        }}
+      />
+    </div>
   );
 }
 
@@ -800,7 +782,11 @@ export default function RomanticLoveTemplate({
 
               {/* Photo & Overlay Popup Container (Dead Centered at y=50vh) */}
               <div className="portrait-container-wrapper">
-                <TextArtPortrait src={displayPhoto} phrase={(patternText && patternText.trim()) ? patternText.trim() : "love you"} />
+                <TextArtPortrait
+                  src={displayPhoto}
+                  phrase={(patternText && patternText.trim()) ? patternText.trim() : "love you"}
+                  generatedUrl={customData?.generatedThumbnailUrl}
+                />
 
                 {/* Love Letter Popup Overlay directly on top of photo */}
                 <AnimatePresence>
