@@ -362,6 +362,7 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
     foodChoices[0]?.id || "phuchka",
   ]);
   const [selectedLocationPref, setSelectedLocationPref] = useState<string>("close");
+  const [recipientVenue, setRecipientVenue] = useState<string>("");
   const [recipientNote, setRecipientNote] = useState<string>("");
   const [hasSubmitted, setHasSubmitted] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -449,6 +450,7 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
         selectedAdventure,
         selectedFoods,
         selectedLocationPref,
+        recipientVenue,
         recipientNote,
         submittedAt: new Date().toISOString(),
       },
@@ -829,9 +831,9 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
                       <span className="text-2xl mt-0.5">{opt.icon}</span>
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-semibold text-[#FDFBF7]">{opt.title}</h4>
+                          <h4 className="text-sm font-semibold text-[#FDFBF7] font-bengali">{opt.title}</h4>
                           {opt.subtitle && (
-                            <span className="font-bengali text-xs text-[#D4AF37]/80">
+                            <span className="text-xs text-[#D4AF37]/80">
                               {opt.subtitle}
                             </span>
                           )}
@@ -1121,56 +1123,19 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
                 })}
               </div>
 
-              {/* Optional Creator Venue Card (rendered only if set) */}
-              {(venueName || date || time) && (
-                <div className="p-4 rounded-2xl bg-[#FAF7F0] text-[#161413] shadow-md border border-[#D4AF37]/40 space-y-2.5">
-                  <div className="flex items-center justify-between border-b border-[#161413]/10 pb-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#C0422B]">
-                      Meeting Point Suggestion
-                    </span>
-                    <span className="text-[10px] text-[#D4AF37] font-semibold">Puja Pass</span>
-                  </div>
-
-                  {venueName && (
-                    <div className="flex items-start gap-2 text-xs">
-                      <MapPin className="w-3.5 h-3.5 text-[#C0422B] shrink-0 mt-0.5" />
-                      <div>
-                        <span className="font-semibold text-sm block">{venueName}</span>
-                        {address && <span className="text-[#161413]/70">{address}</span>}
-                      </div>
-                    </div>
-                  )}
-
-                  {(date || time) && (
-                    <div className="flex items-center gap-4 text-xs text-[#161413]/80 pt-1">
-                      {date && (
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3 text-[#C0422B]" />
-                          <span>{date}</span>
-                        </div>
-                      )}
-                      {time && (
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-[#C0422B]" />
-                          <span>{time}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {googleMapsUrl && (
-                    <a
-                      href={googleMapsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-[#631726] font-semibold hover:underline pt-1"
-                    >
-                      <span>Open on Google Maps</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  )}
-                </div>
-              )}
+              {/* Recipient Input for Meeting Point */}
+              <div className="p-4 rounded-2xl bg-[#FAF7F0] text-[#161413] shadow-md border border-[#D4AF37]/40 space-y-2.5 text-left">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[#C0422B] block">
+                  Where should we meet?
+                </label>
+                <input
+                  type="text"
+                  value={recipientVenue}
+                  onChange={(e) => setRecipientVenue(e.target.value)}
+                  placeholder="e.g. Maddox Square, College Square..."
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#161413]/10 text-xs text-[#161413] placeholder-[#161413]/40 focus:outline-none focus:border-[#D4AF37]"
+                />
+              </div>
 
               <div className="flex items-center gap-3 pt-2">
                 <button

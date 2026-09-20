@@ -725,13 +725,6 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
               "Phuchka, Egg Roll, Chicken Biryani, Mishti Doi",
             ],
           },
-          {
-            key: "venueName",
-            label: "Meeting Point / Pandal (optional)",
-            type: "text",
-            placeholder: "Maddox Square",
-            presetSuggestions: ["Maddox Square", "College Square", "Ekdalia Evergreen"],
-          },
         ],
       },
     ],
