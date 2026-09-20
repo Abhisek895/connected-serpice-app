@@ -10,7 +10,7 @@ import { useRef, useCallback } from "react";
 
 function TextArtPortraitMock({
   src,
-  phrase = "LOVE YOU",
+  phrase = "love you",
 }: {
   src: string;
   phrase?: string;
@@ -28,7 +28,8 @@ function TextArtPortraitMock({
     const charsPerLine = Math.ceil((w * multiplier) / 5);
     const totalLines = Math.ceil((h * multiplier) / 8);
     const totalChars = charsPerLine * totalLines * 1.5;
-    const repeatPhrase = phrase.trim() + "  ";
+    const effective = (phrase && phrase.trim()) ? phrase.trim() : "love you";
+    const repeatPhrase = effective.toUpperCase() + "  ";
     const repeatCount = Math.ceil(totalChars / repeatPhrase.length);
     wall.innerText = repeatPhrase.repeat(repeatCount);
   }, [phrase]);
@@ -127,7 +128,7 @@ export default function AutoClickSimulatedPreview({
   const displayRecipient = formValues["recipientName"] || defaultData["recipientName"] || "Someone Special ✨";
   const displayQuestion = formValues["question"] || defaultData["question"] || "Will you be mine? 💖";
   const displayMessage = formValues["loveMessage"] || defaultData["loveMessage"] || "A little surprise from someone who truly cares…";
-  const patternText = formValues["patternText"] || defaultData["patternText"] || "love you";
+  const patternText = (formValues["patternText"] && formValues["patternText"].trim()) ? formValues["patternText"].trim() : (defaultData["patternText"] || "love you");
   const photoUrl = formValues["_photo"] || formValues["_photo1"] || defaultData["_photo"] || defaultData["photo"];
   const acceptBtn = formValues["acceptBtn"] || defaultData["acceptBtn"] || "Yes! 😍";
   const rejectBtn = formValues["rejectBtn"] || defaultData["rejectBtn"] || "No 🙈";
@@ -485,7 +486,7 @@ export default function AutoClickSimulatedPreview({
                       >
                         {/* TextArtPortrait Mockup with Overlay Popup */}
                         <div className="absolute top-0 left-0 w-full h-full z-10 overflow-hidden flex items-center justify-center pb-12">
-                          <TextArtPortraitMock src={photoUrl || "/demos/surprise/cute_woman.png"} phrase={patternText || "love you"} />
+                          <TextArtPortraitMock src={photoUrl || "/demos/surprise/cute_woman.png"} phrase={patternText} />
 
                           {/* Love Letter Popup overlay directly on top of photo */}
                           <AnimatePresence>

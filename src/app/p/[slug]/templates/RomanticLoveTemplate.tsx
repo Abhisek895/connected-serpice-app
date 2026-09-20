@@ -28,7 +28,7 @@ export type ProposalClientProps = {
   media: { id: string; url: string; type: string }[];
 };
 
-async function generateTextArtBlob(input: File | string, phrase: string = "LOVE YOU"): Promise<Blob | null> {
+async function generateTextArtBlob(input: File | string, phrase?: string): Promise<Blob | null> {
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = "anonymous";
@@ -92,7 +92,8 @@ async function generateTextArtBlob(input: File | string, phrase: string = "LOVE 
       ctx.font = `900 ${fontSize}px sans-serif`;
       ctx.textBaseline = "top";
 
-      const repPhrase = (phrase.toUpperCase().trim() || "LOVE YOU") + "  ";
+      const targetPhrase = (phrase && phrase.trim()) ? phrase.trim() : "love you";
+      const repPhrase = targetPhrase.toUpperCase() + "  ";
       let lineText = "";
       while (ctx.measureText(lineText).width < W + 300) {
         lineText += repPhrase;
@@ -120,7 +121,7 @@ async function generateTextArtBlob(input: File | string, phrase: string = "LOVE 
 // ─── Portrait Text-Art Generator ─────────────────────────────────────────────
 function TextArtPortrait({
   src,
-  phrase = "LOVE YOU",
+  phrase = "love you",
 }: {
   src: string;
   phrase?: string;
@@ -138,7 +139,8 @@ function TextArtPortrait({
     const charsPerLine = Math.ceil((w * multiplier) / 5);
     const totalLines = Math.ceil((h * multiplier) / 8);
     const totalChars = charsPerLine * totalLines * 1.5;
-    const repeatPhrase = phrase.trim() + "  "; // Add spacing so words don't stick together
+    const effective = (phrase && phrase.trim()) ? phrase.trim() : "love you";
+    const repeatPhrase = effective.toUpperCase() + "  "; // Add spacing so words don't stick together
     const repeatCount = Math.ceil(totalChars / repeatPhrase.length);
     wall.innerText = repeatPhrase.repeat(repeatCount);
   }, [phrase]);
@@ -755,21 +757,24 @@ export default function RomanticLoveTemplate({
                           setShowDownloadPopup(false);
                           try {
                             let blob: Blob | null = null;
-                            if (customData?.generatedThumbnailUrl) {
+                            const effectivePattern = (patternText && patternText.trim()) ? patternText.trim() : "love you";
+
+                            // Generate directly on client to guarantee 100% fidelity to the dynamic text input
+                            if (displayPhoto) {
+                              blob = await generateTextArtBlob(displayPhoto, effectivePattern);
+                            }
+                            if (!blob && customData?.generatedThumbnailUrl) {
                               try {
                                 const res = await fetch(customData.generatedThumbnailUrl);
                                 if (res.ok) blob = await res.blob();
                               } catch { }
-                            }
-                            if (!blob && displayPhoto) {
-                              blob = await generateTextArtBlob(displayPhoto, patternText || "LOVE YOU");
                             }
                             if (!blob) return;
 
                             const blobUrl = URL.createObjectURL(blob);
                             const link = document.createElement("a");
                             link.href = blobUrl;
-                            link.download = "romantic-love-art.jpg";
+                            link.download = `${effectivePattern.replace(/[^a-zA-Z0-9_-]/g, "-").toLowerCase()}-art.jpg`;
                             document.body.appendChild(link);
                             link.click();
                             document.body.removeChild(link);
@@ -795,7 +800,7 @@ export default function RomanticLoveTemplate({
 
               {/* Photo & Overlay Popup Container (Dead Centered at y=50vh) */}
               <div className="portrait-container-wrapper">
-                <TextArtPortrait src={displayPhoto} phrase={patternText || "love you"} />
+                <TextArtPortrait src={displayPhoto} phrase={(patternText && patternText.trim()) ? patternText.trim() : "love you"} />
 
                 {/* Love Letter Popup Overlay directly on top of photo */}
                 <AnimatePresence>

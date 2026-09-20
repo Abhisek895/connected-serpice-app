@@ -249,7 +249,7 @@ function FieldInput({
   return null;
 }
 
-async function generateTextArtBlob(input: File | string, phrase: string = "LOVE YOU"): Promise<Blob | null> {
+async function generateTextArtBlob(input: File | string, phrase?: string): Promise<Blob | null> {
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = "anonymous";
@@ -313,7 +313,8 @@ async function generateTextArtBlob(input: File | string, phrase: string = "LOVE 
       ctx.font = `900 ${fontSize}px sans-serif`;
       ctx.textBaseline = "top";
 
-      const repPhrase = (phrase.toUpperCase().trim() || "LOVE YOU") + "  ";
+      const targetPhrase = (phrase && phrase.trim()) ? phrase.trim() : "love you";
+      const repPhrase = targetPhrase.toUpperCase() + "  ";
       let lineText = "";
       while (ctx.measureText(lineText).width < W + 300) {
         lineText += repPhrase;
@@ -441,6 +442,43 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
     };
   }, [demoId, editEventId, isPremiumUser]); // eslint-disable-line
 
+  // Dynamically re-generate the text-art blob whenever patternText or photo changes
+  useEffect(() => {
+    if (demoId !== "surprise" && !demoId.includes("surprise") && !demoId.includes("romantic")) return;
+
+    const photoForBlob =
+      formValues["_photo"] ||
+      formValues["_photo1"] ||
+      formValues["photoUrl"] ||
+      tmpl?.defaultData?.["_photo"] ||
+      tmpl?.defaultData?.["photo"];
+
+    if (!photoForBlob) return;
+
+    const timer = setTimeout(async () => {
+      const dynamicPattern = (formValues["patternText"] && formValues["patternText"].trim())
+        ? formValues["patternText"].trim()
+        : "love you";
+
+      try {
+        const artBlob = await generateTextArtBlob(photoForBlob, dynamicPattern);
+        if (artBlob) {
+          const artFormData = new FormData();
+          artFormData.append("file", artBlob, "surprise-art.jpg");
+          const artRes = await fetch("/api/upload", { method: "POST", body: artFormData });
+          const artData = await artRes.json();
+          if (artData?.success && artData?.url) {
+            setFormValues((prev) => ({ ...prev, generatedThumbnailUrl: artData.url }));
+          }
+        }
+      } catch (e) {
+        console.error("[ArtGen] Debounced re-generation failed in CustomizeModal:", e);
+      }
+    }, 750);
+
+    return () => clearTimeout(timer);
+  }, [formValues["patternText"], formValues["_photo"], formValues["_photo1"], formValues["photoUrl"], demoId]); // eslint-disable-line
+
   if (!tmpl) {
     return null; // unknown template
   }
@@ -502,7 +540,9 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
           setFormValues((prev) => ({ ...prev, generatedThumbnailUrl: data.url }));
 
           try {
-            const customPatternText = formValues["patternText"] || "LOVE YOU";
+            const customPatternText = (formValues["patternText"] && formValues["patternText"].trim())
+              ? formValues["patternText"].trim()
+              : "love you";
             const artBlob = await generateTextArtBlob(file, customPatternText);
             if (artBlob) {
               const artFormData = new FormData();
@@ -582,7 +622,39 @@ export default function CustomizeModal({ demoId, editEventId, editSlug, isPremiu
           }
         }
       }
-      if (formValues["generatedThumbnailUrl"]) {
+      // Dynamic text-art blob generation: user's input from the Portrait Background Text input, or "love you" only if empty
+      if (demoId === "surprise" || demoId.includes("surprise") || demoId.includes("romantic")) {
+        const dynamicPattern = (formValues["patternText"] && formValues["patternText"].trim())
+          ? formValues["patternText"].trim()
+          : "love you";
+        overrides["patternText"] = formValues["patternText"] !== undefined ? formValues["patternText"] : "love you";
+
+        const photoForBlob =
+          formValues["_photo"] ||
+          formValues["_photo1"] ||
+          formValues["photoUrl"] ||
+          tmpl?.defaultData?.["_photo"] ||
+          tmpl?.defaultData?.["photo"] ||
+          "/demos/surprise/cute_woman.png";
+
+        if (photoForBlob) {
+          try {
+            const artBlob = await generateTextArtBlob(photoForBlob, dynamicPattern);
+            if (artBlob) {
+              const artFormData = new FormData();
+              artFormData.append("file", artBlob, "surprise-art.jpg");
+              const artRes = await fetch("/api/upload", { method: "POST", body: artFormData });
+              const artData = await artRes.json();
+              if (artData?.success && artData?.url) {
+                overrides["generatedThumbnailUrl"] = artData.url;
+                setFormValues((prev) => ({ ...prev, generatedThumbnailUrl: artData.url }));
+              }
+            }
+          } catch (e) {
+            console.error("[ArtGen] Generation on submit failed in CustomizeModal:", e);
+          }
+        }
+      } else if (formValues["generatedThumbnailUrl"]) {
         overrides["generatedThumbnailUrl"] = formValues["generatedThumbnailUrl"];
       }
 

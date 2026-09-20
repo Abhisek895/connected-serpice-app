@@ -24,7 +24,7 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
   const displayRecipient = formValues["recipientName"] || defaultData["recipientName"] || "Someone Special ✨";
   const displayQuestion = formValues["question"] || defaultData["question"] || "Will you be mine? 💖";
   const displayMessage = formValues["loveMessage"] || defaultData["loveMessage"] || "A little surprise from someone who truly cares…";
-  const patternText = formValues["patternText"] || defaultData["patternText"] || "love you";
+  const patternText = (formValues["patternText"] && formValues["patternText"].trim()) ? formValues["patternText"].trim() : (defaultData["patternText"] || "love you");
   const acceptBtn = formValues["acceptBtn"] || defaultData["acceptBtn"] || (isBirthday ? "Love ❤️" : "Yes! 😍");
   const rejectBtn = formValues["rejectBtn"] || defaultData["rejectBtn"] || (isBirthday ? "Hate 💔" : "No 🙈");
 
@@ -142,7 +142,7 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
                       willChange: "transform",
                     }}
                   >
-                    {((patternText || "love you").trim() + "  ").repeat(3000)}
+                    {((patternText.trim().toUpperCase() || "LOVE YOU") + "  ").repeat(3000)}
                   </div>
 
                   {/* 2. Source Image with Natural Aspect Ratio + Grayscale + Contrast + Multiply Blend Mode */}

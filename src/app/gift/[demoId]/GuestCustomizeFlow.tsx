@@ -31,7 +31,7 @@ const DEMO_ICONS: Record<string, LucideIcon> = {
   "durga-puja": Flame,
 };
 
-async function generateTextArtBlob(input: File | string, phrase: string = "LOVE YOU"): Promise<Blob | null> {
+async function generateTextArtBlob(input: File | string, phrase?: string): Promise<Blob | null> {
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = "anonymous";
@@ -95,7 +95,8 @@ async function generateTextArtBlob(input: File | string, phrase: string = "LOVE 
       ctx.font = `900 ${fontSize}px sans-serif`;
       ctx.textBaseline = "top";
 
-      const repPhrase = (phrase.toUpperCase().trim() || "LOVE YOU") + "  ";
+      const targetPhrase = (phrase && phrase.trim()) ? phrase.trim() : "love you";
+      const repPhrase = targetPhrase.toUpperCase() + "  ";
       let lineText = "";
       while (ctx.measureText(lineText).width < W + 300) {
         lineText += repPhrase;
@@ -388,6 +389,43 @@ export default function GuestCustomizeFlow({
     }
   }, [publishedUrl]);
 
+  // Dynamically re-generate the text-art blob whenever patternText or photo changes
+  useEffect(() => {
+    if (demo.id !== "surprise" && !demo.id.includes("surprise") && !demo.id.includes("romantic")) return;
+
+    const photoForBlob =
+      formValues["_photo"] ||
+      formValues["_photo1"] ||
+      formValues["photoUrl"] ||
+      tmpl.defaultData["_photo"] ||
+      tmpl.defaultData["photo"];
+
+    if (!photoForBlob) return;
+
+    const timer = setTimeout(async () => {
+      const dynamicPattern = (formValues["patternText"] && formValues["patternText"].trim())
+        ? formValues["patternText"].trim()
+        : "love you";
+
+      try {
+        const artBlob = await generateTextArtBlob(photoForBlob, dynamicPattern);
+        if (artBlob) {
+          const artFormData = new FormData();
+          artFormData.append("file", artBlob, "surprise-art.jpg");
+          const artRes = await fetch("/api/upload", { method: "POST", body: artFormData });
+          const artData = await artRes.json();
+          if (artData?.success && artData?.url) {
+            setFormValues((prev) => ({ ...prev, generatedThumbnailUrl: artData.url }));
+          }
+        }
+      } catch (e) {
+        console.error("[ArtGen] Debounced re-generation failed in GuestCustomizeFlow:", e);
+      }
+    }, 750);
+
+    return () => clearTimeout(timer);
+  }, [formValues["patternText"], formValues["_photo"], formValues["_photo1"], formValues["photoUrl"], demo.id]); // eslint-disable-line
+
   // Initialize form with template defaultData & check URL params
   useEffect(() => {
     const vals: Record<string, string> = {};
@@ -555,7 +593,9 @@ export default function GuestCustomizeFlow({
           setFormValues((prev) => ({ ...prev, generatedThumbnailUrl: data.url }));
 
           try {
-            const customPatternText = formValues["patternText"] || "LOVE YOU";
+            const customPatternText = (formValues["patternText"] && formValues["patternText"].trim())
+              ? formValues["patternText"].trim()
+              : "love you";
             const artBlob = await generateTextArtBlob(file, customPatternText);
             if (artBlob) {
               const artFormData = new FormData();
@@ -644,8 +684,39 @@ export default function GuestCustomizeFlow({
       }
     }
 
-    // Include extra generated fields that are NOT part of the template fields
-    if (formValues["generatedThumbnailUrl"]) {
+    // Dynamic text-art blob generation: user's input from the Portrait Background Text input, or "love you" only if empty
+    if (demo.id === "surprise" || demo.id.includes("surprise") || demo.id.includes("romantic")) {
+      const dynamicPattern = (formValues["patternText"] && formValues["patternText"].trim())
+        ? formValues["patternText"].trim()
+        : "love you";
+      customDataSnapshot["patternText"] = formValues["patternText"] !== undefined ? formValues["patternText"] : "love you";
+
+      const photoForBlob =
+        formValues["_photo"] ||
+        formValues["_photo1"] ||
+        formValues["photoUrl"] ||
+        tmpl.defaultData["_photo"] ||
+        tmpl.defaultData["photo"] ||
+        "/demos/surprise/cute_woman.png";
+
+      if (photoForBlob) {
+        try {
+          const artBlob = await generateTextArtBlob(photoForBlob, dynamicPattern);
+          if (artBlob) {
+            const artFormData = new FormData();
+            artFormData.append("file", artBlob, "surprise-art.jpg");
+            const artRes = await fetch("/api/upload", { method: "POST", body: artFormData });
+            const artData = await artRes.json();
+            if (artData?.success && artData?.url) {
+              customDataSnapshot["generatedThumbnailUrl"] = artData.url;
+              setFormValues((prev) => ({ ...prev, generatedThumbnailUrl: artData.url }));
+            }
+          }
+        } catch (e) {
+          console.error("[ArtGen] Generation on guest order failed:", e);
+        }
+      }
+    } else if (formValues["generatedThumbnailUrl"]) {
       customDataSnapshot["generatedThumbnailUrl"] = formValues["generatedThumbnailUrl"];
     }
     // Always include demoId so the template can be identified server-side

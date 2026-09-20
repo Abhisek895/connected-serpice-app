@@ -27,7 +27,8 @@ export default function MiniTextArtPreview({
     const charsPerLine = Math.ceil((w * multiplier) / 5);
     const totalLines = Math.ceil((h * multiplier) / 8);
     const totalChars = charsPerLine * totalLines * 1.5;
-    const repeatPhrase = phrase.trim() + "  ";
+    const effective = (phrase && phrase.trim()) ? phrase.trim() : "love you";
+    const repeatPhrase = effective.toUpperCase() + "  ";
     wall.innerText = repeatPhrase.repeat(Math.ceil(totalChars / repeatPhrase.length));
   }, [phrase]);
 
