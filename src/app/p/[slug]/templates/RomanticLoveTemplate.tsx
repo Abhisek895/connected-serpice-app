@@ -165,7 +165,7 @@ function TextArtPortrait({
         style={{
           display: "block",
           width: "100%",
-          height: "auto",
+          height: "100%",
           objectFit: "cover",
           filter: artImageSrc ? "none" : "grayscale(100%) contrast(160%) brightness(1.2)",
           opacity: isLoaded ? 1 : 0.95,
@@ -471,9 +471,14 @@ export default function RomanticLoveTemplate({
         .portrait-art-wrapper {
           position: relative;
           display: flex;
+          align-items: center;
+          justify-content: center;
           overflow: hidden;
-          width: 100%;
-          height: auto;
+          width: min(92vw, 420px);
+          height: min(92vw, 420px);
+          max-height: 56vh;
+          border-radius: 26px;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.15);
         }
 
         .portrait-art-img {
@@ -481,7 +486,7 @@ export default function RomanticLoveTemplate({
           position: relative;
           z-index: 2;
           width: 100%;
-          height: auto;
+          height: 100%;
           object-fit: cover;
         }
 
@@ -493,89 +498,74 @@ export default function RomanticLoveTemplate({
           min-height: -webkit-fill-available;
           display: flex;
           flex-direction: column;
-          justify-content: center;
+          justify-content: space-between;
           align-items: center;
           position: relative;
           z-index: 10;
-          overflow: hidden;
+          overflow-y: auto;
+          overflow-x: hidden;
+          padding: 12px 16px;
+          box-sizing: border-box;
           will-change: transform, opacity;
         }
 
-        /* ── Portrait container: base (mobile) absolute full-bleed ── */
+        /* ── Portrait container: base (mobile) ── */
         .portrait-container-wrapper {
-          position: absolute;
-          top: 0;
-          left: 0;
+          position: relative;
           width: 100%;
-          height: 100%;
           display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
-          padding-top: 0;
-          margin-top: -4vh;
-          z-index: 10;
+          z-index: 15;
+          margin: auto 0;
+          flex-shrink: 0;
           transition: transform 0.3s ease;
         }
 
-        /* ── Buttons: base (mobile) absolute at bottom ── */
+        /* ── Buttons: base (mobile) ── */
         .portrait-buttons-container {
-          position: absolute;
-          bottom: max(40px, calc(env(safe-area-inset-bottom, 0px) + 20px));
-          left: 50%;
-          transform: translateX(-50%);
+          position: relative;
+          margin-top: 14px;
+          margin-bottom: max(16px, calc(env(safe-area-inset-bottom, 0px) + 8px));
           display: flex;
           flex-direction: row;
           align-items: center;
           justify-content: center;
           gap: 12px;
-          z-index: 25;
+          z-index: 40;
           width: calc(100% - 32px);
-          max-width: 380px;
+          max-width: 420px;
+          pointer-events: auto;
+          flex-shrink: 0;
         }
 
-        /* ── Desktop: image natural size, no border, buttons at screen bottom ── */
+        /* ── Desktop: generous art size, perfectly framed ── */
         @media (min-width: 768px) {
           .portrait-page {
             background: #000;
-            justify-content: center;
-            align-items: center;
+            padding: 24px 20px;
           }
           .portrait-container-wrapper {
-            position: relative;
-            top: unset;
-            left: unset;
-            width: auto;
-            height: auto;
-            padding-top: 0;
-            margin: 0 auto;
-            border: none;
-            box-shadow: none;
-            border-radius: 0;
-            overflow: visible;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            margin: auto 0;
           }
           .portrait-art-wrapper {
-            width: auto;
-            height: auto;
+            width: min(82vw, 540px, 64vh);
+            height: min(82vw, 540px, 64vh);
+            max-height: 64vh;
+            border-radius: 32px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.18);
           }
           .portrait-art-img {
-            width: auto;
-            height: auto;
-            max-width: 80vw;
-            max-height: 75vh;
-            object-fit: contain;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
           }
-          /* Buttons pinned to screen bottom — same as mobile */
           .portrait-buttons-container {
-            position: absolute;
-            bottom: max(40px, calc(env(safe-area-inset-bottom, 0px) + 20px));
-            left: 50%;
-            transform: translateX(-50%);
-            width: auto;
-            max-width: 420px;
+            margin-top: 20px;
+            margin-bottom: 24px;
+            max-width: 460px;
+            gap: 16px;
           }
         }
 
@@ -667,7 +657,6 @@ export default function RomanticLoveTemplate({
           .portrait-buttons-container {
             max-width: 440px;
             gap: 16px;
-            bottom: max(40px, calc(env(safe-area-inset-bottom, 0px) + 28px));
           }
           .love-letter-btn,
           .continue-btn {
@@ -724,16 +713,16 @@ export default function RomanticLoveTemplate({
               <AnimatePresence>
                 {showDownloadPopup && (customData?.generatedThumbnailUrl || displayPhoto) && (
                   <motion.div
-                    initial={{ opacity: 0, y: -20, x: "-50%", scale: 0.9 }}
-                    animate={{ opacity: 1, y: 0, x: "-50%", scale: 1 }}
-                    exit={{ opacity: 0, y: -20, x: "-50%", scale: 0.9 }}
-                    transition={{ delay: 1, type: "spring", stiffness: 200, damping: 20 }}
-                    className="absolute top-2.5 left-1/2 bg-black/60 backdrop-blur-md border border-white/20 p-2.5 rounded-2xl shadow-2xl flex flex-col items-center gap-2 w-[90%] max-w-[240px] z-50"
+                    initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                    transition={{ delay: 0.8, type: "spring", stiffness: 220, damping: 22 }}
+                    className="relative z-50 mb-2 mt-1 bg-black/85 backdrop-blur-xl border border-white/20 p-4 sm:p-5 rounded-2xl shadow-2xl flex flex-col items-center gap-3 w-[92%] max-w-[380px] sm:max-w-[440px] shrink-0"
                   >
-                    <div className="text-white text-xs font-medium text-center leading-snug">
-                      Would you like to download this picture?
+                    <div className="text-white text-sm sm:text-base font-semibold text-center leading-snug">
+                      Would you like to download this portrait picture? 💖
                     </div>
-                    <div className="flex gap-2 w-full">
+                    <div className="flex gap-3 w-full">
                       <button
                         onClick={async () => {
                           setShowDownloadPopup(false);
@@ -765,22 +754,22 @@ export default function RomanticLoveTemplate({
                             console.error("[Download] Error:", e);
                           }
                         }}
-                        className="flex-1 bg-rose-500 hover:bg-rose-400 text-white text-xs font-bold py-2 rounded-xl transition shadow-lg shadow-rose-500/30"
+                        className="flex-1 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-400 hover:to-pink-400 text-white text-xs sm:text-sm font-bold py-2.5 rounded-xl transition shadow-lg shadow-rose-500/30 active:scale-95"
                       >
-                        Yes
+                        Yes, Download
                       </button>
                       <button
                         onClick={() => setShowDownloadPopup(false)}
-                        className="flex-1 bg-white/10 hover:bg-white/20 text-white text-xs font-bold py-2 rounded-xl transition"
+                        className="flex-1 bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-bold py-2.5 rounded-xl transition active:scale-95"
                       >
-                        No
+                        No, Thanks
                       </button>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* Photo & Overlay Popup Container (Dead Centered at y=50vh) */}
+              {/* Photo & Overlay Popup Container (Centered) */}
               <div className="portrait-container-wrapper">
                 <TextArtPortrait
                   src={displayPhoto}
@@ -811,7 +800,7 @@ export default function RomanticLoveTemplate({
                 </AnimatePresence>
               </div>
 
-              {/* Action Buttons (Positioned at bottom so photo remains dead centered) */}
+              {/* Action Buttons (Positioned at bottom, never clipped) */}
               <div className="portrait-buttons-container">
                 {!showLetter && (
                   <button
@@ -823,7 +812,7 @@ export default function RomanticLoveTemplate({
                 )}
 
                 <button className="continue-btn" onClick={handleGoToProposal}>
-                  ✨ Continue
+                  💖 Continue
                 </button>
               </div>
             </motion.div>
