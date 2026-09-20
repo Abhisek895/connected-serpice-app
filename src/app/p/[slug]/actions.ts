@@ -2,12 +2,19 @@
 
 import { prisma } from "@/lib/prisma"
 import { recordResponse } from "@/lib/analytics/recordResponse"
+import { sendReceiverActionEmail } from "@/lib/email"
 
 export async function recordResponseAction(slug: string, action: string, metadata?: string) {
   try {
     const event = await prisma.event.findUnique({
       where: { slug },
-      select: { id: true }
+      select: {
+        id: true,
+        userId: true,
+        themeId: true,
+        theme: { select: { name: true, title: true } },
+        user: { select: { email: true } },
+      },
     });
 
     if (!event) return { success: false, error: "Event not found" };
@@ -30,6 +37,42 @@ export async function recordResponseAction(slug: string, action: string, metadat
       device: "Desktop/Mobile",
       browser: "Web Browser",
     });
+
+    // ── Fire creator notification email (skip VIEWED to avoid spam) ──────────
+    const skipActions = ["VIEWED"];
+    const shouldEmail = !skipActions.includes(action) && response.success;
+
+    if (shouldEmail) {
+      // Find creator email: registered user email first, then payment buyerEmail
+      let creatorEmail: string | null = event.user?.email ?? null;
+
+      if (!creatorEmail) {
+        const payment = await prisma.payment.findFirst({
+          where: { fulfillment: { eventId: event.id } },
+          select: { buyerEmail: true },
+        });
+        creatorEmail = payment?.buyerEmail ?? null;
+      }
+
+      if (creatorEmail) {
+        const demoId = event.theme?.name ?? "surprise";
+        const templateTitle = event.theme?.title ?? "Your OurStory";
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://www.ourstories.shop";
+        const shareUrl = `${appUrl}/p/${slug}`;
+
+        // Fire async — don't block the response to the receiver
+        sendReceiverActionEmail({
+          to: creatorEmail,
+          demoId,
+          templateTitle,
+          action,
+          metadata: parsedMetadata ?? {},
+          shareUrl,
+        }).catch((err) => {
+          console.warn("[recordResponseAction] Email notification failed:", err);
+        });
+      }
+    }
 
     return { success: response.success };
   } catch (error) {

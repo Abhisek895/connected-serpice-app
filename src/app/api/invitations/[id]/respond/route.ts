@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendReceiverActionEmail } from "@/lib/email";
 import crypto from "crypto";
 
 export async function POST(
@@ -15,6 +16,12 @@ export async function POST(
     const event = await prisma.event.findFirst({
       where: {
         OR: [{ slug: id }, { id }],
+      },
+      select: {
+        id: true,
+        slug: true,
+        user: { select: { email: true } },
+        theme: { select: { name: true, title: true } },
       },
     });
 
@@ -47,6 +54,38 @@ export async function POST(
         idempotencyKey,
       },
     });
+
+    // ── Fire creator notification email ──────────────────────────────────────
+    const skipActions = ["VIEWED"];
+    if (!skipActions.includes(action || "ACCEPTED")) {
+      let creatorEmail: string | null = event.user?.email ?? null;
+
+      if (!creatorEmail) {
+        const payment = await prisma.payment.findFirst({
+          where: { fulfillment: { eventId: event.id } },
+          select: { buyerEmail: true },
+        });
+        creatorEmail = payment?.buyerEmail ?? null;
+      }
+
+      if (creatorEmail) {
+        const demoId = event.theme?.name ?? "durga-puja";
+        const templateTitle = event.theme?.title ?? "Durga Puja Invitation";
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://www.ourstories.shop";
+        const shareUrl = `${appUrl}/p/${event.slug ?? id}`;
+
+        sendReceiverActionEmail({
+          to: creatorEmail,
+          demoId,
+          templateTitle,
+          action: action || "ACCEPTED",
+          metadata: typeof metadata === "object" ? metadata : {},
+          shareUrl,
+        }).catch((err) => {
+          console.warn("[invitations/respond] Email notification failed:", err);
+        });
+      }
+    }
 
     return NextResponse.json({
       success: true,
