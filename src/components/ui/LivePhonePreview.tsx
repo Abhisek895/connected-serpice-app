@@ -142,7 +142,8 @@ function RomanticSurpriseAnimatedPreview({
   })();
 
   const isDark = stage !== "landing" && stage !== "tap_heart";
-  const bgClass = isDark ? "bg-black" : "bg-gradient-to-br from-rose-950 via-purple-950 to-slate-950";
+  const bgClass = isDark ? "bg-black" : "";
+  const bgStyle = isDark ? {} : { background: "linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%)" };
 
   return (
     /* Outer phone frame */
@@ -154,7 +155,10 @@ function RomanticSurpriseAnimatedPreview({
       </div>
 
       {/* Screen */}
-      <div className={`w-full h-[270px] sm:h-[330px] rounded-[22px] overflow-hidden relative text-white text-center shadow-inner transition-colors duration-500 ${bgClass}`}>
+      <div 
+        className={`w-full h-[270px] sm:h-[330px] rounded-[22px] overflow-hidden relative text-white text-center shadow-inner transition-colors duration-500 ${bgClass}`}
+        style={bgStyle}
+      >
 
         {/* Ambient glow (landing only) */}
         {!isDark && (
@@ -193,24 +197,44 @@ function RomanticSurpriseAnimatedPreview({
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.85 }}
-                className="flex flex-col items-center justify-center gap-3 px-3 w-full"
+                className="flex flex-col items-center justify-center px-3 w-full h-full"
               >
-                <motion.div
-                  animate={{ scale: [1, 1.09, 1] }}
-                  transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
-                  className="w-14 h-14 rounded-full bg-gradient-to-tr from-rose-600 via-pink-500 to-purple-600 flex items-center justify-center shadow-[0_0_36px_rgba(244,63,94,0.75)] border-2 border-rose-300/50"
+                <h4
+                  style={{
+                    color: "#b5194e",
+                    fontFamily: "'Dancing Script', cursive",
+                    fontWeight: 700,
+                    fontSize: "24px",
+                    lineHeight: 1.2,
+                    marginBottom: "30px",
+                    textShadow: "none"
+                  }}
                 >
-                  <Heart className="w-7 h-7 text-white fill-white" />
-                </motion.div>
-                <h4 className="text-[10px] sm:text-[11px] font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-200 via-pink-200 to-purple-200 leading-tight px-2">
                   {displayTitle}
                 </h4>
-                <motion.span
-                  animate={stage === "tap_heart" ? { scale: 0.9, backgroundColor: "rgba(244,63,94,0.95)" } : { scale: 1 }}
-                  className="px-4 py-1.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-full text-[8px] sm:text-[9px] font-black shadow-lg border border-rose-300/40"
+                
+                <motion.div
+                  animate={{ scale: [1, 1.15, 1, 1.15, 1] }}
+                  transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                  style={{
+                    color: "#ff4d6d",
+                    filter: "drop-shadow(0 0 15px rgba(255,77,109,0.6))"
+                  }}
                 >
-                  Open Surprise 💌
-                </motion.span>
+                  <Heart className="w-14 h-14 fill-current" />
+                </motion.div>
+                
+                <div
+                  style={{
+                    marginTop: "30px",
+                    color: "#d6336c",
+                    fontFamily: "'Dancing Script', cursive",
+                    fontWeight: "bold",
+                    fontSize: "16px"
+                  }}
+                >
+                  Tap the Heart
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

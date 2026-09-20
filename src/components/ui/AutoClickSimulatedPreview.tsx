@@ -363,7 +363,8 @@ export default function AutoClickSimulatedPreview({
   };
 
   const getBgClass = () => {
-    if (isSurprise && simStage !== "landing") return "bg-black";
+    if (isSurprise && simStage !== "landing" && simStage !== "tap_heart") return "bg-black";
+    if (isSurprise && (simStage === "landing" || simStage === "tap_heart")) return ""; // Handled by inline style
     if (isPuja) return "bg-[#161413]";
     if (isBirthday) return "bg-gradient-to-br from-rose-950 to-black";
     if (isApology) return "bg-[#090312]";
@@ -412,7 +413,10 @@ export default function AutoClickSimulatedPreview({
             </div>
 
             {/* Screen Content Area */}
-            <div className={`w-full h-[250px] sm:h-[310px] rounded-[22px] overflow-hidden relative flex flex-col justify-between p-2.5 pt-5 text-white text-center shadow-inner transition-colors duration-500 ${getBgClass()}`}>
+            <div 
+              className={`w-full h-[250px] sm:h-[310px] rounded-[22px] overflow-hidden relative flex flex-col justify-between p-2.5 pt-5 text-white text-center shadow-inner transition-colors duration-500 ${getBgClass()}`}
+              style={isSurprise && (simStage === "landing" || simStage === "tap_heart") ? { background: "linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%)" } : {}}
+            >
               
               {/* Animated Virtual Cursor */}
               <motion.div
@@ -451,24 +455,45 @@ export default function AutoClickSimulatedPreview({
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.8 }}
-                        className="flex flex-col items-center justify-center space-y-3 h-full py-2"
+                        className="flex flex-col items-center justify-center h-full py-2"
                       >
-                        <motion.div
-                          animate={{ scale: [1, 1.08, 1] }}
-                          transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
-                          className="w-16 h-16 rounded-full bg-gradient-to-tr from-rose-600 via-pink-500 to-purple-600 flex items-center justify-center shadow-[0_0_40px_rgba(244,63,94,0.7)] border-2 border-rose-300/50"
+                        <h4
+                          style={{
+                            color: "#b5194e",
+                            fontFamily: "'Dancing Script', cursive",
+                            fontWeight: 700,
+                            fontSize: "20px",
+                            lineHeight: 1.2,
+                            marginBottom: "20px",
+                            textShadow: "none",
+                            padding: "0 8px"
+                          }}
                         >
-                          <Heart className="w-8 h-8 text-white fill-white" />
-                        </motion.div>
-                        <h4 className="text-[11px] font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-200 via-pink-200 to-purple-200 leading-tight text-center px-2">
                           {displayTitle}
                         </h4>
-                        <motion.span
-                          animate={simStage === "tap_heart" ? { scale: 0.9, backgroundColor: "rgba(244,63,94,0.9)" } : { scale: 1 }}
-                          className="px-4 py-1.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-full text-[9px] font-black shadow-lg border border-rose-300/40"
+                        
+                        <motion.div
+                          animate={{ scale: [1, 1.15, 1, 1.15, 1] }}
+                          transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                          style={{
+                            color: "#ff4d6d",
+                            filter: "drop-shadow(0 0 12px rgba(255,77,109,0.6))"
+                          }}
                         >
-                          Open Surprise 💌
-                        </motion.span>
+                          <Heart className="w-12 h-12 fill-current" />
+                        </motion.div>
+                        
+                        <div
+                          style={{
+                            marginTop: "20px",
+                            color: "#d6336c",
+                            fontFamily: "'Dancing Script', cursive",
+                            fontWeight: "bold",
+                            fontSize: "14px"
+                          }}
+                        >
+                          Tap the Heart
+                        </div>
                       </motion.div>
                     ) : null}
                   </AnimatePresence>
