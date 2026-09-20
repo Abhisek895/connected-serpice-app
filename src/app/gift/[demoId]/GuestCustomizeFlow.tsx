@@ -405,6 +405,7 @@ export default function GuestCustomizeFlow({
   const [error, setError] = useState<string | null>(null);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
   const [buyerEmail, setBuyerEmail] = useState(""); // for link delivery email
+  const [emailShake, setEmailShake] = useState(false); // shake animation when email missing
   const [pollingForLink, setPollingForLink] = useState(false); // recovery poller state
   const [cropTarget, setCropTarget] = useState<{
     file: File;
@@ -1391,12 +1392,29 @@ export default function GuestCustomizeFlow({
                   <><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Email your link (recommended)</>
                 )}
               </label>
+              <style>{`
+                @keyframes shake-input {
+                  0%, 100% { transform: translateX(0); }
+                  15% { transform: translateX(-6px); }
+                  30% { transform: translateX(6px); }
+                  45% { transform: translateX(-5px); }
+                  60% { transform: translateX(5px); }
+                  75% { transform: translateX(-3px); }
+                  90% { transform: translateX(3px); }
+                }
+                .shake-email { animation: shake-input 0.45s ease; }
+              `}</style>
               <input
                 type="email"
                 value={buyerEmail}
-                onChange={(e) => setBuyerEmail(e.target.value)}
-                placeholder="your@email.com — we'll send the link here"
-                className="w-full px-4 py-1.5 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-900 text-sm font-medium placeholder:text-slate-400"
+                onChange={(e) => { setBuyerEmail(e.target.value); if (emailShake) setEmailShake(false); }}
+                placeholder={emailShake ? "⚠️ Please enter your email first!" : "your@email.com — we'll send the link here"}
+                className={`w-full px-4 py-1.5 rounded-2xl border bg-slate-50 focus:bg-white focus:ring-2 transition-all text-slate-900 text-sm font-medium ${
+                  emailShake
+                    ? "border-rose-500 ring-2 ring-rose-400/30 placeholder:text-rose-500 shake-email"
+                    : "border-slate-200 focus:ring-emerald-500/20 focus:border-emerald-500 placeholder:text-slate-400"
+                }`}
+                onAnimationEnd={() => setEmailShake(false)}
               />
               <p className="text-[10px] text-slate-400 font-medium leading-tight">
                 Your link will be emailed instantly after payment — even if your browser closes 🔒
@@ -1443,8 +1461,18 @@ export default function GuestCustomizeFlow({
             )}
 
             <button
-              onClick={handlePayment}
-              disabled={isProcessing || pollingForLink || (requireEmail && !buyerEmail.trim())}
+              onClick={() => {
+                if (requireEmail && !buyerEmail.trim()) {
+                  setEmailShake(true);
+                  // scroll the input into view smoothly
+                  const emailInput = document.querySelector('input[type="email"]') as HTMLElement | null;
+                  emailInput?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  emailInput?.focus();
+                  return;
+                }
+                handlePayment();
+              }}
+              disabled={isProcessing || pollingForLink}
               className="w-full py-2.5 sm:py-3 px-4 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:via-pink-600 hover:to-rose-700 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-rose-200 hover:shadow-rose-300 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer group"
             >
               {pollingForLink ? (
