@@ -19,6 +19,7 @@ import {
   Flame,
 } from "lucide-react";
 import {
+  DEFAULT_PUJA_DAYS,
   DEFAULT_PUJA_VIBE_OPTIONS,
   DEFAULT_ADVENTURE_OPTIONS,
   DEFAULT_FOOD_OPTIONS,
@@ -345,14 +346,16 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
   // 3 = Main Question ("আমার সাথে পুজোয় যাবে?")
   // 3.5 = Respectful Thinking Screen ("একটু ভাবি...")
   // 4 = After Yes Celebration ("তাহলে ঠিক রইলো!")
-  // 5 = Puja Vibe
-  // 6 = Adventure Style
-  // 7 = Food Choices
-  // 8 = Optional Location
-  // 9 = Final Emotional Screen ("we'll remember this Puja.")
+  // 5 = The Day
+  // 6 = Puja Vibe
+  // 7 = Adventure Style
+  // 8 = Food Choices
+  // 9 = Optional Location
+  // 10 = Final Emotional Screen
   const [currentScreen, setCurrentScreen] = useState<number>(1);
 
   // Selections
+  const [selectedDay, setSelectedDay] = useState<string>("ashtami");
   const [selectedVibe, setSelectedVibe] = useState<string>("evening");
   const [selectedAdventure, setSelectedAdventure] = useState<string>("walk");
   const [selectedFoods, setSelectedFoods] = useState<string[]>([
@@ -441,6 +444,7 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
         status,
         recipientName,
         creatorName,
+        selectedDay,
         selectedVibe,
         selectedAdventure,
         selectedFoods,
@@ -787,7 +791,7 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
           )}
 
           {/* =============================================================== */}
-          {/* SCREEN 05 — PUJA VIBE                                           */}
+          {/* SCREEN 05 — THE DAY                                             */}
           {/* =============================================================== */}
           {currentScreen === 5 && (
             <motion.div
@@ -800,7 +804,70 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
             >
               <div className="text-center space-y-1">
                 <span className="text-[11px] uppercase tracking-widest text-[#D4AF37] font-medium">
-                  Step 1 of 4 • The Mood
+                  Step 1 of 5 • The Day
+                </span>
+                <h2 className="font-editorial text-2xl sm:text-3xl font-bold text-[#FDFBF7]">
+                  Which day should we go?
+                </h2>
+                <p className="text-xs text-[#FDFBF7]/60">Select your preferred day</p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-2.5 max-h-[50vh] overflow-y-auto pr-1">
+                {DEFAULT_PUJA_DAYS.map((opt) => {
+                  const isSelected = selectedDay === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setSelectedDay(opt.id)}
+                      className={`text-left p-3.5 rounded-2xl border transition-all flex items-start gap-3.5 ${
+                        isSelected
+                          ? "bg-[#2E161C] border-[#D4AF37] shadow-md shadow-[#631726]/30 ring-1 ring-[#D4AF37]"
+                          : "bg-[#211E1C]/80 border-[#FDFBF7]/10 hover:border-[#D4AF37]/40 text-[#FDFBF7]/80"
+                      }`}
+                    >
+                      <span className="text-2xl mt-0.5">{opt.icon}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-semibold text-[#FDFBF7]">{opt.title}</h4>
+                          {opt.subtitle && (
+                            <span className="font-bengali text-xs text-[#D4AF37]/80">
+                              {opt.subtitle}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-[#FDFBF7]/70 mt-0.5">{opt.description}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={() => setCurrentScreen(6)}
+                className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#631726] to-[#8C2337] border border-[#D4AF37]/40 text-[#FDFBF7] font-medium text-sm tracking-wider flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
+              >
+                <span>Continue</span>
+                <ChevronRight className="w-4 h-4 text-[#D4AF37]" />
+              </button>
+            </motion.div>
+          )}
+
+          {/* =============================================================== */}
+          {/* SCREEN 06 — PUJA VIBE                                           */}
+          {/* =============================================================== */}
+          {currentScreen === 6 && (
+            <motion.div
+              key="screen-6"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="w-full space-y-5"
+            >
+              <div className="text-center space-y-1">
+                <span className="text-[11px] uppercase tracking-widest text-[#D4AF37] font-medium">
+                  Step 2 of 5 • The Mood
                 </span>
                 <h2 className="font-editorial text-2xl sm:text-3xl font-bold text-[#FDFBF7]">
                   What kind of Puja should we have?
@@ -839,22 +906,30 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
                 })}
               </div>
 
-              <button
-                onClick={() => setCurrentScreen(6)}
-                className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#631726] to-[#8C2337] border border-[#D4AF37]/40 text-[#FDFBF7] font-medium text-sm tracking-wider flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
-              >
-                <span>Continue</span>
-                <ChevronRight className="w-4 h-4 text-[#D4AF37]" />
-              </button>
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  onClick={() => setCurrentScreen(5)}
+                  className="py-3.5 px-4 rounded-xl border border-[#FDFBF7]/20 text-xs text-[#FDFBF7]/70"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={() => setCurrentScreen(7)}
+                  className="flex-1 py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#631726] to-[#8C2337] border border-[#D4AF37]/40 text-[#FDFBF7] font-medium text-sm tracking-wider flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
+                >
+                  <span>Continue</span>
+                  <ChevronRight className="w-4 h-4 text-[#D4AF37]" />
+                </button>
+              </div>
             </motion.div>
           )}
 
           {/* =============================================================== */}
-          {/* SCREEN 06 — ADVENTURE STYLE                                     */}
+          {/* SCREEN 07 — ADVENTURE STYLE                                     */}
           {/* =============================================================== */}
-          {currentScreen === 6 && (
+          {currentScreen === 7 && (
             <motion.div
-              key="screen-6"
+              key="screen-7"
               variants={pageVariants}
               initial="initial"
               animate="animate"
@@ -863,7 +938,7 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
             >
               <div className="text-center space-y-1">
                 <span className="text-[11px] uppercase tracking-widest text-[#D4AF37] font-medium">
-                  Step 2 of 4 • The Journey
+                  Step 3 of 5 • The Journey
                 </span>
                 <h2 className="font-editorial text-2xl sm:text-3xl font-bold text-[#FDFBF7]">
                   What&apos;s our kind of adventure?
@@ -904,13 +979,13 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
 
               <div className="flex items-center gap-3 pt-2">
                 <button
-                  onClick={() => setCurrentScreen(5)}
+                  onClick={() => setCurrentScreen(6)}
                   className="py-3.5 px-4 rounded-xl border border-[#FDFBF7]/20 text-xs text-[#FDFBF7]/70"
                 >
                   Back
                 </button>
                 <button
-                  onClick={() => setCurrentScreen(7)}
+                  onClick={() => setCurrentScreen(8)}
                   className="flex-1 py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#631726] to-[#8C2337] border border-[#D4AF37]/40 text-[#FDFBF7] font-medium text-sm tracking-wider flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
                 >
                   <span>Continue</span>
@@ -921,11 +996,11 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
           )}
 
           {/* =============================================================== */}
-          {/* SCREEN 07 — FOOD SELECTION                                      */}
+          {/* SCREEN 08 — FOOD SELECTION                                      */}
           {/* =============================================================== */}
-          {currentScreen === 7 && (
+          {currentScreen === 8 && (
             <motion.div
-              key="screen-7"
+              key="screen-8"
               variants={pageVariants}
               initial="initial"
               animate="animate"
@@ -934,7 +1009,7 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
             >
               <div className="text-center space-y-1">
                 <span className="text-[11px] uppercase tracking-widest text-[#D4AF37] font-medium">
-                  Step 3 of 4 • The Feast
+                  Step 4 of 5 • The Feast
                 </span>
                 <h2 className="font-editorial text-2xl sm:text-3xl font-bold text-[#FDFBF7]">
                   What are we eating? 👀
@@ -979,13 +1054,13 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
 
               <div className="flex items-center gap-3 pt-2">
                 <button
-                  onClick={() => setCurrentScreen(6)}
+                  onClick={() => setCurrentScreen(7)}
                   className="py-3.5 px-4 rounded-xl border border-[#FDFBF7]/20 text-xs text-[#FDFBF7]/70"
                 >
                   Back
                 </button>
                 <button
-                  onClick={() => setCurrentScreen(8)}
+                  onClick={() => setCurrentScreen(9)}
                   className="flex-1 py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#631726] to-[#8C2337] border border-[#D4AF37]/40 text-[#FDFBF7] font-medium text-sm tracking-wider flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
                 >
                   <span>Continue</span>
@@ -996,11 +1071,11 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
           )}
 
           {/* =============================================================== */}
-          {/* SCREEN 08 — OPTIONAL LOCATION                                   */}
+          {/* SCREEN 09 — OPTIONAL LOCATION                                   */}
           {/* =============================================================== */}
-          {currentScreen === 8 && (
+          {currentScreen === 9 && (
             <motion.div
-              key="screen-8"
+              key="screen-9"
               variants={pageVariants}
               initial="initial"
               animate="animate"
@@ -1009,7 +1084,7 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
             >
               <div className="text-center space-y-1">
                 <span className="text-[11px] uppercase tracking-widest text-[#D4AF37] font-medium">
-                  Step 4 of 4 • The Destination
+                  Step 5 of 5 • The Destination
                 </span>
                 <h2 className="font-editorial text-2xl sm:text-3xl font-bold text-[#FDFBF7]">
                   And where are we going?
@@ -1099,7 +1174,7 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
 
               <div className="flex items-center gap-3 pt-2">
                 <button
-                  onClick={() => setCurrentScreen(7)}
+                  onClick={() => setCurrentScreen(8)}
                   className="py-3.5 px-4 rounded-xl border border-[#FDFBF7]/20 text-xs text-[#FDFBF7]/70"
                 >
                   Back
@@ -1107,7 +1182,7 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
                 <button
                   onClick={() => {
                     submitFinalResponse("ACCEPTED", true);
-                    setCurrentScreen(9);
+                    setCurrentScreen(10);
                   }}
                   className="flex-1 py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#631726] to-[#8C2337] border border-[#D4AF37]/40 text-[#FDFBF7] font-medium text-sm tracking-wider flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
                 >
@@ -1119,11 +1194,11 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
           )}
 
           {/* =============================================================== */}
-          {/* SCREEN 09 — FINAL EMOTIONAL SCREEN                              */}
+          {/* SCREEN 10 — FINAL EMOTIONAL SCREEN                              */}
           {/* =============================================================== */}
-          {currentScreen === 9 && (
+          {currentScreen === 10 && (
             <motion.div
-              key="screen-9"
+              key="screen-10"
               variants={pageVariants}
               initial="initial"
               animate="animate"

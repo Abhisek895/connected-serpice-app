@@ -12,6 +12,44 @@ export const DURGA_PUJA_THEME: TemplateThemeTokens = {
   fontSans: "var(--font-inter, sans-serif)",
 };
 
+export const DEFAULT_PUJA_DAYS: ChoiceCard[] = [
+  {
+    id: "sasthi",
+    icon: "🌸",
+    title: "Maha Sasthi",
+    subtitle: "ষষ্ঠী",
+    description: "The beginning. Pandal hopping before the crowd.",
+  },
+  {
+    id: "saptami",
+    icon: "✨",
+    title: "Maha Saptami",
+    subtitle: "সপ্তমী",
+    description: "Morning pushpanjali and evening lights.",
+  },
+  {
+    id: "ashtami",
+    icon: "🌺",
+    title: "Maha Ashtami",
+    subtitle: "অষ্টমী",
+    description: "The main day. Shaje guje, sandhi puja and adda.",
+  },
+  {
+    id: "navami",
+    icon: "🌙",
+    title: "Maha Navami",
+    subtitle: "নবমী",
+    description: "The grand feast and late night pandal hopping.",
+  },
+  {
+    id: "dashami",
+    icon: "🕊️",
+    title: "Bijoya Dashami",
+    subtitle: "দশমী",
+    description: "Sindoor khela and sweet endings.",
+  },
+];
+
 export const DEFAULT_PUJA_VIBE_OPTIONS: ChoiceCard[] = [
   {
     id: "explorer",
