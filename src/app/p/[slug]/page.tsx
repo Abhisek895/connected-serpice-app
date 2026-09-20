@@ -103,12 +103,6 @@ export async function generateMetadata(
     customData = event.customData ? JSON.parse(event.customData) : {};
   } catch { }
 
-  const envUrl = process.env.NEXT_PUBLIC_APP_URL;
-  const headersList = await headers();
-  const host = headersList.get("host") || "localhost:3000";
-  const protocol = host.includes("localhost") ? "http" : "https";
-  const baseUrl = envUrl && !envUrl.includes("localhost") ? envUrl : `${protocol}://${host}`;
-
   const demoId = customData.demoId || "";
   const recipientName = customData.recipientName || "Someone Special ✨";
   const templateMeta = TEMPLATE_META[demoId];
