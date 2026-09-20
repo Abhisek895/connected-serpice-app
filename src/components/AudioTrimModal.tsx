@@ -81,6 +81,7 @@ export default function AudioTrimModal({
   const [isEncoding, setIsEncoding] = useState(false);
   const [encodeProgress, setEncodeProgress] = useState(0);
   const [exportError, setExportError] = useState<string | null>(null);
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 
   // Refs
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -90,6 +91,29 @@ export default function AudioTrimModal({
   const playbackStartOffsetRef = useRef(0);
   const animFrameRef = useRef<number | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Measure canvas and watch for screen/modal resizes
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const updateSize = () => {
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        setCanvasSize({ width: Math.round(rect.width), height: Math.round(rect.height) });
+      }
+    };
+
+    updateSize();
+    const ro = new ResizeObserver(() => updateSize());
+    ro.observe(canvas);
+    window.addEventListener("resize", updateSize);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", updateSize);
+    };
+  }, []);
 
   // ─────────────────────────────────────────────────────────────────────────
   // 1. Load & Decode Audio File
@@ -122,8 +146,8 @@ export default function AudioTrimModal({
         setEndTime(initialEnd);
         setCurrentTime(0);
 
-        // Generate waveform peaks (120 bars)
-        const numBars = 120;
+        // Generate high-resolution waveform peaks (240 points for smooth adaptive scaling)
+        const numBars = 240;
         const channelData = decoded.getChannelData(0);
         const blockSize = Math.floor(channelData.length / numBars);
         const peaks: number[] = [];
@@ -274,7 +298,7 @@ export default function AudioTrimModal({
   }, [startTime, endTime]); // eslint-disable-line
 
   // ─────────────────────────────────────────────────────────────────────────
-  // 3. Render Waveform Canvas
+  // 3. Render Waveform Canvas (Adaptive & strictly aligned on all screen sizes)
   // ─────────────────────────────────────────────────────────────────────────
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -284,38 +308,46 @@ export default function AudioTrimModal({
     if (!ctx) return;
 
     const dpr = window.devicePixelRatio || 1;
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
+    const width = canvas.clientWidth || canvasSize.width || 300;
+    const height = canvas.clientHeight || canvasSize.height || 112;
 
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
     ctx.scale(dpr, dpr);
 
     ctx.clearRect(0, 0, width, height);
 
-    const numBars = waveformPeaks.length;
-    const barSpacing = 2;
-    const totalSpacing = barSpacing * (numBars - 1);
-    const barWidth = Math.max(1, (width - totalSpacing) / numBars);
+    // Dynamic bar calculation: fits the exact canvas width with 0 overflow
+    // On small screens (~280px-340px): ~70-85 bars
+    // On desktop (~500px+): ~120-150 bars
+    const targetStep = width < 360 ? 3.5 : 4;
+    const numBars = Math.max(20, Math.floor(width / targetStep));
+    const step = width / numBars;
+    const barWidth = Math.max(1.2, step * 0.6);
 
     const startRatio = startTime / duration;
     const endRatio = endTime / duration;
     const currentRatio = currentTime / duration;
 
-    // Draw bars
+    // Draw bars strictly aligned with startRatio and endRatio
     for (let i = 0; i < numBars; i++) {
-      const barRatio = i / numBars;
+      const xCenter = (i + 0.5) * step;
+      const barRatio = xCenter / width;
       const isSelected = barRatio >= startRatio && barRatio <= endRatio;
       const isPastPlayhead = barRatio <= currentRatio && isSelected;
 
-      const peak = waveformPeaks[i];
-      const barHeight = Math.max(4, peak * (height - 12));
-      const x = i * (barWidth + barSpacing);
-      const y = (height - barHeight) / 2;
+      // Smoothly sample from waveformPeaks
+      const peakIndex = Math.min(
+        waveformPeaks.length - 1,
+        Math.floor((i / numBars) * waveformPeaks.length)
+      );
+      const peak = waveformPeaks[peakIndex] ?? 0.2;
+      const barHeight = Math.max(4, peak * (height - 14));
+      const x = Math.round(xCenter - barWidth / 2);
+      const y = Math.round((height - barHeight) / 2);
 
       ctx.beginPath();
-      // Rounded bar caps
-      ctx.roundRect(x, y, barWidth, barHeight, 2);
+      ctx.roundRect(x, y, Math.max(1, Math.round(barWidth)), barHeight, 2);
 
       if (isPastPlayhead) {
         ctx.fillStyle = "#ec4899"; // glowing pink for played section
@@ -329,21 +361,21 @@ export default function AudioTrimModal({
 
     // Draw playhead cursor
     if (currentRatio >= 0 && currentRatio <= 1) {
-      const playheadX = currentRatio * width;
+      const playheadX = Math.round(currentRatio * width);
       ctx.fillStyle = "#ffffff";
-      ctx.shadowColor = "rgba(244, 63, 94, 0.8)";
-      ctx.shadowBlur = 6;
-      ctx.fillRect(playheadX - 1, 2, 2, height - 4);
+      ctx.shadowColor = "rgba(255, 255, 255, 0.9)";
+      ctx.shadowBlur = 4;
+      ctx.fillRect(playheadX - 1, 0, 2, height);
       ctx.shadowBlur = 0;
     }
-  }, [waveformPeaks, duration, startTime, endTime, currentTime]);
+  }, [waveformPeaks, duration, startTime, endTime, currentTime, canvasSize]);
 
-  // Handle clicking on waveform to seek
-  const handleWaveformClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  // Handle clicking or touching waveform to seek
+  const handleWaveformSeek = (clientX: number) => {
     const canvas = canvasRef.current;
     if (!canvas || duration === 0) return;
     const rect = canvas.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
+    const clickX = clientX - rect.left;
     const ratio = Math.max(0, Math.min(1, clickX / rect.width));
     const targetTime = ratio * duration;
 
@@ -606,22 +638,58 @@ export default function AudioTrimModal({
                   <span className="font-mono">{formatTime(endTime)}</span>
                 </div>
 
-                <div className="relative h-28 bg-slate-950 rounded-2xl border border-slate-800 p-2 overflow-hidden shadow-inner">
-                  <canvas
-                    ref={canvasRef}
-                    onClick={handleWaveformClick}
-                    className="w-full h-full cursor-pointer"
-                  />
+                <div className="relative h-28 bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden shadow-inner select-none">
+                  <div className="relative w-full h-full">
+                    <canvas
+                      ref={canvasRef}
+                      onClick={(e) => handleWaveformSeek(e.clientX)}
+                      onTouchStart={(e) => {
+                        if (e.touches[0]) handleWaveformSeek(e.touches[0].clientX);
+                      }}
+                      className="w-full h-full cursor-pointer block"
+                    />
 
-                  {/* Range Boundaries Overlay Visual */}
-                  <div
-                    className="absolute top-0 bottom-0 pointer-events-none border-l-2 border-rose-400"
-                    style={{ left: `${(startTime / duration) * 100}%` }}
-                  />
-                  <div
-                    className="absolute top-0 bottom-0 pointer-events-none border-r-2 border-rose-400"
-                    style={{ left: `${(endTime / duration) * 100}%` }}
-                  />
+                    {/* Dimmed unselected region: Left */}
+                    <div
+                      className="absolute top-0 bottom-0 left-0 bg-slate-950/65 backdrop-blur-[0.5px] pointer-events-none"
+                      style={{ width: `${(startTime / duration) * 100}%` }}
+                    />
+
+                    {/* Selected range highlight area */}
+                    <div
+                      className="absolute top-0 bottom-0 pointer-events-none bg-rose-500/[0.04] border-y border-rose-500/20"
+                      style={{
+                        left: `${(startTime / duration) * 100}%`,
+                        width: `${Math.max(0, (endTime - startTime) / duration) * 100}%`,
+                      }}
+                    />
+
+                    {/* Dimmed unselected region: Right */}
+                    <div
+                      className="absolute top-0 bottom-0 right-0 bg-slate-950/65 backdrop-blur-[0.5px] pointer-events-none"
+                      style={{ width: `${Math.max(0, (1 - endTime / duration) * 100)}%` }}
+                    />
+
+                    {/* Left boundary trim line with top/bottom grab handles */}
+                    <div
+                      className="absolute top-0 bottom-0 pointer-events-none -translate-x-1/2 flex flex-col items-center justify-between z-10"
+                      style={{ left: `${(startTime / duration) * 100}%` }}
+                    >
+                      <div className="w-2.5 h-2.5 bg-rose-400 rounded-full shadow-md shadow-rose-500/50 -mt-0.5" />
+                      <div className="w-[2px] h-full bg-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
+                      <div className="w-2.5 h-2.5 bg-rose-400 rounded-full shadow-md shadow-rose-500/50 -mb-0.5" />
+                    </div>
+
+                    {/* Right boundary trim line with top/bottom grab handles */}
+                    <div
+                      className="absolute top-0 bottom-0 pointer-events-none -translate-x-1/2 flex flex-col items-center justify-between z-10"
+                      style={{ left: `${(endTime / duration) * 100}%` }}
+                    >
+                      <div className="w-2.5 h-2.5 bg-rose-400 rounded-full shadow-md shadow-rose-500/50 -mt-0.5" />
+                      <div className="w-[2px] h-full bg-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
+                      <div className="w-2.5 h-2.5 bg-rose-400 rounded-full shadow-md shadow-rose-500/50 -mb-0.5" />
+                    </div>
+                  </div>
                 </div>
               </div>
 
