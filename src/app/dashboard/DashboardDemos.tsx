@@ -81,18 +81,26 @@ export default function DashboardDemos({
     }
   };
 
-  const activeDemos = demos.map(demo => {
-    const dbPricing = themePricing?.find(t => t.name === demo.id);
+  const sourceList = themePricing && themePricing.length > 0
+    ? themePricing.filter(t => t.isActive)
+    : demos.map(d => ({ name: d.id, isActive: true, price: d.price, durationDays: d.durationDays, title: d.title, description: d.description, thumbnailUrl: d.image }));
+
+  const activeDemos = sourceList.map(dbTheme => {
+    const baseConfig = demos.find(d => d.id === dbTheme.name);
     return {
-      ...demo,
-      price: Number(dbPricing?.price ?? demo.price ?? 0),
-      durationDays: Number(dbPricing?.durationDays ?? demo.durationDays ?? 7),
-      isActive: dbPricing?.isActive ?? true,
-      title: dbPricing?.title || demo.title,
-      description: dbPricing?.description || demo.description,
-      image: dbPricing?.thumbnailUrl || demo.image,
+      id: dbTheme.name,
+      title: dbTheme.title || baseConfig?.title || dbTheme.name,
+      description: dbTheme.description || baseConfig?.description || "An interactive experience.",
+      image: dbTheme.thumbnailUrl || baseConfig?.image || "/images/placeholder.webp",
+      price: Number(dbTheme.price ?? baseConfig?.price ?? 0),
+      durationDays: Number(dbTheme.durationDays ?? baseConfig?.durationDays ?? 7),
+      isActive: true,
+      hasInstantUse: baseConfig?.hasInstantUse ?? false,
+      icon: baseConfig?.icon ?? Palette,
+      borderColor: baseConfig?.borderColor ?? "border-slate-200",
+      previewUrl: baseConfig?.previewUrl ?? `/demos/${dbTheme.name}/index.html`
     };
-  }).filter(d => d.isActive).filter(d => {
+  }).filter(d => {
     if (selectedCategory === "festival") return d.id === "durga-puja";
     if (selectedCategory === "romantic") return d.id === "surprise" || d.id === "nasamajh-lakri" || d.id === "she-cant-say-no" || d.id === "im-sorry";
     if (selectedCategory === "birthday") return d.id === "birthday-wish";
