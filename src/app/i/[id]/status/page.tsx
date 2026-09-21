@@ -163,13 +163,14 @@ export default function CreatorStatusPage() {
               <h3 className="font-editorial text-xl font-bold text-[#161413]">
                 Their choices
               </h3>
-              <p className="text-[11px] text-[#161413]/60">What {recipientName} picked for Puja</p>
+              <p className="text-[11px] text-[#161413]/60">What {recipientName} picked</p>
             </div>
 
             <div className="space-y-3 text-xs">
+              {/* Durga Puja Metadata */}
               {meta.selectedVibe && (
                 <div className="flex justify-between items-center py-1 border-b border-[#161413]/5">
-                  <span className="text-[#161413]/70 font-medium">Puja vibe:</span>
+                  <span className="text-[#161413]/70 font-medium">Vibe:</span>
                   <span className="font-bold text-[#631726] uppercase tracking-wide">
                     {meta.selectedVibe}
                   </span>
@@ -209,6 +210,72 @@ export default function CreatorStatusPage() {
                   </span>
                 </div>
               )}
+
+              {/* Date Planner Metadata */}
+              {meta.place && (
+                <div className="flex justify-between items-center py-1 border-b border-[#161413]/5">
+                  <span className="text-[#161413]/70 font-medium">Date location:</span>
+                  <span className="font-bold text-[#631726] uppercase tracking-wide">
+                    {meta.place}
+                  </span>
+                </div>
+              )}
+              {meta.food && (
+                <div className="flex justify-between items-center py-1 border-b border-[#161413]/5">
+                  <span className="text-[#161413]/70 font-medium">Food choice:</span>
+                  <span className="font-bold text-[#161413]">
+                    {meta.food}
+                  </span>
+                </div>
+              )}
+              {meta.date && (
+                <div className="flex justify-between items-center py-1 border-b border-[#161413]/5">
+                  <span className="text-[#161413]/70 font-medium">Date:</span>
+                  <span className="font-bold text-[#161413]">
+                    {meta.date}
+                  </span>
+                </div>
+              )}
+              {meta.time && (
+                <div className="flex justify-between items-center py-1 border-b border-[#161413]/5">
+                  <span className="text-[#161413]/70 font-medium">Time:</span>
+                  <span className="font-bold text-[#161413]">
+                    {meta.time}
+                  </span>
+                </div>
+              )}
+
+              {/* Generic Fallback for other template metadata */}
+              {Object.entries(meta).map(([key, value]) => {
+                if (
+                  [
+                    "selectedVibe",
+                    "selectedAdventure",
+                    "selectedFoods",
+                    "selectedLocationPref",
+                    "recipientNote",
+                    "place",
+                    "food",
+                    "date",
+                    "time",
+                    "status",
+                    "recipientName",
+                    "creatorName",
+                    "selectedDay",
+                    "submittedAt",
+                  ].includes(key)
+                ) {
+                  return null;
+                }
+                return (
+                  <div key={key} className="flex justify-between items-center py-1 border-b border-[#161413]/5">
+                    <span className="text-[#161413]/70 font-medium capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
+                    <span className="font-bold text-[#161413]">
+                      {String(value)}
+                    </span>
+                  </div>
+                );
+              })}
 
               {meta.recipientNote && (
                 <div className="p-3 rounded-xl bg-[#F2EBE0] border-l-4 border-[#C0422B] mt-2">

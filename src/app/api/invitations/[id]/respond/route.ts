@@ -61,7 +61,7 @@ export async function POST(
     });
 
     // ── Fire creator notification email ──────────────────────────────────────
-    const skipActions = ["VIEWED"];
+    const skipActions = ["VIEWED", "STARTED_PLANNING"];
     if (!skipActions.includes(action || "ACCEPTED") && isNewAction) {
       let creatorEmail: string | null = event.user?.email ?? null;
 

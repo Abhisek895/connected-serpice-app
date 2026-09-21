@@ -46,7 +46,7 @@ export async function recordResponseAction(slug: string, action: string, metadat
     });
 
     // ── Fire creator notification email (skip VIEWED to avoid spam) ──────────
-    const skipActions = ["VIEWED"];
+    const skipActions = ["VIEWED", "STARTED_PLANNING"];
     const shouldEmail = !skipActions.includes(action) && response.success && isNewAction;
 
     if (shouldEmail) {

@@ -185,7 +185,7 @@ export default function DatePlannerTemplate({
   };
 
   const handleProposalYes = () => {
-    recordResponseAction(slug, "ACCEPTED");
+    recordResponseAction(slug, "STARTED_PLANNING");
     setStage(2);
     window.scrollTo(0, 0);
   };
@@ -516,7 +516,7 @@ export default function DatePlannerTemplate({
                   date: getFormattedDate(selectedDate),
                   time: selectedTime
                 };
-                recordResponseAction(slug, `ACCEPTED|${JSON.stringify(metaObj)}`);
+                recordResponseAction(slug, "ACCEPTED", JSON.stringify(metaObj));
                 setStage(6);
               }
               else alert("Please pick a date and time!");

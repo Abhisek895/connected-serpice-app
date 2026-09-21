@@ -434,7 +434,7 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
   };
 
   // Submit response to API
-  const submitFinalResponse = async (status: "ACCEPTED" | "THINKING", forceUpdate = false) => {
+  const submitFinalResponse = async (status: "ACCEPTED" | "THINKING" | "STARTED_PLANNING", forceUpdate = false) => {
     if ((hasSubmitted && !forceUpdate) || isSubmitting) return;
     setIsSubmitting(true);
 
@@ -673,7 +673,7 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
                 {/* YES Option */}
                 <button
                   onClick={() => {
-                    submitFinalResponse("ACCEPTED");
+                    submitFinalResponse("STARTED_PLANNING");
                     setCurrentScreen(4);
                   }}
                   className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#631726] to-[#C0422B] hover:from-[#751B2E] hover:to-[#D44E35] border border-[#D4AF37]/50 text-[#FDFBF7] font-semibold text-sm tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-[#631726]/40 transition-all hover:scale-[1.02] active:scale-[0.98]"
@@ -732,7 +732,7 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
               <div className="pt-4 space-y-2">
                 <button
                   onClick={() => {
-                    submitFinalResponse("ACCEPTED");
+                    submitFinalResponse("STARTED_PLANNING");
                     setCurrentScreen(4);
                   }}
                   className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#631726] to-[#8C2337] text-[#FDFBF7] font-medium text-xs tracking-wider flex items-center justify-center gap-1.5 transition-all"
