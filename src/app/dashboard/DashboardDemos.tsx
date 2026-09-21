@@ -327,15 +327,11 @@ export default function DashboardDemos({
                 <div>
                   {/* Image Header */}
                   <div className="relative h-48 w-full bg-slate-100 overflow-hidden group">
-                    {demo.id === "surprise" ? (
-                      <MiniTextArtPreviewShared src={demo.image} phrase="LOVE YOU" />
-                    ) : (
-                      <img
-                        src={demo.image}
-                        alt={demo.title}
-                        className="w-full h-full object-cover object-[center_25%] group-hover:scale-105 transition-transform duration-500"
-                      />
-                    )}
+                    <img
+                      src={demo.image}
+                      alt={demo.title}
+                      className="w-full h-full object-cover object-[center_25%] group-hover:scale-105 transition-transform duration-500"
+                    />
                     {/* Light gradient just for text readability at the bottom, no dark overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent" />
 
