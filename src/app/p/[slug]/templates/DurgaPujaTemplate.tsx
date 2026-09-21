@@ -434,7 +434,7 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
   };
 
   // Submit response to API
-  const submitFinalResponse = async (status: "ACCEPTED" | "THINKING" | "STARTED_PLANNING", forceUpdate = false) => {
+  const submitFinalResponse = async (status: "ACCEPTED" | "THINKING" | "STARTED_PLANNING" | "PLANNING_COMPLETE", forceUpdate = false, useBeacon = false) => {
     if ((hasSubmitted && !forceUpdate) || isSubmitting) return;
     setIsSubmitting(true);
 
@@ -457,6 +457,16 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
     };
 
     try {
+      if (useBeacon && props.slug) {
+        fetch(`/api/invitations/${props.slug}/respond`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          keepalive: true,
+        }).catch(() => {});
+        return;
+      }
+
       if (props.slug) {
         // Post to /api/invitations/[id]/respond or /api/response
         await fetch(`/api/invitations/${props.slug}/respond`, {
@@ -483,8 +493,61 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
     }
   };
 
+  const hasEmailedRef = useRef(false);
+  const noteRef = useRef("");
+
+  useEffect(() => {
+    noteRef.current = recipientNote;
+  }, [recipientNote]);
+
+  useEffect(() => {
+    if (currentScreen === 10) {
+      const handleLeave = () => {
+        if (!hasEmailedRef.current) {
+          hasEmailedRef.current = true;
+          const payload = {
+            eventId: props.slug || custom.eventId || "durga-puja",
+            action: "ACCEPTED",
+            metadata: {
+              status: "ACCEPTED",
+              recipientName,
+              creatorName,
+              selectedDay,
+              selectedVibe,
+              selectedAdventure,
+              selectedFoods,
+              selectedLocationPref,
+              recipientVenue,
+              recipientNote: noteRef.current,
+              submittedAt: new Date().toISOString(),
+            },
+          };
+          if (props.slug) {
+            fetch(`/api/invitations/${props.slug}/respond`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+              keepalive: true,
+            }).catch(() => {});
+          }
+        }
+      };
+
+      window.addEventListener("beforeunload", handleLeave);
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === 'hidden') handleLeave();
+      });
+
+      return () => {
+        window.removeEventListener("beforeunload", handleLeave);
+        // We can't cleanly remove the anonymous visibilitychange listener, but it's okay for this short-lived component
+      };
+    }
+  }, [currentScreen]);
+
   const handleSendCustomNote = async () => {
     if (!recipientNote.trim()) return;
+    hasEmailedRef.current = true;
     await submitFinalResponse("ACCEPTED", true);
   };
 
@@ -1152,7 +1215,7 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
                 </button>
                 <button
                   onClick={() => {
-                    submitFinalResponse("ACCEPTED", true);
+                    submitFinalResponse("PLANNING_COMPLETE", true);
                     setCurrentScreen(10);
                   }}
                   className="flex-1 py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#631726] to-[#8C2337] border border-[#D4AF37]/40 text-[#FDFBF7] font-medium text-sm tracking-wider flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
@@ -1247,10 +1310,15 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
                   />
                   <button
                     onClick={handleSendCustomNote}
-                    className="px-3 py-2 rounded-xl bg-[#631726] border border-[#D4AF37]/40 text-[#FDFBF7] hover:bg-[#781C2E] text-xs flex items-center justify-center transition-all"
+                    disabled={isSubmitting}
+                    className="px-3 py-2 rounded-xl bg-[#631726] border border-[#D4AF37]/40 text-[#FDFBF7] hover:bg-[#781C2E] text-xs flex items-center justify-center transition-all disabled:opacity-70"
                     title="Send note"
                   >
-                    <Send className="w-3.5 h-3.5" />
+                    {isSubmitting ? (
+                      <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <Send className="w-3.5 h-3.5" />
+                    )}
                   </button>
                 </div>
                 {hasSubmitted && (

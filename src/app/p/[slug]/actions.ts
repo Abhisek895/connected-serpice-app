@@ -41,7 +41,7 @@ export async function recordResponseAction(slug: string, action: string, metadat
     const isNewAction = response.isNew;
 
     // ── Fire creator notification email (skip VIEWED to avoid spam) ──────────
-    const skipActions = ["VIEWED", "STARTED_PLANNING"];
+    const skipActions = ["VIEWED", "STARTED_PLANNING", "PLANNING_COMPLETE"];
     const shouldEmail = !skipActions.includes(action) && response.success && isNewAction;
 
     if (shouldEmail) {
