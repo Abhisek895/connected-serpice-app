@@ -2,16 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Gift, Sparkles, Wand2, X, PlusCircle, CheckCircle2, ChevronRight, Share2, Eye, Banknote, Palette, Users, Settings as SettingsIcon, Crown } from "lucide-react";
+import { Zap, Loader2, CheckCircle2, Copy, Edit3, Eye, X, ExternalLink, Palette } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import MiniTextArtPreviewShared from "@/components/MiniTextArtPreview";
-import { ThemePricingSettings } from "./DashboardClient";
 import { createInstantEventFromTemplate } from "./builder/actions";
 import { TEMPLATE_CLASSES } from "./templateConfig";
 import { demos } from "./demoConfig";
 import CheckoutModal from "./CheckoutModal";
 import CustomizeModal from "./CustomizeModal";
 import AutoClickSimulatedPreview from "@/components/ui/AutoClickSimulatedPreview";
-import MiniTextArtPreviewShared from "@/components/MiniTextArtPreview";
 
 type ThemePricingItem = {
   name: string;
