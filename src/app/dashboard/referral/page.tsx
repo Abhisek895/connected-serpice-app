@@ -407,7 +407,7 @@ export default function ReferralPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {themes.map((theme, i) => (
+            {themes.filter(t => t.name !== "Romantic").map((theme, i) => (
               <TemplateReferralCard
                 key={theme.id}
                 theme={theme}

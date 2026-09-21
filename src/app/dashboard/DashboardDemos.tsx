@@ -82,7 +82,7 @@ export default function DashboardDemos({
   };
 
   const sourceList = themePricing && themePricing.length > 0
-    ? themePricing.filter(t => t.isActive)
+    ? themePricing.filter(t => t.isActive && t.name !== "Romantic")
     : demos.map(d => ({ name: d.id, isActive: true, price: d.price, durationDays: d.durationDays, title: d.title, description: d.description, thumbnailUrl: d.image }));
 
   const activeDemos = sourceList.map(dbTheme => {
