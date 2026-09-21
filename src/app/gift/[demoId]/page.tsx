@@ -20,6 +20,11 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const description = theme?.description || demo.description;
   const image = theme?.thumbnailUrl || demo.image;
 
+  let ogImageUrl = image;
+  if (demoId === "surprise" || theme?.name === "surprise") {
+    ogImageUrl = `/api/og/surprise?image=${encodeURIComponent(image)}`;
+  }
+
   return {
     title: `${title} — Made with OurStory 💖`,
     description,
@@ -31,7 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
       type: "website",
       images: [
         {
-          url: image,
+          url: ogImageUrl,
           width: 1200,
           height: 630,
           alt: title,
@@ -42,7 +47,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
       card: "summary_large_image",
       title: `${title} — Made with OurStory 💖`,
       description,
-      images: [image],
+      images: [ogImageUrl],
     },
   };
 }
