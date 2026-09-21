@@ -343,11 +343,6 @@ export default function DashboardDemos({
                     {/* Light gradient just for text readability at the bottom, no dark overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent" />
 
-                    {/* OurStory brand watermark on card thumbnail */}
-                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-sm border border-white/15 text-white text-[9px] font-bold tracking-wide whitespace-nowrap shadow-sm pointer-events-none">
-                      💖 Made with OurStory
-                    </div>
-
 
                   </div>
 
