@@ -36,6 +36,12 @@ export async function recordResponse(params: RecordResponseParams) {
     const rawKey = `${eventId}:${action}:${identityFactor}`;
     idempotencyKey = crypto.createHash("sha256").update(rawKey).digest("hex");
 
+    // Check if it's new before upserting
+    const existing = await prisma.response.findUnique({
+      where: { idempotencyKey }
+    });
+    const isNew = !existing;
+
     // 3. Upsert Response (Idempotent)
     // If the exact same action from the same session/IP is logged, we just return the existing one.
     const response = await prisma.response.upsert({
@@ -61,7 +67,7 @@ export async function recordResponse(params: RecordResponseParams) {
       },
     });
 
-    return { success: true, data: response };
+    return { success: true, data: response, isNew };
 
   } catch (error) {
     console.error("Error in recordResponse:", error);

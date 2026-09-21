@@ -39,9 +39,10 @@ export async function POST(
     const idempotencyKey = crypto.createHash("sha256").update(rawKey).digest("hex");
 
     // ── Check for spam/deduplication ─────────────────────────────────────────
-    const isNewAction = await prisma.response.findFirst({
-      where: { eventId: event.id, action: action || "ACCEPTED" },
-    }) === null;
+    const existingRecord = await prisma.response.findUnique({
+      where: { idempotencyKey },
+    });
+    const isNewAction = !existingRecord || existingRecord.action !== (action || "ACCEPTED");
 
     // Upsert response
     const responseRecord = await prisma.response.upsert({

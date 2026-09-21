@@ -30,13 +30,6 @@ export async function recordResponseAction(slug: string, action: string, metadat
       }
     }
 
-    // ── Check for spam/deduplication ─────────────────────────────────────────
-    // We check if this action was already recorded previously to avoid spamming 
-    // the creator if the receiver clicks the same button 5 times.
-    const isNewAction = await prisma.response.findFirst({
-      where: { eventId: event.id, action: action },
-    }) === null;
-
     const response = await recordResponse({
       eventId: event.id,
       action: action,
@@ -44,6 +37,8 @@ export async function recordResponseAction(slug: string, action: string, metadat
       device: "Desktop/Mobile",
       browser: "Web Browser",
     });
+
+    const isNewAction = response.isNew;
 
     // ── Fire creator notification email (skip VIEWED to avoid spam) ──────────
     const skipActions = ["VIEWED", "STARTED_PLANNING"];
