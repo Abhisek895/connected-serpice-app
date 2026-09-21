@@ -7,6 +7,7 @@ import {
   Banknote, ExternalLink, Loader2, X, Link2,
   Zap, Clock, Star, MessageCircle
 } from "lucide-react";
+import MiniTextArtPreviewShared from "@/components/MiniTextArtPreview";
 import { demos } from "../demoConfig";
 
 type Theme = {
@@ -138,13 +139,19 @@ function TemplateReferralCard({
       {/* Large Image Header */}
       <div className="relative h-48 w-full bg-slate-100 overflow-hidden">
         {imageUrl && (
-          <img
-            src={imageUrl}
-            alt={displayTitle}
-            className="w-full h-full object-cover object-[center_25%] group-hover:scale-105 transition-transform duration-500"
-          />
+          <div className="w-full h-full group-hover:scale-105 transition-transform duration-500">
+            {theme.name === "surprise" || fallbackDemo?.id === "surprise" ? (
+              <MiniTextArtPreviewShared src={imageUrl} phrase="LOVE YOU" />
+            ) : (
+              <img
+                src={imageUrl}
+                alt={displayTitle}
+                className="w-full h-full object-cover object-[center_25%]"
+              />
+            )}
+          </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent pointer-events-none" />
 
         {/* Badges on Image */}
         <div className="absolute top-3 right-3 z-10 flex flex-wrap gap-1.5 items-center">

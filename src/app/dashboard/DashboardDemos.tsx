@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Zap, Loader2, CheckCircle2, Copy, Edit3, Eye, X, ExternalLink, Palette } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Gift, Sparkles, Wand2, X, PlusCircle, CheckCircle2, ChevronRight, Share2, Eye, Banknote, Palette, Users, Settings as SettingsIcon, Crown } from "lucide-react";
+import MiniTextArtPreviewShared from "@/components/MiniTextArtPreview";
+import { ThemePricingSettings } from "./DashboardClient";
 import { createInstantEventFromTemplate } from "./builder/actions";
 import { TEMPLATE_CLASSES } from "./templateConfig";
 import { demos } from "./demoConfig";
@@ -335,13 +336,19 @@ export default function DashboardDemos({
                 <div>
                   {/* Image Header */}
                   <div className="relative h-48 w-full bg-slate-100 overflow-hidden group">
-                    <img
-                      src={demo.image}
-                      alt={demo.title}
-                      className="w-full h-full object-cover object-[center_25%] group-hover:scale-105 transition-transform duration-500"
-                    />
+                    <div className="w-full h-full group-hover:scale-105 transition-transform duration-500">
+                      {demo.id === "surprise" ? (
+                        <MiniTextArtPreviewShared src={demo.image} phrase="LOVE YOU" />
+                      ) : (
+                        <img
+                          src={demo.image}
+                          alt={demo.title}
+                          className="w-full h-full object-cover object-[center_25%]"
+                        />
+                      )}
+                    </div>
                     {/* Light gradient just for text readability at the bottom, no dark overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent pointer-events-none" />
 
                     {/* OurStory brand watermark on card thumbnail */}
                     <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-sm border border-white/15 text-white text-[9px] font-bold tracking-wide whitespace-nowrap shadow-sm pointer-events-none">

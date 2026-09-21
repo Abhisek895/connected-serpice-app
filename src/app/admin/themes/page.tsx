@@ -294,16 +294,18 @@ export default function AdminThemesPage() {
                 >
                   {/* Thumbnail */}
                   <div className="relative h-48 w-full bg-slate-900 overflow-hidden group">
-                    {demo.id === "surprise" ? (
-                      <MiniTextArtPreviewShared src={displayThumb} phrase="LOVE YOU" />
-                    ) : (
-                      <img
-                        src={displayThumb}
-                        alt={displayTitle}
-                        className="w-full h-full object-cover object-[center_25%] group-hover:scale-105 transition-transform duration-500"
-                      />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#111827]/60 via-transparent to-transparent" />
+                    <div className="w-full h-full group-hover:scale-105 transition-transform duration-500">
+                      {demo.id === "surprise" ? (
+                        <MiniTextArtPreviewShared src={displayThumb} phrase="LOVE YOU" />
+                      ) : (
+                        <img
+                          src={displayThumb}
+                          alt={displayTitle}
+                          className="w-full h-full object-cover object-[center_25%]"
+                        />
+                      )}
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#111827]/60 via-transparent to-transparent pointer-events-none" />
 
                     {/* Badges container */}
                     <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 items-center pr-3">
