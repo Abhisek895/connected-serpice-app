@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { X, QrCode, Download, Copy, CheckCircle2 } from "lucide-react";
+import HeartQRCode from "./HeartQRCode";
 
 interface QRCodeModalProps {
   url: string;
@@ -12,9 +13,6 @@ interface QRCodeModalProps {
 
 export default function QRCodeModal({ url, title, onClose }: QRCodeModalProps) {
   const [copied, setCopied] = useState(false);
-  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&color=f43f5e&data=${encodeURIComponent(
-    url
-  )}`;
 
   const copyUrl = () => {
     navigator.clipboard.writeText(url);
@@ -22,20 +20,24 @@ export default function QRCodeModal({ url, title, onClose }: QRCodeModalProps) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleDownload = async () => {
+  const handleDownload = () => {
     try {
-      const response = await fetch(qrImageUrl);
-      const blob = await response.blob();
+      const svg = document.getElementById("heart-qr-code");
+      if (!svg) return;
+      
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
       const blobUrl = URL.createObjectURL(blob);
+      
       const a = document.createElement("a");
       a.href = blobUrl;
-      a.download = `${title.toLowerCase().replace(/[^a-z0-9]/g, "-")}-qr.png`;
+      a.download = `${title.toLowerCase().replace(/[^a-z0-9]/g, "-")}-qr.svg`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(blobUrl);
     } catch (err) {
-      window.open(qrImageUrl, "_blank");
+      console.error("Failed to download QR code", err);
     }
   };
 
@@ -63,11 +65,7 @@ export default function QRCodeModal({ url, title, onClose }: QRCodeModalProps) {
 
         {/* QR Code Container */}
         <div className="bg-gradient-to-tr from-rose-50 to-purple-50 p-4 rounded-2xl border border-rose-100 inline-block mb-5 shadow-inner">
-          <img
-            src={qrImageUrl}
-            alt="Proposal QR Code"
-            className="w-48 h-48 rounded-xl bg-white p-2 shadow-sm object-contain mx-auto"
-          />
+          <HeartQRCode url={url} size={192} color="#f43f5e" />
         </div>
 
         <div className="bg-slate-50 rounded-xl p-3 mb-5 border border-slate-200 text-xs font-mono text-slate-600 truncate">

@@ -591,6 +591,8 @@ export default function BirthdayTemplate({
           display: flex;
           align-items: center;
           justify-content: center;
+          padding: 16px;
+          box-sizing: border-box;
           animation: popupFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         @keyframes popupFadeIn {
@@ -612,6 +614,8 @@ export default function BirthdayTemplate({
           padding: 42px 34px 38px;
           max-width: 360px;
           width: calc(100% - 36px);
+          max-height: calc(100dvh - 32px);
+          overflow-y: auto;
           text-align: center;
           box-shadow:
             0 0 0 1px rgba(251,191,36,0.28),
