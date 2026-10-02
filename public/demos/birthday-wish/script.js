@@ -127,7 +127,7 @@ function toggleMusic(e) {
 
 if (musicBtn) musicBtn.addEventListener('click', toggleMusic);
 
-// Unlock audio on first tap
+// Unlock audio on first tap (can remove since we play on button click now, but keeping just in case)
 const unlockAudio = () => {
   if (!isPlaying) playAudio();
   window.removeEventListener('click', unlockAudio);
@@ -148,23 +148,6 @@ const noMessages = [
   { title: "Okay fine… 😭", sub: "You clearly can't resist forever!" },
 ];
 
-function openPopup() {
-  if (lovePopup) {
-    lovePopup.style.display = 'flex';
-    // Reset
-    noClickCount = 0;
-    yesSizeScale = 1;
-    if (popupTitle) popupTitle.textContent = 'Do you love me? 💖';
-    if (popupSub) popupSub.textContent = 'Choose honestly…';
-    if (loveYesBtn) loveYesBtn.style.transform = 'scale(1)';
-    if (loveNoBtn) {
-      loveNoBtn.style.transform = 'scale(1)';
-      loveNoBtn.style.opacity = '1';
-      loveNoBtn.style.display = '';
-    }
-  }
-}
-
 function closePopupAndReveal() {
   if (lovePopup) {
     lovePopup.classList.add('popup-fade-out');
@@ -173,25 +156,19 @@ function closePopupAndReveal() {
       lovePopup.classList.remove('popup-fade-out');
     }, 350);
   }
-  // Hide tap prompt
-  if (tapPrompt) tapPrompt.style.display = 'none';
+  
   // Show birthday card content
+  if (card) card.style.display = 'block';
   if (stage1) stage1.style.display = 'block';
+  
   // Start music
   if (!isPlaying) playAudio();
+  
   // Start typewriter
   setTimeout(() => typeText(mainMessage, messageEl, 30), 400);
 }
 
-// Click on card opens popup (only if not yet revealed)
 let revealed = false;
-if (card) {
-  card.addEventListener('click', (e) => {
-    if (revealed) return;
-    if (e.target.closest('#musicBtn') || e.target.closest('.love-popup-overlay')) return;
-    openPopup();
-  });
-}
 
 if (loveYesBtn) {
   loveYesBtn.addEventListener('click', (e) => {
