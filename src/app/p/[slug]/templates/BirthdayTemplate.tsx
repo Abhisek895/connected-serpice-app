@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { recordResponseAction } from "../actions";
 import type { ProposalClientProps } from "./RomanticLoveTemplate";
 import OurStoryWatermark from "./OurStoryWatermark";
 
-// ─── Soft Falling Fairy Confetti Canvas (Matches Demo & Reference Photos) ────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Soft Falling Fairy Confetti Canvas (Matches Demo & Reference Photos) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 type Piece = {
   x: number;
   y: number;
@@ -68,17 +68,20 @@ function useConfetti(active = true) {
     resize();
     window.addEventListener("resize", resize);
 
-    pieces.current = Array.from({ length: 90 }).map(() => ({
+    pieces.current = Array.from({ length: 110 }).map(() => ({
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
-      vy: 0.8 + Math.random() * 1.4,
-      vx: (Math.random() - 0.5) * 0.4,
-      width: 4 + Math.random() * 5,
-      height: 3 + Math.random() * 4,
-      color: ["#ffffff", "#ffd1dc", "#fca5a5", "#ff9cc6", "#ffe4e6"][Math.floor(Math.random() * 5)],
-      opacity: 0.35 + Math.random() * 0.55,
+      vy: 0.7 + Math.random() * 1.6,
+      vx: (Math.random() - 0.5) * 0.5,
+      width: 4 + Math.random() * 7,
+      height: 3 + Math.random() * 5,
+      color: [
+        "#ffd700", "#ffb700", "#ffc4d0", "#ff85a1", "#c084fc",
+        "#e9d5ff", "#ffffff", "#fef3c7", "#f9a8d4", "#a78bfa"
+      ][Math.floor(Math.random() * 10)],
+      opacity: 0.4 + Math.random() * 0.55,
       rotation: Math.random() * 360,
-      vr: (Math.random() - 0.5) * 1.5,
+      vr: (Math.random() - 0.5) * 1.8,
     }));
 
     raf.current = requestAnimationFrame(draw);
@@ -91,7 +94,7 @@ function useConfetti(active = true) {
   return canvasRef;
 }
 
-// ─── Smooth Typewriter Hook ──────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Smooth Typewriter Hook Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 function useTypewriter(text: string, active = true, speed = 32) {
   const [displayed, setDisplayed] = useState("");
   useEffect(() => {
@@ -108,7 +111,7 @@ function useTypewriter(text: string, active = true, speed = 32) {
   return displayed;
 }
 
-// ─── Photo Slideshow Hook ────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Photo Slideshow Hook Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 function useSlideshow(photos: string[], interval = 3000) {
   const [current, setCurrent] = useState(0);
   useEffect(() => {
@@ -119,7 +122,7 @@ function useSlideshow(photos: string[], interval = 3000) {
   return current;
 }
 
-// ─── BirthdayTemplate Component ──────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ BirthdayTemplate Component Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 export default function BirthdayTemplate({
   slug,
   title,
@@ -139,10 +142,10 @@ export default function BirthdayTemplate({
 }: ProposalClientProps) {
   const hasViewedRef = useRef(false);
   const [revealed, setRevealed] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
+  const [showPopup, setShowPopup] = useState(true); // Show immediately on load
   const [noCount, setNoCount] = useState(0);
   const [yesScale, setYesScale] = useState(1);
-  const [popupMsg, setPopupMsg] = useState({ title: "Do you love me? 💖", sub: "Choose honestly…" });
+  const [popupMsg, setPopupMsg] = useState({ title: "Do you love me? Ã°Å¸â€™â€“", sub: "Choose honestlyÃ¢â‚¬Â¦" });
 
   useEffect(() => {
     if (!hasViewedRef.current) {
@@ -189,14 +192,14 @@ export default function BirthdayTemplate({
   const confettiRef = useConfetti(true);
 
   const displayRecipient = recipientName || "Someone Special";
-  const displayTitle = title || "Happy Birthday! 🎂";
-  const displayQuestion = question || "Wishing you the happiest birthday! 🎂";
-  const displayAcceptBtn = acceptBtn || "Love ❤️";
-  const displayRejectBtn = rejectBtn || "Hate 💔";
+  const displayTitle = title || "Happy Birthday! Ã°Å¸Å½â€š";
+  const displayQuestion = question || "Wishing you the happiest birthday! Ã°Å¸Å½â€š";
+  const displayAcceptBtn = acceptBtn || "Love Ã¢ÂÂ¤Ã¯Â¸Â";
+  const displayRejectBtn = rejectBtn || "Hate Ã°Å¸â€™â€";
   
   const displayMessage =
     loveMessage ||
-    "May all your dreams come true. You deserve all the happiness in the world! 🎉";
+    "May all your dreams come true. You deserve all the happiness in the world! Ã°Å¸Å½â€°";
 
   const typedMessage = useTypewriter(displayMessage, revealed, 30);
 
@@ -227,18 +230,18 @@ export default function BirthdayTemplate({
   );
 
   const noMessages = [
-    { title: "Are you sure? 🥺", sub: "Think again, please…" },
-    { title: "Really sure? 😢", sub: "I made this with love!" },
-    { title: "Don't break my heart! 💔", sub: "The Yes button is RIGHT THERE…" },
-    { title: "Last chance! 🥺", sub: "Just click Love already!" },
-    { title: "Okay fine… 😭", sub: "You clearly can't resist forever!" },
+    { title: "Are you sure? Ã°Å¸Â¥Âº", sub: "Think again, pleaseÃ¢â‚¬Â¦" },
+    { title: "Really sure? Ã°Å¸ËœÂ¢", sub: "I made this with love!" },
+    { title: "Don't break my heart! Ã°Å¸â€™â€", sub: "The Yes button is RIGHT THEREÃ¢â‚¬Â¦" },
+    { title: "Last chance! Ã°Å¸Â¥Âº", sub: "Just click Love already!" },
+    { title: "Okay fineÃ¢â‚¬Â¦ Ã°Å¸ËœÂ­", sub: "You clearly can't resist forever!" },
   ];
 
   const handleOpenPopup = () => {
     if (revealed) return;
     setNoCount(0);
     setYesScale(1);
-    setPopupMsg({ title: "Do you love me? 💖", sub: "Choose honestly…" });
+    setPopupMsg({ title: "Do you love me? Ã°Å¸â€™â€“", sub: "Choose honestlyÃ¢â‚¬Â¦" });
     setShowPopup(true);
   };
 
@@ -267,33 +270,25 @@ export default function BirthdayTemplate({
     const audio = new Audio(audioSrc);
     audio.loop = true;
     audioRef.current = audio;
-
-    const playPromise = audio.play();
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => setIsPlaying(true))
-        .catch(() => {
-          setIsPlaying(false);
-          const unlock = () => {
-            audio.play().then(() => setIsPlaying(true)).catch(() => {});
-            window.removeEventListener("click", unlock);
-            window.removeEventListener("touchstart", unlock);
-          };
-          window.addEventListener("click", unlock, { once: true });
-          window.addEventListener("touchstart", unlock, { once: true });
-        });
-    }
-
+    // Do NOT auto-play â€” music only starts after Love is clicked
     return () => {
       audio.pause();
       audioRef.current = null;
     };
   }, [audioSrc]);
 
+
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Poppins:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@600;700&display=swap');
+
+        /* Psychology Palette:
+           Deep Violet = Magic, Wonder, Mystery (evokes awe)
+           Gold/Amber  = Achievement, Joy, Celebration (dopamine trigger)
+           Rose/Pink   = Love, Warmth, Tenderness (oxytocin response)
+           Warm White  = Comfort, Clarity (cognitive ease)
+        */
 
         .bday-page {
           min-height: 100vh;
@@ -301,14 +296,36 @@ export default function BirthdayTemplate({
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 24px 16px;
+          padding: 28px 16px;
           font-family: 'Poppins', sans-serif;
-          background: radial-gradient(ellipse at 50% 25%, #851838 0%, #4a071c 55%, #1f010b 100%);
+          background:
+            radial-gradient(ellipse at 30% 0%,   rgba(120,40,200,0.55) 0%,  transparent 55%),
+            radial-gradient(ellipse at 70% 100%, rgba(220,38,100,0.45) 0%,  transparent 55%),
+            radial-gradient(ellipse at 80% 20%,  rgba(251,191,36,0.15) 0%,  transparent 45%),
+            linear-gradient(160deg, #0d0118 0%, #150530 40%, #1e0a30 70%, #120215 100%);
           color: #ffffff;
           overflow-x: hidden;
           position: relative;
           box-sizing: border-box;
           -webkit-font-smoothing: antialiased;
+        }
+
+        .bday-page::before {
+          content: '';
+          position: fixed;
+          top: -15%;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 80vw;
+          height: 50vh;
+          background: radial-gradient(ellipse, rgba(251,191,36,0.09) 0%, transparent 70%);
+          pointer-events: none;
+          z-index: 0;
+          animation: auroraFloat 8s ease-in-out infinite alternate;
+        }
+        @keyframes auroraFloat {
+          0%   { opacity: 0.6; transform: translateX(-50%) scale(1); }
+          100% { opacity: 1;   transform: translateX(-50%) scale(1.18); }
         }
 
         .bday-confetti {
@@ -325,67 +342,87 @@ export default function BirthdayTemplate({
           top: 20px;
           right: 20px;
           z-index: 100;
-          width: 44px;
-          height: 44px;
+          width: 46px;
+          height: 46px;
           border-radius: 50%;
-          background: rgba(255, 255, 255, 0.15);
-          backdrop-filter: blur(14px);
-          -webkit-backdrop-filter: blur(14px);
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          color: #ffffff;
+          background: rgba(251, 191, 36, 0.12);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(251, 191, 36, 0.3);
+          color: #fde68a;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
           font-size: 18px;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-          transition: transform 0.2s ease, background 0.2s ease;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 12px rgba(251,191,36,0.18);
+          transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
         }
         .bday-music-btn:hover {
-          transform: scale(1.08);
-          background: rgba(255, 255, 255, 0.25);
+          transform: scale(1.1);
+          background: rgba(251, 191, 36, 0.25);
+          box-shadow: 0 6px 24px rgba(0,0,0,0.5), 0 0 22px rgba(251,191,36,0.38);
         }
-        .bday-music-btn:active {
-          transform: scale(0.95);
-        }
+        .bday-music-btn:active { transform: scale(0.93); }
 
         .bday-card-container {
           position: relative;
           z-index: 2;
           width: 100%;
           max-width: 680px;
-          background: rgba(225, 29, 72, 0.22);
-          backdrop-filter: blur(24px) saturate(180%);
-          -webkit-backdrop-filter: blur(24px) saturate(180%);
-          border-radius: 28px;
-          border: 1px solid rgba(255, 180, 200, 0.28);
-          box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 40px rgba(225, 29, 72, 0.35);
-          padding: 26px;
+          background: linear-gradient(
+            145deg,
+            rgba(70, 15, 120, 0.38) 0%,
+            rgba(130, 18, 65, 0.30) 50%,
+            rgba(55, 8, 100, 0.38) 100%
+          );
+          backdrop-filter: blur(36px) saturate(200%);
+          -webkit-backdrop-filter: blur(36px) saturate(200%);
+          border-radius: 32px;
+          border: 1px solid rgba(251, 191, 36, 0.2);
+          box-shadow:
+            0 0 0 1px rgba(192, 132, 252, 0.12),
+            0 25px 65px -15px rgba(0,0,0,0.8),
+            0 0 55px rgba(100, 30, 180, 0.2),
+            inset 0 1px 0 rgba(255,255,255,0.07);
+          padding: 28px;
           box-sizing: border-box;
-          animation: bdayCardFadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          animation: bdayCardFadeIn 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
           margin: 24px auto;
         }
-
         @keyframes bdayCardFadeIn {
-          from {
-            opacity: 0;
-            transform: scale(0.96) translateY(12px);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
+          from { opacity: 0; transform: scale(0.94) translateY(18px); }
+          to   { opacity: 1; transform: scale(1)    translateY(0); }
         }
 
         .bday-photo-slider {
           width: 100%;
-          height: 280px;
-          border-radius: 20px;
+          height: 300px;
+          border-radius: 22px;
           overflow: hidden;
           position: relative;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-          margin-bottom: 20px;
-          background: #150208;
+          margin-bottom: 22px;
+          background: #0d0118;
+          box-shadow:
+            0 12px 40px rgba(0,0,0,0.6),
+            0 0 0 1.5px rgba(251,191,36,0.18),
+            0 0 30px rgba(192,132,252,0.18);
+        }
+        /* Animated shimmer ring around photo */
+        .bday-photo-slider::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: 22px;
+          background: linear-gradient(135deg, rgba(255,215,0,0.18) 0%, rgba(192,132,252,0.12) 40%, rgba(255,133,161,0.12) 70%, rgba(255,215,0,0.18) 100%);
+          background-size: 200% 200%;
+          pointer-events: none;
+          z-index: 2;
+          animation: photoShimmer 4s ease-in-out infinite;
+        }
+        @keyframes photoShimmer {
+          0%, 100% { background-position: 0% 50%; opacity: 0.7; }
+          50%       { background-position: 100% 50%; opacity: 1; }
         }
 
         .bday-slide-img {
@@ -394,12 +431,11 @@ export default function BirthdayTemplate({
           width: 100%;
           height: 100%;
           object-fit: cover;
-          object-position: center 30%;
+          object-position: center 25%;
           opacity: 0;
-          transition: opacity 1.5s ease-in-out, transform 6s ease-in-out;
-          transform: scale(1.06);
+          transition: opacity 1.8s ease-in-out, transform 7s ease-in-out;
+          transform: scale(1.07);
         }
-
         .bday-slide-img.active {
           opacity: 1;
           transform: scale(1);
@@ -409,119 +445,110 @@ export default function BirthdayTemplate({
           font-family: 'Playfair Display', serif;
           font-size: 28px;
           font-weight: 700;
-          color: #ffffff;
-          margin-bottom: 8px;
+          background: linear-gradient(135deg, #fde68a 0%, #fbbf24 40%, #f9a8d4 80%, #e9d5ff 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          margin-bottom: 10px;
           line-height: 1.3;
           text-align: left;
-          letter-spacing: -0.2px;
+          letter-spacing: -0.3px;
+          filter: drop-shadow(0 2px 8px rgba(251,191,36,0.25));
         }
 
         .bday-name {
-          color: #fca5a5;
+          background: linear-gradient(90deg, #ffd700 0%, #f9a8d4 55%, #c084fc 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
           font-weight: 700;
         }
 
         .bday-subtitle {
           font-size: 15px;
-          color: rgba(255, 255, 255, 0.9);
-          margin-bottom: 16px;
+          color: rgba(253, 230, 138, 0.82);
+          margin-bottom: 18px;
           text-align: left;
           font-weight: 400;
-          line-height: 1.4;
+          line-height: 1.5;
+          font-style: italic;
         }
 
         .bday-message-box {
-          font-size: 16px;
-          line-height: 1.6;
-          color: #ffffff;
+          background: rgba(251, 191, 36, 0.06);
+          border: 1px solid rgba(251, 191, 36, 0.16);
+          border-radius: 18px;
+          padding: 18px 20px;
+          font-family: 'Dancing Script', cursive;
+          font-size: 19px;
+          line-height: 1.65;
+          color: #fef3c7;
           text-align: left;
-          min-height: 52px;
-          font-weight: 500;
+          min-height: 64px;
+          font-weight: 600;
           white-space: pre-wrap;
           word-break: break-word;
+          box-shadow: inset 0 0 24px rgba(251,191,36,0.04);
         }
 
         .bday-cursor {
           display: inline-block;
           font-weight: 300;
           margin-left: 2px;
-          color: rgba(255, 255, 255, 0.8);
+          color: #fbbf24;
           animation: bdayBlink 0.9s step-start infinite;
         }
-
         @keyframes bdayBlink {
           0%, 100% { opacity: 1; }
-          50% { opacity: 0; }
+          50%       { opacity: 0; }
         }
 
         @media (max-width: 640px) {
-          .bday-page {
-            padding: 16px 12px;
-          }
-          .bday-card-container {
-            padding: 18px;
-            border-radius: 24px;
-            max-width: 100%;
-          }
-          .bday-photo-slider {
-            height: 220px;
-            border-radius: 16px;
-            margin-bottom: 16px;
-          }
-          .bday-heading {
-            font-size: 24px;
-            line-height: 1.28;
-          }
-          .bday-subtitle {
-            font-size: 14px;
-            margin-bottom: 14px;
-          }
-          .bday-message-box {
-            font-size: 15px;
-            line-height: 1.55;
-          }
-          .bday-music-btn {
-            top: 14px;
-            right: 14px;
-            width: 38px;
-            height: 38px;
-            font-size: 16px;
-          }
+          .bday-page { padding: 16px 12px; }
+          .bday-card-container { padding: 18px; border-radius: 26px; max-width: 100%; }
+          .bday-photo-slider { height: 230px; border-radius: 18px; margin-bottom: 18px; }
+          .bday-heading { font-size: 23px; line-height: 1.28; }
+          .bday-subtitle { font-size: 13px; margin-bottom: 14px; }
+          .bday-message-box { font-size: 17px; line-height: 1.6; padding: 14px 16px; }
+          .bday-music-btn { top: 14px; right: 14px; width: 40px; height: 40px; font-size: 16px; }
         }
-
         @media (max-width: 380px) {
-          .bday-photo-slider {
-            height: 190px;
-          }
-          .bday-heading {
-            font-size: 22px;
-          }
-          .bday-message-box {
-            font-size: 14px;
-          }
+          .bday-photo-slider { height: 200px; }
+          .bday-heading { font-size: 20px; }
+          .bday-message-box { font-size: 16px; }
         }
 
+        /* Ã¢â€â‚¬Ã¢â€â‚¬ Tap Prompt Ã¢â€â‚¬Ã¢â€â‚¬ */
         .bday-tap-prompt {
           text-align: center;
-          padding: 14px 0 6px;
-          color: rgba(255, 255, 255, 0.75);
-          font-size: 14px;
-          font-weight: 500;
-          letter-spacing: 0.3px;
+          padding: 18px 0 8px;
+          background: linear-gradient(90deg, #fbbf24, #c084fc, #f9a8d4, #fbbf24);
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          font-size: 15px;
+          font-weight: 600;
+          letter-spacing: 0.4px;
           cursor: pointer;
-          animation: tapPulse 2s ease-in-out infinite;
+          animation: tapPulse 2s ease-in-out infinite, shimmerText 3s linear infinite;
         }
         @keyframes tapPulse {
-          0%, 100% { opacity: 0.6; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.03); }
+          0%, 100% { opacity: 0.7; transform: scale(1); }
+          50%       { opacity: 1;   transform: scale(1.04); }
+        }
+        @keyframes shimmerText {
+          0%   { background-position: 0% 50%; }
+          100% { background-position: 200% 50%; }
         }
 
+        /* Ã¢â€â‚¬Ã¢â€â‚¬ Popup Overlay Ã¢â€â‚¬Ã¢â€â‚¬ */
         .bday-popup-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(0, 0, 0, 0.72);
-          backdrop-filter: blur(6px);
-          -webkit-backdrop-filter: blur(6px);
+          background: rgba(6, 0, 18, 0.84);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
           z-index: 200;
           display: flex;
           align-items: center;
@@ -530,95 +557,133 @@ export default function BirthdayTemplate({
         }
         @keyframes popupFadeIn {
           from { opacity: 0; }
-          to { opacity: 1; }
+          to   { opacity: 1; }
         }
 
         .bday-popup-box {
-          background: rgba(225, 29, 72, 0.18);
-          backdrop-filter: blur(28px) saturate(180%);
-          -webkit-backdrop-filter: blur(28px) saturate(180%);
-          border: 1px solid rgba(255, 180, 200, 0.35);
-          border-radius: 28px;
-          padding: 36px 28px 32px;
-          max-width: 340px;
-          width: calc(100% - 40px);
+          position: relative;
+          background: linear-gradient(
+            145deg,
+            rgba(55, 8, 100, 0.95) 0%,
+            rgba(95, 12, 48, 0.92) 55%,
+            rgba(45, 6, 88, 0.95) 100%
+          );
+          backdrop-filter: blur(40px) saturate(220%);
+          -webkit-backdrop-filter: blur(40px) saturate(220%);
+          border-radius: 32px;
+          padding: 42px 34px 38px;
+          max-width: 360px;
+          width: calc(100% - 36px);
           text-align: center;
-          box-shadow: 0 30px 70px rgba(0,0,0,0.65), 0 0 40px rgba(225,29,72,0.3);
-          animation: popupBoxIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          box-shadow:
+            0 0 0 1px rgba(251,191,36,0.28),
+            0 30px 80px rgba(0,0,0,0.85),
+            0 0 70px rgba(100,30,180,0.3),
+            inset 0 1px 0 rgba(255,255,255,0.09);
+          animation: popupBoxIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        /* Animated shimmer ring */
+        .bday-popup-box::before {
+          content: '';
+          position: absolute;
+          inset: -1.5px;
+          border-radius: 33.5px;
+          background: linear-gradient(135deg, #ffd700, #c084fc, #ff85a1, #ffd700);
+          background-size: 300% 300%;
+          z-index: -1;
+          animation: popupRing 3s linear infinite;
+          opacity: 0.55;
+        }
+        @keyframes popupRing {
+          0%   { background-position: 0% 50%; }
+          50%  { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
         }
         @keyframes popupBoxIn {
-          from { opacity: 0; transform: scale(0.88) translateY(20px); }
-          to { opacity: 1; transform: scale(1) translateY(0); }
+          from { opacity: 0; transform: scale(0.84) translateY(28px); }
+          to   { opacity: 1; transform: scale(1)    translateY(0); }
         }
 
         .bday-popup-emoji {
-          font-size: 48px;
-          margin-bottom: 12px;
-          animation: emojiBounce 1.5s ease-in-out infinite;
+          font-size: 56px;
+          margin-bottom: 14px;
+          display: block;
+          animation: emojiBounce 1.6s ease-in-out infinite;
+          filter: drop-shadow(0 4px 16px rgba(251,191,36,0.55));
         }
         @keyframes emojiBounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-8px); }
+          0%, 100% { transform: translateY(0)   rotate(-4deg); }
+          50%       { transform: translateY(-12px) rotate(4deg); }
         }
 
         .bday-popup-title {
           font-family: 'Playfair Display', serif;
-          font-size: 22px;
+          font-size: 24px;
           font-weight: 700;
-          color: #ffffff;
-          margin: 0 0 8px;
+          background: linear-gradient(135deg, #fde68a 0%, #fbbf24 50%, #f9a8d4 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          margin: 0 0 10px;
           line-height: 1.3;
-          transition: all 0.3s ease;
+          transition: all 0.35s ease;
+          filter: drop-shadow(0 2px 8px rgba(251,191,36,0.3));
         }
 
         .bday-popup-sub {
-          font-size: 13px;
-          color: rgba(255,255,255,0.75);
-          margin: 0 0 28px;
+          font-size: 13.5px;
+          color: rgba(233, 213, 255, 0.82);
+          margin: 0 0 32px;
           font-weight: 400;
           min-height: 20px;
-          transition: all 0.3s ease;
+          transition: all 0.35s ease;
+          font-style: italic;
         }
 
         .bday-popup-btns {
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 18px;
-          min-height: 60px;
+          gap: 20px;
+          min-height: 64px;
         }
 
         .bday-btn-yes {
-          padding: 14px 32px;
-          background: #ffffff;
-          color: #e11d48;
+          padding: 15px 36px;
+          background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #fcd34d 100%);
+          color: #1c0a00;
           font-weight: 700;
           font-size: 16px;
           border-radius: 9999px;
           border: none;
           cursor: pointer;
-          box-shadow: 0 8px 24px rgba(225,29,72,0.5);
-          transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+          box-shadow:
+            0 8px 30px rgba(251,191,36,0.65),
+            0 0 0 1px rgba(251,191,36,0.4),
+            inset 0 1px 0 rgba(255,255,255,0.35);
+          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
           transform-origin: center;
           font-family: 'Poppins', sans-serif;
         }
-        .bday-btn-yes:hover { box-shadow: 0 12px 32px rgba(225,29,72,0.7); }
-        .bday-btn-yes:active { filter: brightness(0.95); }
+        .bday-btn-yes:hover {
+          box-shadow: 0 12px 38px rgba(251,191,36,0.85), 0 0 0 2px rgba(251,191,36,0.55);
+        }
+        .bday-btn-yes:active { filter: brightness(0.9); }
 
         .bday-btn-no {
           padding: 12px 24px;
-          background: rgba(255,255,255,0.12);
-          color: rgba(255,255,255,0.7);
-          font-weight: 600;
-          font-size: 14px;
+          background: rgba(255,255,255,0.07);
+          color: rgba(233,213,255,0.55);
+          font-weight: 500;
+          font-size: 13px;
           border-radius: 9999px;
-          border: 1px solid rgba(255,255,255,0.2);
+          border: 1px solid rgba(192,132,252,0.22);
           cursor: pointer;
-          transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
           transform-origin: center;
           font-family: 'Poppins', sans-serif;
         }
-        .bday-btn-no:hover { background: rgba(255,255,255,0.18); }
+        .bday-btn-no:hover { background: rgba(255,255,255,0.13); }
       `}</style>
 
       <div className="bday-page">
@@ -632,56 +697,43 @@ export default function BirthdayTemplate({
           aria-label="Toggle Music"
           title="Toggle Music"
         >
-          {isPlaying ? "🎵" : "🔇"}
+          {isPlaying ? "Ã°Å¸Å½Âµ" : "Ã°Å¸â€â€¡"}
         </button>
 
-        {/* Glassmorphic Card — always visible, click to open popup */}
-        <div
-          className="bday-card-container"
-          onClick={handleOpenPopup}
-          style={{ cursor: revealed ? "default" : "pointer" }}
-        >
-          {/* Photo Slideshow */}
-          <div className="bday-photo-slider">
-            {photos.map((src, i) => (
-              <img
-                key={src + i}
-                src={src}
-                className={`bday-slide-img ${i === activeSlide ? "active" : ""}`}
-                alt={`Birthday photo ${i + 1}`}
-              />
-            ))}
+        {/* Card — only visible after Love ❤️ is clicked */}
+        {revealed && (
+          <div className="bday-card-container">
+            {/* Photo Slideshow */}
+            <div className="bday-photo-slider">
+              {photos.map((src, i) => (
+                <img
+                  key={src + i}
+                  src={src}
+                  className={`bday-slide-img ${i === activeSlide ? "active" : ""}`}
+                  alt={`Birthday photo ${i + 1}`}
+                />
+              ))}
+            </div>
+
+            {/* Birthday card content with typewriter */}
+            <h1 className="bday-heading">
+              Happy Birthday, <span className="bday-name">{displayRecipient} ✨</span> 🦋 💖
+            </h1>
+            <div className="bday-subtitle">
+              A little surprise from someone who truly cares…
+            </div>
+            <div className="bday-message-box">
+              {typedMessage}
+              <span className="bday-cursor">|</span>
+            </div>
           </div>
-
-          {/* Tap Prompt (before reveal) */}
-          {!revealed && (
-            <div className="bday-tap-prompt">
-              Tap to open your surprise 🎁
-            </div>
-          )}
-
-          {/* Revealed: Birthday card content with typewriter */}
-          {revealed && (
-            <div>
-              <h1 className="bday-heading">
-                Happy Birthday, <span className="bday-name">{displayRecipient} ✨</span> 🦋 💖
-              </h1>
-              <div className="bday-subtitle">
-                A little surprise from someone who truly cares…
-              </div>
-              <div className="bday-message-box">
-                {typedMessage}
-                <span className="bday-cursor">|</span>
-              </div>
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Love Popup Overlay */}
         {showPopup && (
           <div className="bday-popup-overlay" onClick={(e) => e.stopPropagation()}>
             <div className="bday-popup-box">
-              <div className="bday-popup-emoji">🎂</div>
+              <div className="bday-popup-emoji">Ã°Å¸Å½â€š</div>
               <h2 className="bday-popup-title">{popupMsg.title}</h2>
               <p className="bday-popup-sub">{popupMsg.sub}</p>
               <div className="bday-popup-btns">

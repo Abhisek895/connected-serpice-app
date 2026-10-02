@@ -43,17 +43,20 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-const confettiPieces = Array.from({ length: 90 }).map(() => ({
+const confettiPieces = Array.from({ length: 110 }).map(() => ({
   x: Math.random() * window.innerWidth,
   y: Math.random() * window.innerHeight,
-  vy: 0.8 + Math.random() * 1.4,
-  vx: (Math.random() - 0.5) * 0.4,
-  width: 4 + Math.random() * 5,
-  height: 3 + Math.random() * 4,
-  color: ['#ffffff', '#ffd1dc', '#fca5a5', '#ff9cc6', '#ffe4e6'][Math.floor(Math.random() * 5)],
-  opacity: 0.35 + Math.random() * 0.55,
+  vy: 0.7 + Math.random() * 1.6,
+  vx: (Math.random() - 0.5) * 0.5,
+  width: 4 + Math.random() * 7,
+  height: 3 + Math.random() * 5,
+  color: [
+    '#ffd700', '#ffb700', '#ffc4d0', '#ff85a1', '#c084fc',
+    '#e9d5ff', '#ffffff', '#fef3c7', '#f9a8d4', '#a78bfa'
+  ][Math.floor(Math.random() * 10)],
+  opacity: 0.4 + Math.random() * 0.55,
   rotation: Math.random() * 360,
-  vr: (Math.random() - 0.5) * 1.5,
+  vr: (Math.random() - 0.5) * 1.8,
 }));
 
 function drawConfetti() {
