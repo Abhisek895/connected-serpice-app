@@ -138,8 +138,11 @@ export default function BirthdayTemplate({
   customData,
 }: ProposalClientProps) {
   const hasViewedRef = useRef(false);
-  const [stage, setStage] = useState(0); // 0 = proposal, 1 = accepted
-  const [noBtnPosition, setNoBtnPosition] = useState<{ x: number; y: number } | null>(null);
+  const [revealed, setRevealed] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [noCount, setNoCount] = useState(0);
+  const [yesScale, setYesScale] = useState(1);
+  const [popupMsg, setPopupMsg] = useState({ title: "Do you love me? 💖", sub: "Choose honestly…" });
 
   useEffect(() => {
     if (!hasViewedRef.current) {
@@ -195,7 +198,7 @@ export default function BirthdayTemplate({
     loveMessage ||
     "May all your dreams come true. You deserve all the happiness in the world! 🎉";
 
-  const typedMessage = useTypewriter(displayMessage, stage === 1, 30);
+  const typedMessage = useTypewriter(displayMessage, revealed, 30);
 
   // Audio Playback & Toggle
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -223,32 +226,42 @@ export default function BirthdayTemplate({
     [isPlaying, startAudio]
   );
 
-  const moveNoButton = () => {
-    if (typeof window === "undefined") return;
-    const padding = 80;
-    const maxX = window.innerWidth - 120;
-    const maxY = window.innerHeight - 60;
+  const noMessages = [
+    { title: "Are you sure? 🥺", sub: "Think again, please…" },
+    { title: "Really sure? 😢", sub: "I made this with love!" },
+    { title: "Don't break my heart! 💔", sub: "The Yes button is RIGHT THERE…" },
+    { title: "Last chance! 🥺", sub: "Just click Love already!" },
+    { title: "Okay fine… 😭", sub: "You clearly can't resist forever!" },
+  ];
 
-    const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
-    const randomY = Math.max(padding, Math.floor(Math.random() * maxY));
-
-    setNoBtnPosition({ x: randomX, y: randomY });
+  const handleOpenPopup = () => {
+    if (revealed) return;
+    setNoCount(0);
+    setYesScale(1);
+    setPopupMsg({ title: "Do you love me? 💖", sub: "Choose honestly…" });
+    setShowPopup(true);
   };
 
   const handleAccept = () => {
-    setStage(1);
+    setShowPopup(false);
+    setRevealed(true);
     recordResponseAction(slug, "ACCEPTED");
     startAudio();
   };
 
   const handleReject = () => {
     recordResponseAction(slug, "REJECTED");
-    moveNoButton();
+    const next = noCount + 1;
+    setNoCount(next);
+    const newYes = Math.min(yesScale + 0.18, 2.2);
+    setYesScale(newYes);
+    const msg = noMessages[Math.min(next - 1, noMessages.length - 1)];
+    setPopupMsg(msg);
   };
 
-  const handleNoHover = () => {
-    moveNoButton();
-  };
+  const noScale = Math.max(1 - noCount * 0.12, 0.38);
+  const noOpacity = Math.max(noScale, 0.35);
+  const noHidden = noCount >= 5;
 
   useEffect(() => {
     const audio = new Audio(audioSrc);
@@ -488,18 +501,95 @@ export default function BirthdayTemplate({
           }
         }
 
-        .action-buttons {
+        .bday-tap-prompt {
+          text-align: center;
+          padding: 14px 0 6px;
+          color: rgba(255, 255, 255, 0.75);
+          font-size: 14px;
+          font-weight: 500;
+          letter-spacing: 0.3px;
+          cursor: pointer;
+          animation: tapPulse 2s ease-in-out infinite;
+        }
+        @keyframes tapPulse {
+          0%, 100% { opacity: 0.6; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.03); }
+        }
+
+        .bday-popup-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.72);
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+          z-index: 200;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 16px;
-          margin-top: 24px;
-          position: relative;
-          min-height: 50px;
+          animation: popupFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes popupFadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
 
-        .btn-yes {
-          padding: 12px 28px;
+        .bday-popup-box {
+          background: rgba(225, 29, 72, 0.18);
+          backdrop-filter: blur(28px) saturate(180%);
+          -webkit-backdrop-filter: blur(28px) saturate(180%);
+          border: 1px solid rgba(255, 180, 200, 0.35);
+          border-radius: 28px;
+          padding: 36px 28px 32px;
+          max-width: 340px;
+          width: calc(100% - 40px);
+          text-align: center;
+          box-shadow: 0 30px 70px rgba(0,0,0,0.65), 0 0 40px rgba(225,29,72,0.3);
+          animation: popupBoxIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes popupBoxIn {
+          from { opacity: 0; transform: scale(0.88) translateY(20px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .bday-popup-emoji {
+          font-size: 48px;
+          margin-bottom: 12px;
+          animation: emojiBounce 1.5s ease-in-out infinite;
+        }
+        @keyframes emojiBounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
+        }
+
+        .bday-popup-title {
+          font-family: 'Playfair Display', serif;
+          font-size: 22px;
+          font-weight: 700;
+          color: #ffffff;
+          margin: 0 0 8px;
+          line-height: 1.3;
+          transition: all 0.3s ease;
+        }
+
+        .bday-popup-sub {
+          font-size: 13px;
+          color: rgba(255,255,255,0.75);
+          margin: 0 0 28px;
+          font-weight: 400;
+          min-height: 20px;
+          transition: all 0.3s ease;
+        }
+
+        .bday-popup-btns {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 18px;
+          min-height: 60px;
+        }
+
+        .bday-btn-yes {
+          padding: 14px 32px;
           background: #ffffff;
           color: #e11d48;
           font-weight: 700;
@@ -507,25 +597,28 @@ export default function BirthdayTemplate({
           border-radius: 9999px;
           border: none;
           cursor: pointer;
-          box-shadow: 0 8px 20px rgba(225, 29, 72, 0.4);
-          transition: transform 0.2s ease;
+          box-shadow: 0 8px 24px rgba(225,29,72,0.5);
+          transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+          transform-origin: center;
+          font-family: 'Poppins', sans-serif;
         }
-        .btn-yes:hover { transform: scale(1.05); }
-        .btn-yes:active { transform: scale(0.95); }
+        .bday-btn-yes:hover { box-shadow: 0 12px 32px rgba(225,29,72,0.7); }
+        .bday-btn-yes:active { filter: brightness(0.95); }
 
-        .btn-no {
-          padding: 12px 28px;
-          background: rgba(255, 255, 255, 0.9);
-          color: #475569;
-          font-weight: 700;
-          font-size: 16px;
+        .bday-btn-no {
+          padding: 12px 24px;
+          background: rgba(255,255,255,0.12);
+          color: rgba(255,255,255,0.7);
+          font-weight: 600;
+          font-size: 14px;
           border-radius: 9999px;
-          border: none;
+          border: 1px solid rgba(255,255,255,0.2);
           cursor: pointer;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-          transition: transform 0.2s ease;
+          transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+          transform-origin: center;
+          font-family: 'Poppins', sans-serif;
         }
-        .btn-no:hover { background: #ffffff; transform: scale(1.05); }
+        .bday-btn-no:hover { background: rgba(255,255,255,0.18); }
       `}</style>
 
       <div className="bday-page">
@@ -542,8 +635,12 @@ export default function BirthdayTemplate({
           {isPlaying ? "🎵" : "🔇"}
         </button>
 
-        {/* Glassmorphic Card (Matches Demo & Reference Photos) */}
-        <div className="bday-card-container">
+        {/* Glassmorphic Card — always visible, click to open popup */}
+        <div
+          className="bday-card-container"
+          onClick={handleOpenPopup}
+          style={{ cursor: revealed ? "default" : "pointer" }}
+        >
           {/* Photo Slideshow */}
           <div className="bday-photo-slider">
             {photos.map((src, i) => (
@@ -556,42 +653,16 @@ export default function BirthdayTemplate({
             ))}
           </div>
 
-          {stage === 0 ? (
-            <div className="animate-in fade-in zoom-in duration-500">
-              <h1 className="bday-heading">
-                {displayTitle}
-              </h1>
-              <div className="bday-subtitle" style={{ fontSize: '18px', color: '#fca5a5' }}>
-                {displayQuestion}
-              </div>
-
-              <div className="action-buttons">
-                <button className="btn-yes" onClick={handleAccept}>
-                  {displayAcceptBtn}
-                </button>
-                <button
-                  className="btn-no"
-                  onClick={handleReject}
-                  onMouseEnter={handleNoHover}
-                  onTouchStart={handleNoHover}
-                  style={
-                    noBtnPosition
-                      ? {
-                          position: "fixed",
-                          left: `${noBtnPosition.x}px`,
-                          top: `${noBtnPosition.y}px`,
-                          zIndex: 999,
-                          transition: "all 0.2s ease-out",
-                        }
-                      : undefined
-                  }
-                >
-                  {displayRejectBtn}
-                </button>
-              </div>
+          {/* Tap Prompt (before reveal) */}
+          {!revealed && (
+            <div className="bday-tap-prompt">
+              Tap to open your surprise 🎁
             </div>
-          ) : (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+          )}
+
+          {/* Revealed: Birthday card content with typewriter */}
+          {revealed && (
+            <div>
               <h1 className="bday-heading">
                 Happy Birthday, <span className="bday-name">{displayRecipient} ✨</span> 🦋 💖
               </h1>
@@ -605,6 +676,38 @@ export default function BirthdayTemplate({
             </div>
           )}
         </div>
+
+        {/* Love Popup Overlay */}
+        {showPopup && (
+          <div className="bday-popup-overlay" onClick={(e) => e.stopPropagation()}>
+            <div className="bday-popup-box">
+              <div className="bday-popup-emoji">🎂</div>
+              <h2 className="bday-popup-title">{popupMsg.title}</h2>
+              <p className="bday-popup-sub">{popupMsg.sub}</p>
+              <div className="bday-popup-btns">
+                <button
+                  className="bday-btn-yes"
+                  onClick={handleAccept}
+                  style={{ transform: `scale(${yesScale})` }}
+                >
+                  {displayAcceptBtn}
+                </button>
+                {!noHidden && (
+                  <button
+                    className="bday-btn-no"
+                    onClick={handleReject}
+                    style={{
+                      transform: `scale(${noScale})`,
+                      opacity: noOpacity,
+                    }}
+                  >
+                    {displayRejectBtn}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* OurStory viral watermark badge */}
         <OurStoryWatermark variant="dark" templateId="birthday-wish" />

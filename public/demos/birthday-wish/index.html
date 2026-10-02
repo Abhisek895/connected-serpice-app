@@ -15,7 +15,7 @@
   </button>
   <audio id="song" src="hbd.mp3" loop preload="auto"></audio>
 
-  <!-- Birthday Card -->
+  <!-- Birthday Card (always visible, clickable to open popup) -->
   <div class="card" id="card">
     <div class="photo-slider">
       <img src="s0.jpeg" class="active" alt="Birthday photo">
@@ -26,21 +26,29 @@
       <img src="s5.jpeg" alt="Birthday photo">
     </div>
 
-    <div id="stage0">
-      <h1 class="heading" id="titleText">Happy Birthday! 🎂</h1>
-      <div class="subtitle" style="font-size: 18px; color: #fca5a5;" id="questionText">Wishing you the happiest birthday! 🎂</div>
-      
-      <div class="action-buttons">
-        <button id="acceptBtn" class="btn-yes">Love ❤️</button>
-        <button id="rejectBtn" class="btn-no">Hate 💔</button>
-      </div>
+    <!-- Tap prompt shown on card before popup opens -->
+    <div id="tapPrompt" class="tap-prompt">
+      <span>Tap to open your surprise 🎁</span>
     </div>
 
+    <!-- Stage 1: Revealed after Love is clicked -->
     <div id="stage1" style="display: none;">
       <h1>Happy Birthday, <span class="name">Someone Special ✨</span> 🦋 💖</h1>
-    <div class="subtitle">A little surprise from someone who truly cares…</div>
-    
+      <div class="subtitle">A little surprise from someone who truly cares…</div>
       <div class="message" id="message"></div>
+    </div>
+  </div>
+
+  <!-- Love Popup Overlay -->
+  <div id="lovePopup" class="love-popup-overlay" style="display:none;">
+    <div class="love-popup-box">
+      <div class="love-popup-emoji">🎂</div>
+      <h2 class="love-popup-title" id="popupTitle">Do you love me? 💖</h2>
+      <p class="love-popup-sub" id="popupSub">Choose honestly…</p>
+      <div class="love-popup-btns">
+        <button id="loveYesBtn" class="love-btn-yes">Love ❤️</button>
+        <button id="loveNoBtn" class="love-btn-no">Hate 💔</button>
+      </div>
     </div>
   </div>
 

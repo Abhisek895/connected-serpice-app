@@ -4,9 +4,16 @@ const song = document.getElementById('song');
 const messageEl = document.getElementById('message');
 const musicBtn = document.getElementById('musicBtn');
 const musicIcon = document.getElementById('musicIcon');
+const tapPrompt = document.getElementById('tapPrompt');
+const lovePopup = document.getElementById('lovePopup');
+const loveYesBtn = document.getElementById('loveYesBtn');
+const loveNoBtn = document.getElementById('loveNoBtn');
+const popupTitle = document.getElementById('popupTitle');
+const popupSub = document.getElementById('popupSub');
+const stage1 = document.getElementById('stage1');
 
-// Message matching user photo
-const mainMessage = "My all your dreams come true. You deserve all the happiness in the world! 🎉";
+// Birthday message
+const mainMessage = "May all your dreams come true. You deserve all the happiness in the world! 🎉";
 
 // ─── Typewriter Effect ────────────────────────────────────────────────────────
 async function typeText(text, el, speed = 32) {
@@ -25,7 +32,7 @@ async function typeText(text, el, speed = 32) {
   });
 }
 
-// ─── Soft Falling Confetti Flakes (Matches Reference Photos) ──────────────────
+// ─── Soft Falling Confetti ─────────────────────────────────────────────────────
 const confettiCanvas = document.getElementById('confetti');
 const ctx = confettiCanvas.getContext('2d');
 
@@ -86,7 +93,7 @@ function startSlideshow() {
   }, 3000);
 }
 
-// ─── Music Control & Smooth Autoplay Handling ─────────────────────────────────
+// ─── Music Control ─────────────────────────────────────────────────────────────
 let isPlaying = false;
 
 function playAudio() {
@@ -115,56 +122,106 @@ function toggleMusic(e) {
   }
 }
 
-if (musicBtn) {
-  musicBtn.addEventListener('click', toggleMusic);
-}
+if (musicBtn) musicBtn.addEventListener('click', toggleMusic);
 
-// Unlock audio on first user tap/click anywhere if blocked by browser policy
+// Unlock audio on first tap
 const unlockAudio = () => {
-  if (!isPlaying) {
-    playAudio();
-  }
+  if (!isPlaying) playAudio();
   window.removeEventListener('click', unlockAudio);
   window.removeEventListener('touchstart', unlockAudio);
 };
 window.addEventListener('click', unlockAudio, { once: true });
 window.addEventListener('touchstart', unlockAudio, { once: true });
 
-// ─── Stage 0 logic ────────────────────────────────────────────────────────────
-const stage0 = document.getElementById('stage0');
-const stage1 = document.getElementById('stage1');
-const acceptBtn = document.getElementById('acceptBtn');
-const rejectBtn = document.getElementById('rejectBtn');
+// ─── Love Popup Logic ─────────────────────────────────────────────────────────
+let noClickCount = 0;
+let yesSizeScale = 1;
 
-function moveNoButton() {
-  const padding = 80;
-  const maxX = window.innerWidth - 120;
-  const maxY = window.innerHeight - 60;
+const noMessages = [
+  { title: "Are you sure? 🥺", sub: "Think again, please…" },
+  { title: "Really sure? 😢", sub: "I baked this with love!" },
+  { title: "Don't break my heart! 💔", sub: "The Yes button is RIGHT THERE…" },
+  { title: "Last chance! 🥺", sub: "Just click Love already!" },
+  { title: "Okay fine… 😭", sub: "You clearly can't resist forever!" },
+];
 
-  const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
-  const randomY = Math.max(padding, Math.floor(Math.random() * maxY));
-
-  rejectBtn.style.position = 'fixed';
-  rejectBtn.style.left = `${randomX}px`;
-  rejectBtn.style.top = `${randomY}px`;
-  rejectBtn.style.zIndex = '999';
-  rejectBtn.style.transition = 'all 0.2s ease-out';
+function openPopup() {
+  if (lovePopup) {
+    lovePopup.style.display = 'flex';
+    // Reset
+    noClickCount = 0;
+    yesSizeScale = 1;
+    if (popupTitle) popupTitle.textContent = 'Do you love me? 💖';
+    if (popupSub) popupSub.textContent = 'Choose honestly…';
+    if (loveYesBtn) loveYesBtn.style.transform = 'scale(1)';
+    if (loveNoBtn) {
+      loveNoBtn.style.transform = 'scale(1)';
+      loveNoBtn.style.opacity = '1';
+      loveNoBtn.style.display = '';
+    }
+  }
 }
 
-if (rejectBtn) {
-  rejectBtn.addEventListener('click', moveNoButton);
-  rejectBtn.addEventListener('mouseenter', moveNoButton);
-  rejectBtn.addEventListener('touchstart', moveNoButton);
-}
-
-if (acceptBtn) {
-  acceptBtn.addEventListener('click', () => {
-    stage0.style.display = 'none';
-    stage1.style.display = 'block';
-    if (!isPlaying) playAudio();
+function closePopupAndReveal() {
+  if (lovePopup) {
+    lovePopup.classList.add('popup-fade-out');
     setTimeout(() => {
-      typeText(mainMessage, messageEl, 30);
-    }, 200);
+      lovePopup.style.display = 'none';
+      lovePopup.classList.remove('popup-fade-out');
+    }, 350);
+  }
+  // Hide tap prompt
+  if (tapPrompt) tapPrompt.style.display = 'none';
+  // Show birthday card content
+  if (stage1) stage1.style.display = 'block';
+  // Start music
+  if (!isPlaying) playAudio();
+  // Start typewriter
+  setTimeout(() => typeText(mainMessage, messageEl, 30), 400);
+}
+
+// Click on card opens popup (only if not yet revealed)
+let revealed = false;
+if (card) {
+  card.addEventListener('click', (e) => {
+    if (revealed) return;
+    if (e.target.closest('#musicBtn') || e.target.closest('.love-popup-overlay')) return;
+    openPopup();
+  });
+}
+
+if (loveYesBtn) {
+  loveYesBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    revealed = true;
+    closePopupAndReveal();
+  });
+}
+
+if (loveNoBtn) {
+  loveNoBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    noClickCount++;
+
+    // Make Yes bigger, No smaller
+    yesSizeScale = Math.min(yesSizeScale + 0.18, 2.2);
+    const noScale = Math.max(1 - noClickCount * 0.12, 0.38);
+
+    if (loveYesBtn) loveYesBtn.style.transform = `scale(${yesSizeScale})`;
+    if (loveNoBtn) {
+      loveNoBtn.style.transform = `scale(${noScale})`;
+      loveNoBtn.style.opacity = `${Math.max(noScale, 0.35)}`;
+    }
+
+    // Update messages
+    const msg = noMessages[Math.min(noClickCount - 1, noMessages.length - 1)];
+    if (popupTitle) popupTitle.textContent = msg.title;
+    if (popupSub) popupSub.textContent = msg.sub;
+
+    // After 5 clicks, hide the no button completely
+    if (noClickCount >= 5 && loveNoBtn) {
+      loveNoBtn.style.display = 'none';
+    }
   });
 }
 
@@ -172,5 +229,4 @@ if (acceptBtn) {
 window.addEventListener('DOMContentLoaded', () => {
   drawConfetti();
   startSlideshow();
-  // Don't auto-type text here anymore. It will be typed on accept.
 });
