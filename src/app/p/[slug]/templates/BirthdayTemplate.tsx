@@ -123,6 +123,9 @@ function useSlideshow(photos: string[], interval = 3000) {
 export default function BirthdayTemplate({
   slug,
   title,
+  question,
+  acceptBtn,
+  rejectBtn,
   loveMessage,
   recipientName,
   media = [],
@@ -135,11 +138,12 @@ export default function BirthdayTemplate({
   customData,
 }: ProposalClientProps) {
   const hasViewedRef = useRef(false);
+  const [stage, setStage] = useState(0); // 0 = proposal, 1 = accepted
+  const [noBtnPosition, setNoBtnPosition] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     if (!hasViewedRef.current) {
       recordResponseAction(slug, "VIEWED");
-      recordResponseAction(slug, "ACCEPTED");
       hasViewedRef.current = true;
     }
   }, [slug]);
@@ -182,11 +186,16 @@ export default function BirthdayTemplate({
   const confettiRef = useConfetti(true);
 
   const displayRecipient = recipientName || "Someone Special";
+  const displayTitle = title || "Happy Birthday! 🎂";
+  const displayQuestion = question || "Wishing you the happiest birthday! 🎂";
+  const displayAcceptBtn = acceptBtn || "Love ❤️";
+  const displayRejectBtn = rejectBtn || "Hate 💔";
+  
   const displayMessage =
     loveMessage ||
-    "My all your dreams come true. You deserve all the happiness in the world! 🎉";
+    "May all your dreams come true. You deserve all the happiness in the world! 🎉";
 
-  const typedMessage = useTypewriter(displayMessage, true, 30);
+  const typedMessage = useTypewriter(displayMessage, stage === 1, 30);
 
   // Audio Playback & Toggle
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -213,6 +222,33 @@ export default function BirthdayTemplate({
     },
     [isPlaying, startAudio]
   );
+
+  const moveNoButton = () => {
+    if (typeof window === "undefined") return;
+    const padding = 80;
+    const maxX = window.innerWidth - 120;
+    const maxY = window.innerHeight - 60;
+
+    const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
+    const randomY = Math.max(padding, Math.floor(Math.random() * maxY));
+
+    setNoBtnPosition({ x: randomX, y: randomY });
+  };
+
+  const handleAccept = () => {
+    setStage(1);
+    recordResponseAction(slug, "ACCEPTED");
+    startAudio();
+  };
+
+  const handleReject = () => {
+    recordResponseAction(slug, "REJECTED");
+    moveNoButton();
+  };
+
+  const handleNoHover = () => {
+    moveNoButton();
+  };
 
   useEffect(() => {
     const audio = new Audio(audioSrc);
@@ -451,6 +487,45 @@ export default function BirthdayTemplate({
             font-size: 14px;
           }
         }
+
+        .action-buttons {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 16px;
+          margin-top: 24px;
+          position: relative;
+          min-height: 50px;
+        }
+
+        .btn-yes {
+          padding: 12px 28px;
+          background: #ffffff;
+          color: #e11d48;
+          font-weight: 700;
+          font-size: 16px;
+          border-radius: 9999px;
+          border: none;
+          cursor: pointer;
+          box-shadow: 0 8px 20px rgba(225, 29, 72, 0.4);
+          transition: transform 0.2s ease;
+        }
+        .btn-yes:hover { transform: scale(1.05); }
+        .btn-yes:active { transform: scale(0.95); }
+
+        .btn-no {
+          padding: 12px 28px;
+          background: rgba(255, 255, 255, 0.9);
+          color: #475569;
+          font-weight: 700;
+          font-size: 16px;
+          border-radius: 9999px;
+          border: none;
+          cursor: pointer;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          transition: transform 0.2s ease;
+        }
+        .btn-no:hover { background: #ffffff; transform: scale(1.05); }
       `}</style>
 
       <div className="bday-page">
@@ -481,21 +556,54 @@ export default function BirthdayTemplate({
             ))}
           </div>
 
-          {/* Heading */}
-          <h1 className="bday-heading">
-            Happy Birthday, <span className="bday-name">{displayRecipient} ✨</span> 🦋 💖
-          </h1>
+          {stage === 0 ? (
+            <div className="animate-in fade-in zoom-in duration-500">
+              <h1 className="bday-heading">
+                {displayTitle}
+              </h1>
+              <div className="bday-subtitle" style={{ fontSize: '18px', color: '#fca5a5' }}>
+                {displayQuestion}
+              </div>
 
-          {/* Subtitle */}
-          <div className="bday-subtitle">
-            A little surprise from someone who truly cares…
-          </div>
-
-          {/* Typewriter Message */}
-          <div className="bday-message-box">
-            {typedMessage}
-            <span className="bday-cursor">|</span>
-          </div>
+              <div className="action-buttons">
+                <button className="btn-yes" onClick={handleAccept}>
+                  {displayAcceptBtn}
+                </button>
+                <button
+                  className="btn-no"
+                  onClick={handleReject}
+                  onMouseEnter={handleNoHover}
+                  onTouchStart={handleNoHover}
+                  style={
+                    noBtnPosition
+                      ? {
+                          position: "fixed",
+                          left: `${noBtnPosition.x}px`,
+                          top: `${noBtnPosition.y}px`,
+                          zIndex: 999,
+                          transition: "all 0.2s ease-out",
+                        }
+                      : undefined
+                  }
+                >
+                  {displayRejectBtn}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <h1 className="bday-heading">
+                Happy Birthday, <span className="bday-name">{displayRecipient} ✨</span> 🦋 💖
+              </h1>
+              <div className="bday-subtitle">
+                A little surprise from someone who truly cares…
+              </div>
+              <div className="bday-message-box">
+                {typedMessage}
+                <span className="bday-cursor">|</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* OurStory viral watermark badge */}

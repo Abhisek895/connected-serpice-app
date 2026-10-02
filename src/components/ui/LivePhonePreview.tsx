@@ -569,10 +569,10 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
             </div>
           ) : isBirthday ? (
             <div className="relative z-10 h-full w-full flex flex-col justify-center items-center py-2 px-1">
-              {/* Glass Card Container (Matches Real Birthday Card & Photos) */}
-              <div className="w-full bg-rose-950/40 backdrop-blur-xl border border-rose-300/30 rounded-2xl p-2 sm:p-2.5 shadow-2xl flex flex-col items-center text-center space-y-2">
-                {/* 1. Photo Container */}
-                <div className="relative w-full h-[130px] sm:h-[140px] rounded-xl overflow-hidden shadow-md bg-slate-950">
+              {/* Glass Card Container (Matches Real Birthday Card) */}
+              <div className="w-full bg-rose-950/40 backdrop-blur-xl border border-rose-300/30 rounded-2xl p-2 sm:p-2.5 shadow-2xl flex flex-col items-start text-left space-y-2">
+                {/* Photo Slideshow */}
+                <div className="relative w-full h-[130px] sm:h-[140px] rounded-xl overflow-hidden shadow-md bg-slate-950 shrink-0">
                   <img
                     src={activeBdayPhoto}
                     alt="Birthday Photo"
@@ -580,23 +580,41 @@ export default function LivePhonePreview({ demoId, formValues, defaultData, curr
                   />
                 </div>
 
-                {/* 2. Heading BELOW photo box */}
-                <h4 className="text-xs font-bold text-white font-serif tracking-tight leading-snug px-1 text-left w-full">
-                  Happy Birthday, <span className="text-rose-300 font-extrabold">{displayRecipient} ✨</span> 🦋 💖
-                </h4>
-
-                {/* 3. Subtitle BELOW heading */}
-                <p className="text-[9px] text-rose-100/90 font-medium text-left w-full">
-                  A little surprise from someone who truly cares…
-                </p>
-
-                {/* 4. Live Message Box */}
-                <div className="w-full bg-white/5 rounded-lg p-1.5 text-left border border-white/10">
-                  <p className="text-[9.5px] text-white font-medium leading-relaxed">
-                    {displayMessage}
-                    <span className="animate-pulse text-white/80"> |</span>
-                  </p>
-                </div>
+                {/* Stage 0 (Step 0): Cover Page — Title + Wish Heading + Buttons */}
+                {!isStep2 ? (
+                  <>
+                    <h4 className="text-xs font-bold text-white font-serif tracking-tight leading-snug px-0.5">
+                      {displayTitle}
+                    </h4>
+                    <p className="text-[9px] text-rose-200/90 font-medium leading-snug px-0.5">
+                      {displayQuestion}
+                    </p>
+                    <div className="flex gap-2 pt-0.5">
+                      <span className="px-3 py-1.5 text-[9px] font-bold rounded-full" style={{ background: "#ffffff", color: "#e11d48", boxShadow: "0 4px 12px rgba(225,29,72,0.4)" }}>
+                        {acceptBtn}
+                      </span>
+                      <span className="px-3 py-1.5 text-[9px] font-medium rounded-full" style={{ background: "rgba(255,255,255,0.85)", color: "#475569" }}>
+                        {rejectBtn}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  /* Stage 1 (Step 1): Birthday Card Revealed — Recipient + Message */
+                  <>
+                    <h4 className="text-xs font-bold text-white font-serif tracking-tight leading-snug px-1 w-full">
+                      Happy Birthday, <span className="text-rose-300 font-extrabold">{displayRecipient} ✨</span> 🦋 💖
+                    </h4>
+                    <p className="text-[9px] text-rose-100/90 font-medium text-left w-full">
+                      A little surprise from someone who truly cares…
+                    </p>
+                    <div className="w-full bg-white/5 rounded-lg p-1.5 text-left border border-white/10">
+                      <p className="text-[9.5px] text-white font-medium leading-relaxed">
+                        {displayMessage}
+                        <span className="animate-pulse text-white/80"> |</span>
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           ) : isApology ? (

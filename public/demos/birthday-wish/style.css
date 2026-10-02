@@ -224,3 +224,41 @@ h1 {
     font-size: 14px;
   }
 }
+.action-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+  position: relative;
+  min-height: 50px;
+}
+.btn-yes {
+  padding: 12px 28px;
+  background: #ffffff;
+  color: #e11d48;
+  font-weight: 700;
+  font-size: 16px;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(225, 29, 72, 0.4);
+  transition: transform 0.2s ease;
+}
+.btn-yes:hover { transform: scale(1.05); }
+.btn-yes:active { transform: scale(0.95); }
+.btn-no {
+  padding: 12px 28px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #475569;
+  font-weight: 700;
+  font-size: 16px;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+.btn-no:hover { background: #ffffff; transform: scale(1.05); }
+.animate-fade-in { animation: fadeIn 0.5s ease-in forwards; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

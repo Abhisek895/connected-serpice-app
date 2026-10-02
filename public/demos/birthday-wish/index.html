@@ -26,10 +26,22 @@
       <img src="s5.jpeg" alt="Birthday photo">
     </div>
 
-    <h1>Happy Birthday, <span class="name">Someone Special ✨</span> 🦋 💖</h1>
+    <div id="stage0">
+      <h1 class="heading" id="titleText">Happy Birthday! 🎂</h1>
+      <div class="subtitle" style="font-size: 18px; color: #fca5a5;" id="questionText">Wishing you the happiest birthday! 🎂</div>
+      
+      <div class="action-buttons">
+        <button id="acceptBtn" class="btn-yes">Love ❤️</button>
+        <button id="rejectBtn" class="btn-no">Hate 💔</button>
+      </div>
+    </div>
+
+    <div id="stage1" style="display: none;">
+      <h1>Happy Birthday, <span class="name">Someone Special ✨</span> 🦋 💖</h1>
     <div class="subtitle">A little surprise from someone who truly cares…</div>
     
-    <div class="message" id="message"></div>
+      <div class="message" id="message"></div>
+    </div>
   </div>
 
   <script src="script.js"></script>

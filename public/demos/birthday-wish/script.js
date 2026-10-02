@@ -130,12 +130,47 @@ const unlockAudio = () => {
 window.addEventListener('click', unlockAudio, { once: true });
 window.addEventListener('touchstart', unlockAudio, { once: true });
 
+// ─── Stage 0 logic ────────────────────────────────────────────────────────────
+const stage0 = document.getElementById('stage0');
+const stage1 = document.getElementById('stage1');
+const acceptBtn = document.getElementById('acceptBtn');
+const rejectBtn = document.getElementById('rejectBtn');
+
+function moveNoButton() {
+  const padding = 80;
+  const maxX = window.innerWidth - 120;
+  const maxY = window.innerHeight - 60;
+
+  const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
+  const randomY = Math.max(padding, Math.floor(Math.random() * maxY));
+
+  rejectBtn.style.position = 'fixed';
+  rejectBtn.style.left = `${randomX}px`;
+  rejectBtn.style.top = `${randomY}px`;
+  rejectBtn.style.zIndex = '999';
+  rejectBtn.style.transition = 'all 0.2s ease-out';
+}
+
+if (rejectBtn) {
+  rejectBtn.addEventListener('click', moveNoButton);
+  rejectBtn.addEventListener('mouseenter', moveNoButton);
+  rejectBtn.addEventListener('touchstart', moveNoButton);
+}
+
+if (acceptBtn) {
+  acceptBtn.addEventListener('click', () => {
+    stage0.style.display = 'none';
+    stage1.style.display = 'block';
+    if (!isPlaying) playAudio();
+    setTimeout(() => {
+      typeText(mainMessage, messageEl, 30);
+    }, 200);
+  });
+}
+
 // ─── Initialization ───────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
   drawConfetti();
   startSlideshow();
-  setTimeout(() => {
-    typeText(mainMessage, messageEl, 30);
-  }, 400);
-  playAudio();
+  // Don't auto-type text here anymore. It will be typed on accept.
 });

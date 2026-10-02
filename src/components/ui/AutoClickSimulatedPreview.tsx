@@ -229,12 +229,12 @@ export default function AutoClickSimulatedPreview({
     };
 
     const runBirthdayCycle = () => {
-      setSimStage("landing");
-      setTriggerConfetti(true); // Falling confetti from start
-      timers.push(setTimeout(() => setSimStage("slideshow"), 1500));
-      timers.push(setTimeout(() => setSimStage("read_wish"), 4000));
-      timers.push(setTimeout(() => setSimStage("slideshow"), 7000));
-      timers.push(setTimeout(() => runBirthdayCycle(), 10000));
+      setSimStage("landing");         // Stage 0: Cover Page with title + Love/Hate btns
+      setTriggerConfetti(true);
+      timers.push(setTimeout(() => setSimStage("accept_clicked"), 2000));  // Hover Love btn
+      timers.push(setTimeout(() => setSimStage("slideshow"), 2600));       // Click Love → card revealed
+      timers.push(setTimeout(() => setSimStage("read_wish"), 5500));       // Typewriter done
+      timers.push(setTimeout(() => runBirthdayCycle(), 9500));
     };
 
     const runApologyCycle = () => {
@@ -609,23 +609,42 @@ export default function AutoClickSimulatedPreview({
                   </AnimatePresence>
                 ) : isBirthday ? (
                   <AnimatePresence mode="wait">
-                    {simStage === "landing" || simStage === "slideshow" || simStage === "read_wish" ? (
-                      <motion.div key="bday_slideshow" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="w-full h-full flex flex-col items-center justify-center relative space-y-2">
-                        {/* Typewriter Text (simulated) */}
-                        <div className="text-[11px] font-bold text-rose-300 font-serif leading-tight">
-                          May all your dreams come true...
+                    {simStage === "landing" || simStage === "accept_clicked" ? (
+                      /* Stage 0: Cover Page with custom title, wish heading, Love/Hate buttons */
+                      <motion.div key="bday_landing" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="w-full h-full flex flex-col items-start justify-center px-1.5 space-y-1.5">
+                        <div className="relative w-full h-[100px] rounded-xl overflow-hidden shadow-xl bg-black border border-rose-300/20 shrink-0">
+                          <img src={photoUrl || "/demos/birthday-wish/s0.jpeg"} alt="Birthday" className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/10" />
                         </div>
-                        <div className="relative w-full h-[140px] rounded-xl overflow-hidden shadow-2xl bg-black border-2 border-rose-300/30">
+                        <h4 className="text-[11px] font-bold text-white font-serif leading-snug">{displayTitle}</h4>
+                        <p className="text-[9px] text-rose-200/90 leading-snug">{formValues["question"] || defaultData["question"] || "Wishing you the happiest birthday! 🎂"}</p>
+                        <div className="flex gap-2 pt-0.5">
+                          <motion.span
+                            animate={simStage === "accept_clicked" ? { scale: 0.92 } : { scale: 1 }}
+                            className="px-3 py-1.5 text-[9px] font-bold rounded-full shadow-md"
+                            style={{ background: "#ffffff", color: "#e11d48", boxShadow: "0 4px 12px rgba(225,29,72,0.4)" }}
+                          >
+                            {formValues["acceptBtn"] || defaultData["acceptBtn"] || "Love ❤️"}
+                          </motion.span>
+                          <span className="px-3 py-1.5 text-[9px] font-medium rounded-full" style={{ background: "rgba(255,255,255,0.85)", color: "#475569" }}>
+                            {formValues["rejectBtn"] || defaultData["rejectBtn"] || "Hate 💔"}
+                          </span>
+                        </div>
+                      </motion.div>
+                    ) : simStage === "slideshow" || simStage === "read_wish" ? (
+                      /* Stage 1: Birthday card revealed with typewriter message */
+                      <motion.div key="bday_card" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="w-full h-full flex flex-col items-start justify-center relative space-y-1.5 px-0.5">
+                        <div className="relative w-full h-[100px] rounded-xl overflow-hidden shadow-2xl bg-black border border-rose-300/20 shrink-0">
                           <img src={photoUrl || "/demos/birthday-wish/s0.jpeg"} alt="Birthday Person" className="w-full h-full object-cover" />
                           <div className="absolute inset-0 bg-black/10" />
                         </div>
-                        <h4 className="text-[12px] font-bold text-white font-serif tracking-tight leading-snug pt-1">
-                          Happy Birthday, <span className="text-amber-400 font-extrabold">{displayRecipient} ✨</span>
+                        <h4 className="text-[11px] font-bold text-white font-serif tracking-tight leading-snug">
+                          Happy Birthday, <span className="text-rose-300 font-extrabold">{displayRecipient} ✨</span> 🦋 💖
                         </h4>
-                        
+                        <p className="text-[8.5px] text-rose-100/80">A little surprise from someone who truly cares…</p>
                         {/* Wish Popup */}
                         {simStage === "read_wish" && (
-                          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="absolute inset-2 z-30 bg-white/95 backdrop-blur-md rounded-xl p-2.5 text-slate-900 flex flex-col items-center justify-center text-center shadow-2xl border border-white/60">
+                          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="absolute inset-x-0 top-0 bottom-0 z-30 bg-white/95 backdrop-blur-md rounded-xl p-2.5 text-slate-900 flex flex-col items-center justify-center text-center shadow-2xl border border-white/60">
                             <span className="text-[8px] font-extrabold text-rose-500 uppercase tracking-wider mb-0.5">💌 Birthday Wish</span>
                             <p className="text-[9px] font-medium italic leading-tight line-clamp-4">"{displayMessage}"</p>
                             <span className="text-[7.5px] text-slate-400 mt-2 font-bold bg-slate-100 px-2 py-1 rounded-full">(Tap to close)</span>
