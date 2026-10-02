@@ -251,8 +251,17 @@ export default function BirthdayTemplate({
   const handleAccept = () => {
     setShowPopup(false);
     setRevealed(true);
-    recordResponseAction(slug, "ACCEPTED");
+    setShowMessagePopup(true);
     startAudio();
+  };
+
+  const submitReply = (skipped = false) => {
+    setIsSubmitting(true);
+    const msg = replyMessage.trim();
+    const metadata = skipped || !msg ? undefined : JSON.stringify({ recipientNote: msg });
+    recordResponseAction(slug, "ACCEPTED", metadata);
+    setShowMessagePopup(false);
+    setIsSubmitting(false);
   };
 
   const handleReject = () => {
