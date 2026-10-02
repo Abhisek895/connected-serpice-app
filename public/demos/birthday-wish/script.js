@@ -12,6 +12,11 @@ const popupTitle = document.getElementById('popupTitle');
 const popupSub = document.getElementById('popupSub');
 const stage1 = document.getElementById('stage1');
 
+const replyPopup = document.getElementById('replyPopup');
+const replySendBtn = document.getElementById('replySendBtn');
+const replySkipBtn = document.getElementById('replySkipBtn');
+
+
 // Birthday message
 const mainMessage = "May all your dreams come true. You deserve all the happiness in the world! 🎉";
 
@@ -161,6 +166,11 @@ function closePopupAndReveal() {
   if (card) card.style.display = 'block';
   if (stage1) stage1.style.display = 'block';
   
+  // Show reply popup
+  if (replyPopup) {
+    replyPopup.style.display = 'flex';
+  }
+  
   // Start music
   if (!isPlaying) playAudio();
   
@@ -204,6 +214,31 @@ if (loveNoBtn) {
     }
   });
 }
+
+
+if (replySendBtn) {
+  replySendBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    replySendBtn.textContent = 'Sending...';
+    setTimeout(() => {
+      replyPopup.style.display = 'none';
+      if (typeof window.triggerAction === 'function') {
+         window.triggerAction('ACCEPTED');
+      }
+    }, 600);
+  });
+}
+
+if (replySkipBtn) {
+  replySkipBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    replyPopup.style.display = 'none';
+    if (typeof window.triggerAction === 'function') {
+       window.triggerAction('ACCEPTED');
+    }
+  });
+}
+
 
 // ─── Initialization ───────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {

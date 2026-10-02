@@ -146,6 +146,9 @@ export default function BirthdayTemplate({
   const [noCount, setNoCount] = useState(0);
   const [yesScale, setYesScale] = useState(1);
   const [popupMsg, setPopupMsg] = useState({ title: "Do you love me? 💖", sub: "Choose honestly…" });
+  const [showMessagePopup, setShowMessagePopup] = useState(false);
+  const [replyMessage, setReplyMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!hasViewedRef.current) {
@@ -542,6 +545,30 @@ export default function BirthdayTemplate({
           100% { background-position: 200% 50%; }
         }
 
+        
+        .bday-reply-textarea {
+          width: 100%;
+          background: rgba(251, 191, 36, 0.08);
+          border: 1px solid rgba(251, 191, 36, 0.25);
+          border-radius: 12px;
+          padding: 12px 16px;
+          color: #fef3c7;
+          font-family: 'Poppins', sans-serif;
+          font-size: 14px;
+          resize: none;
+          outline: none;
+          box-sizing: border-box;
+          transition: border-color 0.3s ease, box-shadow 0.3s ease;
+          margin-bottom: 12px;
+        }
+        .bday-reply-textarea::placeholder {
+          color: rgba(251, 191, 36, 0.4);
+        }
+        .bday-reply-textarea:focus {
+          border-color: rgba(251, 191, 36, 0.6);
+          box-shadow: 0 0 12px rgba(251, 191, 36, 0.15);
+        }
+
         /* --- Popup Overlay --- */
         .bday-popup-overlay {
           position: fixed;
@@ -756,6 +783,44 @@ export default function BirthdayTemplate({
                     {displayRejectBtn}
                   </button>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        
+        {/* Reply Message Popup Overlay */}
+        {showMessagePopup && (
+          <div className="bday-popup-overlay" onClick={(e) => e.stopPropagation()}>
+            <div className="bday-popup-box">
+              <div className="bday-popup-emoji">💌</div>
+              <h2 className="bday-popup-title">Send a Reply?</h2>
+              <p className="bday-popup-sub">Would you like to send a message back to the sender?</p>
+              
+              <textarea
+                value={replyMessage}
+                onChange={(e) => setReplyMessage(e.target.value)}
+                placeholder="Type your message here..."
+                className="bday-reply-textarea"
+                rows={3}
+              />
+
+              <div className="bday-popup-btns" style={{ minHeight: 'auto' }}>
+                <button
+                  className="bday-btn-yes"
+                  onClick={() => submitReply(false)}
+                  disabled={isSubmitting}
+                  style={{ padding: '12px 24px', fontSize: '14px' }}
+                >
+                  {isSubmitting ? "Sending..." : "Send Message"}
+                </button>
+                <button
+                  className="bday-btn-no"
+                  onClick={() => submitReply(true)}
+                  disabled={isSubmitting}
+                >
+                  Skip
+                </button>
               </div>
             </div>
           </div>

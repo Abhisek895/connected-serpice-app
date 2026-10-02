@@ -235,8 +235,12 @@ export async function sendReceiverActionEmail(opts: {
     if (metadata.selectedVibe)      metaRowsHtml += row("✨ Vibe", metadata.selectedVibe);
     if (metadata.selectedAdventure) metaRowsHtml += row("🧭 Adventure", metadata.selectedAdventure);
     if (metadata.selectedFoods?.length) metaRowsHtml += row("🍜 Food Picks", Array.isArray(metadata.selectedFoods) ? metadata.selectedFoods.join(", ") : metadata.selectedFoods);
-    if (metadata.recipientNote)     metaRowsHtml += row("💬 Her Note", `"${metadata.recipientNote}"`);
     if (metadata.recipientName)     metaRowsHtml += row("👤 Recipient", metadata.recipientName);
+  }
+  
+  // Generic Recipient Note
+  if (metadata && metadata.recipientNote) {
+    metaRowsHtml += row("💬 Note", `"${metadata.recipientNote}"`);
   }
 
   const metaTableHtml = metaRowsHtml

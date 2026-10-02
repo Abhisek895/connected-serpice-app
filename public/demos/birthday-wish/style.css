@@ -423,3 +423,26 @@ h1 {
   font-family: 'Poppins', sans-serif;
 }
 .love-btn-no:hover { background: rgba(255,255,255,0.13); }
+
+.reply-textarea {
+  width: 100%;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: #fef3c7;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  resize: none;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  margin-bottom: 12px;
+}
+.reply-textarea::placeholder {
+  color: rgba(251, 191, 36, 0.4);
+}
+.reply-textarea:focus {
+  border-color: rgba(251, 191, 36, 0.6);
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.15);
+}

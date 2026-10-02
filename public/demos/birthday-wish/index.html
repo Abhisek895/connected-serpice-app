@@ -47,6 +47,23 @@
     </div>
   </div>
 
+
+  <!-- Reply Popup Overlay -->
+  <div id="replyPopup" class="love-popup-overlay" style="display:none;">
+    <div class="love-popup-box">
+      <div class="love-popup-emoji">💌</div>
+      <h2 class="love-popup-title">Send a Reply?</h2>
+      <p class="love-popup-sub">Would you like to send a message back to the sender?</p>
+      
+      <textarea id="replyMessage" placeholder="Type your message here..." class="reply-textarea" rows="3"></textarea>
+
+      <div class="love-popup-btns" style="min-height: auto; margin-top: 16px;">
+        <button id="replySendBtn" class="love-btn-yes" style="padding: 12px 24px; font-size: 14px;">Send Message</button>
+        <button id="replySkipBtn" class="love-btn-no">Skip</button>
+      </div>
+    </div>
+  </div>
+
   <script src="script.js"></script>
 
   <script src="/demos/shared-action-bar.js"></script>
