@@ -251,8 +251,10 @@ export default function BirthdayTemplate({
   const handleAccept = () => {
     setShowPopup(false);
     setRevealed(true);
-    setShowMessagePopup(true);
     startAudio();
+    setTimeout(() => {
+      setShowMessagePopup(true);
+    }, 5000);
   };
 
   const submitReply = (skipped = false) => {

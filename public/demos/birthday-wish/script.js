@@ -166,10 +166,12 @@ function closePopupAndReveal() {
   if (card) card.style.display = 'block';
   if (stage1) stage1.style.display = 'block';
   
-  // Show reply popup
-  if (replyPopup) {
-    replyPopup.style.display = 'flex';
-  }
+  // Show reply popup after 5 seconds
+  setTimeout(() => {
+    if (replyPopup) {
+      replyPopup.style.display = 'flex';
+    }
+  }, 5000);
   
   // Start music
   if (!isPlaying) playAudio();
