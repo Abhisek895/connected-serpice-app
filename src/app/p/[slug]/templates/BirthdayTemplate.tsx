@@ -616,6 +616,8 @@ export default function BirthdayTemplate({
           width: calc(100% - 36px);
           max-height: calc(100dvh - 32px);
           overflow-y: auto;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
           text-align: center;
           box-shadow:
             0 0 0 1px rgba(251,191,36,0.28),
@@ -623,6 +625,9 @@ export default function BirthdayTemplate({
             0 0 70px rgba(100,30,180,0.3),
             inset 0 1px 0 rgba(255,255,255,0.09);
           animation: popupBoxIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .bday-popup-box::-webkit-scrollbar {
+          display: none;
         }
         /* Animated shimmer ring */
         .bday-popup-box::before {
