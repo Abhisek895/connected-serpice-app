@@ -1,5 +1,6 @@
 "use server"
 
+import { headers } from "next/headers"
 import { prisma } from "@/lib/prisma"
 import { recordResponse } from "@/lib/analytics/recordResponse"
 import { sendReceiverActionEmail } from "@/lib/email"
@@ -30,12 +31,16 @@ export async function recordResponseAction(slug: string, action: string, metadat
       }
     }
 
+    const headersList = await headers();
+    const ipAddress = headersList.get("x-forwarded-for") || headersList.get("x-real-ip") || "anonymous";
+
     const response = await recordResponse({
       eventId: event.id,
       action: action,
       metadata: parsedMetadata,
       device: "Desktop/Mobile",
       browser: "Web Browser",
+      ipAddress: ipAddress,
     });
 
     const isNewAction = response.isNew;

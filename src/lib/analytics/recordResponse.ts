@@ -40,7 +40,8 @@ export async function recordResponse(params: RecordResponseParams) {
     const existing = await prisma.response.findUnique({
       where: { idempotencyKey }
     });
-    const isNew = !existing;
+    // If it's a new entry OR we are attaching new metadata (like a recipientNote), treat it as "new" to trigger notifications
+    const isNew = !existing || !!metadata;
 
     // 3. Upsert Response (Idempotent)
     // If the exact same action from the same session/IP is logged, we just return the existing one.
@@ -49,8 +50,7 @@ export async function recordResponse(params: RecordResponseParams) {
         idempotencyKey: idempotencyKey,
       },
       update: {
-        // If it already exists, we could potentially update metadata, but usually we do nothing
-        // except maybe bumping the updated time if we had one.
+        ...(metadata ? { metadata } : {}),
       },
       create: {
         eventId,
