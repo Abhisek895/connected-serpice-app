@@ -523,9 +523,16 @@ export default function SharodyaWhisperTemplate(props: SharodyaWhisperTemplatePr
 
   return (
     <div
-      className="relative min-h-screen w-full overflow-hidden flex flex-col"
-      style={{ background: "linear-gradient(155deg,#FFF1DC 0%,#FFE8C8 45%,#FFD9AD 100%)" }}
+      className="relative min-h-screen w-full overflow-hidden flex flex-col bg-[#FFF1DC]"
     >
+      {/* Cinematic Mandap Background with Ken Burns Effect */}
+      <motion.div 
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-[0.25] mix-blend-multiply"
+        style={{ backgroundImage: "url('/images/vibes/rajbari.jpg')" }}
+        animate={reducedMotion ? {} : { scale: [1.02, 1.15, 1.02] }}
+        transition={{ duration: 45, ease: "linear", repeat: Infinity }}
+      />
+      <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#FFF1DC]/40 via-transparent to-[#FFD9AD]/80" />
       {/* Petals layer */}
       <ShiuliBrightPetals reducedMotion={reducedMotion} />
 
