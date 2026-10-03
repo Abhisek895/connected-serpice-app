@@ -1372,52 +1372,55 @@ export default function SharodyaWhisperTemplate(props: SharodyaWhisperTemplatePr
                 <MarigoldGarlandBorder className="h-5 opacity-80" />
               </div>
 
-              {/* Recipient note */}
-              <AnimatePresence>
-                {showReplyBox && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="space-y-2 mt-4"
-                  >
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={recipientNote}
-                        onChange={(e) => setRecipientNote(e.target.value)}
-                        placeholder={`Write ${creatorName} a note back...`}
-                        className="flex-1 px-3.5 py-2.5 rounded-xl bg-white/80 border border-[#E8791A]/20 text-xs text-[#2C1A0E] placeholder-[#5C3D2E]/40 focus:outline-none focus:border-[#E8791A]/60 transition-colors"
-                      />
-                      <button
-                        onClick={async () => {
-                          if (!recipientNote.trim()) return;
-                          await submitResponse("ACCEPTED", true);
-                        }}
-                        disabled={isSubmitting}
-                        className="px-3 py-2.5 rounded-xl bg-[#E8791A] text-white hover:bg-[#D06A10] text-xs flex items-center justify-center transition-all disabled:opacity-70"
-                        title="Send note"
-                      >
-                        {isSubmitting ? (
-                          <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        ) : (
-                          <Send className="w-3.5 h-3.5" />
-                        )}
-                      </button>
-                    </div>
-                    {hasSubmitted && (
-                      <p className="text-[11px] text-emerald-600 text-center pt-1">
-                        ✓ Your plan is saved & shared with {creatorName}
-                      </p>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </motion.div>
           )}
 
         </AnimatePresence>
       </main>
+
+      {/* 8-second Reply Floating Popup */}
+      <AnimatePresence>
+        {currentScreen === 10 && showReplyBox && (
+          <motion.div
+            initial={{ opacity: 0, y: 80 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 80 }}
+            transition={{ type: "spring", damping: 20, stiffness: 100 }}
+            className="fixed bottom-6 left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 sm:w-[400px] z-[100] bg-white/95 backdrop-blur-xl shadow-[0_10px_40px_rgba(232,121,26,0.15)] border border-[#E8791A]/30 p-5 rounded-3xl"
+          >
+            <p className="text-sm font-semibold text-[#2C1A0E] mb-3">Write {creatorName} a note back:</p>
+            <div className="flex gap-2">
+              <input
+                 type="text"
+                 value={recipientNote}
+                 onChange={(e) => setRecipientNote(e.target.value)}
+                 placeholder="e.g. Can't wait! See you then ❤️"
+                 className="flex-1 px-4 py-3 rounded-2xl bg-black/5 border border-[#E8791A]/20 text-sm text-[#2C1A0E] placeholder-[#5C3D2E]/50 focus:outline-none focus:border-[#E8791A]/60 focus:bg-white transition-all"
+              />
+              <button
+                onClick={async () => {
+                  if (!recipientNote.trim()) return;
+                  await submitResponse("ACCEPTED", true);
+                }}
+                disabled={isSubmitting}
+                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-[#E8791A] to-[#C05B4A] text-white hover:shadow-lg hover:shadow-[#E8791A]/20 flex items-center justify-center transition-all disabled:opacity-70"
+                title="Send note"
+              >
+                {isSubmitting ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+            {hasSubmitted && (
+              <p className="text-xs text-emerald-600 text-center mt-3 font-medium">
+                ✓ Your plan is saved & shared with {creatorName}
+              </p>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Footer */}
       <footer className="relative z-30 p-4 text-center text-[10px] text-[#5C3D2E]/40 tracking-wider">
