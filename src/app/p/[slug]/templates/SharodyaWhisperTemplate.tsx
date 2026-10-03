@@ -146,7 +146,7 @@ function ShiuliBrightPetals({ reducedMotion = false }: { reducedMotion: boolean 
     };
     window.addEventListener("resize", handleResize);
 
-    const count = width < 500 ? 14 : 22;
+    const count = width < 500 ? 28 : 45;
     const flowers = Array.from({ length: count }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
@@ -527,7 +527,7 @@ export default function SharodyaWhisperTemplate(props: SharodyaWhisperTemplatePr
     >
       {/* Cinematic Mandap Background with Ken Burns Effect */}
       <motion.div 
-        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-[0.25] mix-blend-multiply"
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-[0.45] mix-blend-multiply"
         style={{ backgroundImage: "url('/images/vibes/rajbari.jpg')" }}
         animate={reducedMotion ? {} : { scale: [1.02, 1.15, 1.02] }}
         transition={{ duration: 45, ease: "linear", repeat: Infinity }}
