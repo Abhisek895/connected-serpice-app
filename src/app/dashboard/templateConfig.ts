@@ -719,6 +719,78 @@ export const TEMPLATE_CLASSES: TemplateClass[] = [
       },
     ],
   },
+  {
+    id: "puja-whisper",
+    title: "Sharodiya Whisper 🌺",
+    hasInstantUse: true,
+    defaultData: {
+      demoId: "puja-whisper",
+      recipientName: "Riya",
+      creatorName: "Ayan",
+      memoryMessage: "Last Ashtami, you were laughing at something the dhaki played wrong. I remember thinking — I want to be standing next to you every time you laugh like that.",
+      secretMessage: "I already know which phuchka stall I want to take you to. I've been saving it. 🧆 And I want the first photo we take together this Puja to be the one we both keep.",
+      vibeHint: "I was thinking The Evening — but it's completely up to you.",
+      foodOptions: ["phuchka", "momos", "roll", "biryani", "sweet", "you-choose"],
+    },
+    steps: [
+      {
+        title: "Names & The Memory",
+        description: "Personalize the recipient, your name, and a cherished memory from past Pujas.",
+        fields: [
+          {
+            key: "recipientName",
+            label: "Recipient Name",
+            type: "text",
+            placeholder: "Riya",
+            presetSuggestions: ["Riya", "Priya ✨", "Someone Special ✨"],
+          },
+          {
+            key: "creatorName",
+            label: "Your Name",
+            type: "text",
+            placeholder: "Ayan",
+            presetSuggestions: ["Ayan", "Your Name"],
+          },
+          {
+            key: "memoryMessage",
+            label: "A Special Memory",
+            type: "textarea",
+            placeholder: "Last Ashtami, you were laughing at...",
+            presetSuggestions: [
+              "Last Ashtami, you were laughing at something the dhaki played wrong. I remember thinking — I want to be standing next to you every time you laugh like that.",
+              "I still remember the first time we met at Maddox square. The way you looked in that saree is burned into my memory forever.",
+            ],
+          },
+        ],
+      },
+      {
+        title: "The Plan & Secret",
+        description: "Add a subtle hint about what you want to do, and a cute secret to make her smile.",
+        fields: [
+          {
+            key: "vibeHint",
+            label: "Vibe Suggestion",
+            type: "text",
+            placeholder: "I was thinking The Evening — but it's completely up to you.",
+            presetSuggestions: [
+              "I was thinking The Evening — but it's completely up to you.",
+              "I was hoping for Food + Adda, but you are the boss.",
+            ],
+          },
+          {
+            key: "secretMessage",
+            label: "The Secret Plan",
+            type: "textarea",
+            placeholder: "I already know which phuchka stall...",
+            presetSuggestions: [
+              "I already know which phuchka stall I want to take you to. I've been saving it. 🧆 And I want the first photo we take together this Puja to be the one we both keep.",
+              "I bought a new panjabi just so it matches the saree you showed me. Don't tell anyone.",
+            ],
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 /** Find a template class definition by demoId */
