@@ -7,6 +7,7 @@ import BirthdayTemplate from "./templates/BirthdayTemplate";
 import SheCantSayNoTemplate from "./templates/SheCantSayNoTemplate";
 import ImSorryTemplate from "./templates/ImSorryTemplate";
 import DurgaPujaTemplate from "./templates/DurgaPujaTemplate";
+import SharodyaWhisperTemplate from "./templates/SharodyaWhisperTemplate";
 import { RecipientActionBar } from "@/components/ui/RecipientActionBar";
 
 type MediaItem = {
@@ -55,12 +56,21 @@ export default function ProposalClient(props: ProposalClientProps) {
     content = <BirthdayTemplate {...props} />;
   } else if (demoId === "durga-puja" || demoId === "puja") {
     content = <DurgaPujaTemplate {...props} />;
+  } else if (demoId === "puja-whisper" || demoId === "sharodya-whisper") {
+    content = <SharodyaWhisperTemplate {...props} />;
   } else if (demoId === "surprise") {
     content = <RomanticLoveTemplate {...props} />;
   }
 
   const url = typeof window !== "undefined" ? window.location.href : "";
   const isPuja = demoId === "durga-puja" || demoId === "puja";
+  const isWhisper = demoId === "puja-whisper" || demoId === "sharodya-whisper";
+
+  const themeColors = isWhisper
+    ? { primary: "#E8791A", secondary: "#F4B942" }
+    : isPuja
+    ? { primary: "#631726", secondary: "#D4AF37" }
+    : { primary: "#e11d48", secondary: "#f43f5e" };
 
   return (
     <>
@@ -69,7 +79,7 @@ export default function ProposalClient(props: ProposalClientProps) {
         url={url} 
         recipientName={props.recipientName}
         title={props.title}
-        themeColors={isPuja ? { primary: "#631726", secondary: "#D4AF37" } : { primary: "#e11d48", secondary: "#f43f5e" }}
+        themeColors={themeColors}
       />
     </>
   );

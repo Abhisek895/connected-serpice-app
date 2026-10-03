@@ -87,6 +87,56 @@ export default function DurgaPujaLandingPage() {
           </Link>
         </div>
 
+        {/* Two Templates */}
+        <div className="pt-8 text-left max-w-3xl mx-auto space-y-4">
+          <div className="text-center space-y-1">
+            <span className="text-xs uppercase tracking-widest text-[#D4AF37] font-semibold">
+              Choose Your Style
+            </span>
+            <h2 className="font-editorial text-2xl sm:text-3xl font-bold text-[#FDFBF7]">
+              Two invitation experiences
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* V1 */}
+            <div className="p-5 rounded-2xl bg-[#211E1C] border border-[#D4AF37]/20 space-y-3">
+              <span className="text-xl">🌑</span>
+              <h3 className="text-sm font-bold text-[#FDFBF7]">Bengal After Dusk</h3>
+              <p className="text-xs text-[#FDFBF7]/70 leading-relaxed">
+                Dark, cinematic, dramatic. Bengali typography, falling shiuli, deep burgundy. The original.
+              </p>
+              <Link
+                href="/puja/builder"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#D4AF37] hover:underline"
+              >
+                Create this →
+              </Link>
+            </div>
+
+            {/* V2 */}
+            <div
+              className="p-5 rounded-2xl border border-[#F4B942]/40 space-y-3 shadow-lg"
+              style={{ background: "linear-gradient(135deg,#FFF8F0,#FFEFD0)" }}
+            >
+              <span className="text-xl">🌸</span>
+              <h3 className="text-sm font-bold text-[#2C1A0E]">
+                Sharodiya Whisper{" "}
+                <span className="text-[10px] bg-[#E8791A] text-white px-1.5 py-0.5 rounded-full font-medium">NEW</span>
+              </h3>
+              <p className="text-xs text-[#5C3D2E] leading-relaxed">
+                Bright, poetic, letter-style. She explores a story — not a form. Psychologically irresistible.
+              </p>
+              <Link
+                href="/puja/whisper"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#E8791A] hover:underline"
+              >
+                See Sharodiya Whisper →
+              </Link>
+            </div>
+          </div>
+        </div>
+
         {/* Emotional Journey Preview Grid */}
         <div className="pt-16 text-left max-w-3xl mx-auto space-y-6">
           <div className="text-center space-y-1">

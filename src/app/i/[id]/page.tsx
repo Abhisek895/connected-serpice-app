@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import DurgaPujaTemplate from "@/app/p/[slug]/templates/DurgaPujaTemplate";
+import SharodyaWhisperTemplate from "@/app/p/[slug]/templates/SharodyaWhisperTemplate";
+import { WHISPER_DEFAULT_DATA } from "@/lib/templates/sharodya-whisper";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { Heart } from "lucide-react";
@@ -94,6 +96,18 @@ export default async function InvitationPage({
     );
   }
 
+  // Sharodiya Whisper demo
+  if (id === "puja-whisper-demo") {
+    return (
+      <SharodyaWhisperTemplate
+        slug="puja-whisper-demo"
+        recipientName={WHISPER_DEFAULT_DATA.recipientName}
+        loveMessage={WHISPER_DEFAULT_DATA.memoryMessage}
+        customData={WHISPER_DEFAULT_DATA}
+      />
+    );
+  }
+
   const event = await prisma.event.findFirst({
     where: {
       OR: [{ slug: id }, { id }],
@@ -128,6 +142,20 @@ export default async function InvitationPage({
     customData = event.customData ? JSON.parse(event.customData) : {};
   } catch (err) {
     console.error("Failed to parse customData for invitation:", id, err);
+  }
+
+  const demoId = customData.demoId || "";
+
+  if (demoId === "puja-whisper" || demoId === "sharodya-whisper") {
+    return (
+      <SharodyaWhisperTemplate
+        slug={event.slug}
+        recipientName={customData.recipientName}
+        loveMessage={customData.memoryMessage}
+        audioUrl={customData.audioUrl}
+        customData={customData}
+      />
+    );
   }
 
   return (

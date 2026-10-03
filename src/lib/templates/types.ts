@@ -57,3 +57,16 @@ export interface RecipientResponseData {
   recipientNote?: string;
   submittedAt: string;
 }
+
+export interface SharodyaWhisperCustomData {
+  demoId?: string;
+  recipientName: string;
+  creatorName: string;
+  memoryMessage?: string;
+  secretMessage?: string;
+  vibeHint?: string;
+  creatorFavFood?: string;
+  foodOptions?: string[];
+  audioUrl?: string;
+  soundEnabledByDefault?: boolean;
+}

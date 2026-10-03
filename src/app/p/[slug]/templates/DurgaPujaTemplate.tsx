@@ -463,7 +463,7 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
           keepalive: true,
-        }).catch(() => {});
+        }).catch(() => { });
         return;
       }
 
@@ -528,7 +528,7 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload),
               keepalive: true,
-            }).catch(() => {});
+            }).catch(() => { });
           }
         }
       };
@@ -885,11 +885,10 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
                       key={opt.id}
                       type="button"
                       onClick={() => setSelectedDay(opt.id)}
-                      className={`text-left p-3.5 rounded-2xl border transition-all flex items-start gap-3.5 ${
-                        isSelected
+                      className={`text-left p-3.5 rounded-2xl border transition-all flex items-start gap-3.5 ${isSelected
                           ? "bg-[#2E161C] border-[#D4AF37] shadow-md shadow-[#631726]/30 ring-1 ring-[#D4AF37]"
                           : "bg-[#211E1C]/80 border-[#FDFBF7]/10 hover:border-[#D4AF37]/40 text-[#FDFBF7]/80"
-                      }`}
+                        }`}
                     >
                       <span className="text-2xl mt-0.5">{opt.icon}</span>
                       <div className="flex-1">
@@ -948,11 +947,10 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
                       key={opt.id}
                       type="button"
                       onClick={() => setSelectedVibe(opt.id)}
-                      className={`text-left p-3.5 rounded-2xl border transition-all flex items-start gap-3.5 ${
-                        isSelected
+                      className={`text-left p-3.5 rounded-2xl border transition-all flex items-start gap-3.5 ${isSelected
                           ? "bg-[#2E161C] border-[#D4AF37] shadow-md shadow-[#631726]/30 ring-1 ring-[#D4AF37]"
                           : "bg-[#211E1C]/80 border-[#FDFBF7]/10 hover:border-[#D4AF37]/40 text-[#FDFBF7]/80"
-                      }`}
+                        }`}
                     >
                       <span className="text-2xl mt-0.5">{opt.icon}</span>
                       <div className="flex-1">
@@ -1019,11 +1017,10 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
                       key={opt.id}
                       type="button"
                       onClick={() => setSelectedAdventure(opt.id)}
-                      className={`text-left p-3.5 rounded-2xl border transition-all flex items-start gap-3.5 ${
-                        isSelected
+                      className={`text-left p-3.5 rounded-2xl border transition-all flex items-start gap-3.5 ${isSelected
                           ? "bg-[#2E161C] border-[#D4AF37] shadow-md ring-1 ring-[#D4AF37]"
                           : "bg-[#211E1C]/80 border-[#FDFBF7]/10 hover:border-[#D4AF37]/40 text-[#FDFBF7]/80"
-                      }`}
+                        }`}
                     >
                       <span className="text-2xl mt-0.5">{opt.icon}</span>
                       <div className="flex-1">
@@ -1090,11 +1087,10 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
                       key={food.id}
                       type="button"
                       onClick={() => toggleFoodSelection(food.id)}
-                      className={`text-left p-3 rounded-2xl border transition-all flex flex-col justify-between ${
-                        isSelected
+                      className={`text-left p-3 rounded-2xl border transition-all flex flex-col justify-between ${isSelected
                           ? "bg-[#2E161C] border-[#D4AF37] shadow-md ring-1 ring-[#D4AF37]"
                           : "bg-[#211E1C]/80 border-[#FDFBF7]/10 hover:border-[#D4AF37]/30 text-[#FDFBF7]/80"
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="relative w-10 h-10 rounded-full overflow-hidden border border-[#D4AF37]/20 shrink-0 bg-[#24201D] shadow-sm">
@@ -1177,11 +1173,10 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
                       key={item.id}
                       type="button"
                       onClick={() => setSelectedLocationPref(item.id)}
-                      className={`text-left p-3 rounded-2xl border transition-all ${
-                        isSelected
+                      className={`text-left p-3 rounded-2xl border transition-all ${isSelected
                           ? "bg-[#2E161C] border-[#D4AF37] shadow-md ring-1 ring-[#D4AF37]"
                           : "bg-[#211E1C]/80 border-[#FDFBF7]/10 hover:border-[#D4AF37]/30 text-[#FDFBF7]/80"
-                      }`}
+                        }`}
                     >
                       <h4 className="text-xs sm:text-sm font-semibold text-[#FDFBF7]">
                         {item.label}
@@ -1249,14 +1244,14 @@ export default function DurgaPujaTemplate(props: DurgaPujaTemplateProps) {
                   .filter((f: any) => selectedFoods.includes(f.id))
                   .map((f: any) => f.name)
                   .join(", ") || "good food";
-                
+
                 const locMap: Record<string, string> = {
                   close: "somewhere close",
                   explore: "to explore the city",
                   favourite: "at your favorite place",
                   surprise: "at a surprise location",
                 };
-                const venueStr = recipientVenue 
+                const venueStr = recipientVenue
                   ? (recipientVenue.toLowerCase().startsWith("at ") ? recipientVenue : `at ${recipientVenue}`)
                   : (locMap[selectedLocationPref] || "somewhere special");
 
