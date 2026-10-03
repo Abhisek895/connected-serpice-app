@@ -211,8 +211,11 @@ export async function sendReceiverActionEmail(opts: {
     "date-planner":     { ACCEPTED: datePlanMeta ? "She Confirmed the Date! 🗓️💖" : "She Said Yes to the Date! 🌸" },
     "jalpaiguri-planner": { ACCEPTED: datePlanMeta ? "She Confirmed the Date! 🗓️💖" : "She Said Yes to the Date! 🌿" },
     "durga-puja":       { ACCEPTED: "She Responded to Your Puja Invitation! 🌺" },
+    "puja-whisper":     { ACCEPTED: "She Responded to Your Puja Invitation! 🌺" },
   };
-  const headline = (headlines[demoId] || {})[isRejected ? "REJECTED" : "ACCEPTED"] || `She Responded! ${theme.emoji}`;
+  
+  const defaultHeadline = metadata?.recipientName ? `${metadata.recipientName} Responded! ${theme.emoji}` : `She Responded! ${theme.emoji}`;
+  const headline = (headlines[demoId] || {})[isRejected ? "REJECTED" : "ACCEPTED"] || defaultHeadline;
   const subject = `${headline} — OurStory Notification`;
 
   // ── Build metadata rows HTML ───────────────────────────────────────────────
@@ -229,8 +232,8 @@ export async function sendReceiverActionEmail(opts: {
     if (datePlanMeta.time)  metaRowsHtml += row("⏰ Time", datePlanMeta.time);
   }
 
-  // Durga Puja (rich metadata from API)
-  if (demoId === "durga-puja" && metadata) {
+  // Durga Puja / Whisper (rich metadata from API)
+  if ((demoId === "durga-puja" || demoId === "puja-whisper") && metadata) {
     if (metadata.selectedDay)       metaRowsHtml += row("🗓️ Puja Day", metadata.selectedDay);
     if (metadata.selectedVibe)      metaRowsHtml += row("✨ Vibe", metadata.selectedVibe);
     if (metadata.selectedAdventure) metaRowsHtml += row("🧭 Adventure", metadata.selectedAdventure);
