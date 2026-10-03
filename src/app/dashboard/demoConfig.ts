@@ -136,5 +136,20 @@ export const demos: DemoItem[] = [
     hasInstantUse: true,
     price: 1500,
     durationDays: 14
+  },
+  {
+    id: "puja-whisper",
+    title: "Sharodiya Whisper 🌺",
+    badge: "Instant Available",
+    badgeColor: "bg-[#E8791A] text-white",
+    description: "A bright, poetic, letter-style Durga Puja proposal experience that she explores step by step.",
+    previewUrl: "/i/puja-whisper-demo",
+    builderTheme: "Romantic",
+    image: "/demos/durga-puja/thumb_durga_puja.jpg",
+    icon: Flame,
+    borderColor: "border-[#F4B942]",
+    hasInstantUse: true,
+    price: 1500,
+    durationDays: 14
   }
 ];
